@@ -1,25 +1,98 @@
 \documentclass[12pt]{scrbook}
 
-\usepackage{hyperref}
-\usepackage{graphicx}
+\usepackage[british]{babel}
 \usepackage{scrlayer-scrpage}
-\usepackage{kantlipsum}
+\usepackage{csquotes}
+\usepackage{microtype}
+\usepackage{balance}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, fit, shapes}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{newunicodechar}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{upgreek}
+
+% Listings
+
+\definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{errorcolor}{rgb}{1, 0, 0}           % bright red
+\definecolor{stringcolor}{rgb}{0.5, 0.3, 0.2}    % brown
+
+\def\lstlanguagefiles{lstlean.tex}
+\lstset{language=lean}
+\lstdefinestyle{leannocolor}{
+  basicstyle={\ttfamily},
+  identifierstyle={\ttfamily},
+  keywordstyle=[1]{\ttfamily},
+  keywordstyle=[2]{\ttfamily},
+  keywordstyle=[3]{\ttfamily},
+  stringstyle={\ttfamily},
+  commentstyle={\ttfamily}
+}
+\lstMakeShortInline[style=leannocolor]|
 
 % Headers
 
 \ohead{\headmark}
 
-% \pagestyle{fancyplain}
-% \renewcommand{\chaptermark}[1]%
-%          {\markboth{\thechapter.\ #1}{}}
-% \renewcommand{\sectionmark}[1]%
-%          {\markright{\thesection\ #1}}
-% \lhead[\fancyplain{}{\bfseries\thepage}]%
-%     {\fancyplain{}{\bfseries\rightmark}}
-% \rhead[\fancyplain{}{\bfseries\leftmark}]%
-%     {\fancyplain{}{\bfseries\thepage}}
-% \cfoot{}
+% Hyphenation
 
+\hyphenation{meta-va-ri-able meta-va-ri-ables us-abil-i-ty gen-er-al-i-sa-tion
+  none-the-less semi-group semi-groups rel-a-tive in-duc-tive rel-e-vant
+  tran-si-tive-ly nor-ma-li-sa-tion de-fi-ni-tion de-fi-ni-tions no-ta-bly}
+
+% Unicode
+
+\newunicodechar{¬}{\ensuremath{\lnot}}
+\newunicodechar{∧}{\ensuremath{\land}}
+\newunicodechar{∨}{\ensuremath{\lor}}
+\newunicodechar{⊢}{\ensuremath{\vdash}}
+\newunicodechar{∀}{\ensuremath{\forall}}
+\newunicodechar{∃}{\ensuremath{\exists}}
+\newunicodechar{⊥}{\ensuremath{\bot}}
+\newunicodechar{⊤}{\ensuremath{\top}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{↔}{\ensuremath{\leftrightarrow}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{ℕ}{\ensuremath{\mathbb{N}}}
+\newunicodechar{ℤ}{\ensuremath{\mathbb{Z}}}
+\newunicodechar{ℝ}{\ensuremath{\mathbb{R}}}
+\newunicodechar{ℚ}{\ensuremath{\mathbb{Q}}}
+\newunicodechar{≠}{\ensuremath{\neq}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{∉}{\ensuremath{\notin}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{β}{\ensuremath{\beta}}
+\newunicodechar{γ}{\ensuremath{\gamma}}
+\newunicodechar{δ}{\ensuremath{\delta}}
+\newunicodechar{ε}{\ensuremath{\varepsilon}}
+\newunicodechar{φ}{\ensuremath{\phi}}
+\newunicodechar{ψ}{\ensuremath{\psi}}
+\newunicodechar{π}{\ensuremath{\pi}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{Γ}{\ensuremath{\Gamma}}
+\newunicodechar{Δ}{\ensuremath{\Delta}}
+\newunicodechar{Φ}{\ensuremath{\Phi}}
+\newunicodechar{Ψ}{\ensuremath{\Psi}}
+\newunicodechar{₁}{\ensuremath{_{1}}}
+\newunicodechar{₂}{\ensuremath{_{2}}}
+\newunicodechar{₃}{\ensuremath{_{3}}}
+\newunicodechar{₄}{\ensuremath{_{4}}}
+\newunicodechar{₅}{\ensuremath{_{5}}}
+\newunicodechar{₆}{\ensuremath{_{6}}}
+\newunicodechar{₇}{\ensuremath{_{7}}}
+\newunicodechar{₈}{\ensuremath{_{8}}}
+\newunicodechar{₉}{\ensuremath{_{9}}}
+\newunicodechar{₀}{\ensuremath{_{0}}}
 
 % Title page
 
