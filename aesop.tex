@@ -367,7 +367,7 @@ We only require that tactic rules either change the goal or fail, so they cannot
 \label{sec:simp}
 
 Lean's simplifier, which performs rewriting with a user-provided set of conditional rewrite rules, is used heavily in all big Lean projects.
-In particular, Mathlib~\cite{mathlib}, a large library of formalised mathematics which contains most Lean code written to date, defines an extensive set of simplifier rules.
+In particular, Mathlib~\cite{Mathlib}, a large library of formalised mathematics which contains most Lean code written to date, defines an extensive set of simplifier rules.
 To make Aesop practical, we should leverage this existing automation.
 
 To that end, we integrate simplification into the normalisation process, adding a built-in normalisation rule which runs the simplifier on the entire goal (target type and hypotheses).
@@ -921,7 +921,7 @@ There are also black-box tools based on tree search, notably Coq's sauto~\cite{s
 These tools use fairly strong default rules, some of which could also be interesting for Aesop.
 But since they are push-button tools, their rules are also quite opaque.
 
-For Lean 3, Mathlib~\cite{mathlib} already contains some search tactics which are currently being ported to Lean 4: continuity, measurability, tidy, tautology and finish.
+For Lean 3, Mathlib~\cite{Mathlib} already contains some search tactics which are currently being ported to Lean 4: continuity, measurability, tidy, tautology and finish.
 These tactics perform essentially depth-first search with various rule sets, so Aesop should supersede them.
 However, finish uses e-matching and so makes better use of unoriented equations.
 
