@@ -6,6 +6,6 @@ podman run --rm \
   --mount=type=bind,source="$ROOT",destination=/work \
   --workdir /work \
   registry.gitlab.com/islandoftex/images/texlive:TL2025-2025-03-23-full \
-  latexmk -xelatex -pdf -recorder \
+  latexmk -xelatex -recorder \
   -latexoption="-interaction nonstopmode -shell-escape" \
   -outdir=build thesis.tex "$@"

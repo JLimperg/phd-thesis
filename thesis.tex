@@ -2,22 +2,43 @@
 
 \usepackage[british]{babel}
 \usepackage{scrlayer-scrpage}
-\usepackage{csquotes}
-\usepackage{microtype}
-\usepackage{balance}
+\usepackage{mathtools}
+\usepackage{fontspec}
+\usepackage{unicode-math}
 \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, fit, shapes}
 \usepackage{minted}
 \usepackage{hyperref}
 \usepackage{newunicodechar}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{mathtools}
-\usepackage{upgreek}
+\usepackage{csquotes}
+
+% Fonts
+
+\setmainfont{STIXTwoText}[
+  Extension = .otf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic,
+  BoldItalicFont = *-BoldItalic
+]
+\setmathfont{STIXTwoMath-Regular.otf}
+\setsansfont{NotoSans}[
+  Scale = MatchUppercase,
+  Extension = .ttf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold,
+  ItalicFont = *-Italic,
+  BoldItalicFont = *-BoldItalic
+]
+\setmonofont{NotoSansMono}[
+  Scale = MatchUppercase,
+  Extension = .ttf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold
+]
 
 % Listings
-
 
 \setminted[lean4]{extrakeywords={aesop cases add aesop? intro simp simp_all only split apply on_goal next rename_i safe unsafe norm constructors forward destruct norm_num done add_aesop_rules rfl subst ext}}
 \newmintinline[lean]{lean4}{bgcolor={},ignorelexererrors=true}
@@ -33,52 +54,6 @@
 \hyphenation{meta-va-ri-able meta-va-ri-ables us-abil-i-ty gen-er-al-i-sa-tion
   none-the-less semi-group semi-groups rel-a-tive in-duc-tive rel-e-vant
   tran-si-tive-ly nor-ma-li-sa-tion de-fi-ni-tion de-fi-ni-tions no-ta-bly}
-
-% Unicode
-
-\newunicodechar{¬}{\ensuremath{\lnot}}
-\newunicodechar{∧}{\ensuremath{\land}}
-\newunicodechar{∨}{\ensuremath{\lor}}
-\newunicodechar{⊢}{\ensuremath{\vdash}}
-\newunicodechar{∀}{\ensuremath{\forall}}
-\newunicodechar{∃}{\ensuremath{\exists}}
-\newunicodechar{⊥}{\ensuremath{\bot}}
-\newunicodechar{⊤}{\ensuremath{\top}}
-\newunicodechar{→}{\ensuremath{\rightarrow}}
-\newunicodechar{↔}{\ensuremath{\leftrightarrow}}
-\newunicodechar{×}{\ensuremath{\times}}
-\newunicodechar{ℕ}{\ensuremath{\mathbb{N}}}
-\newunicodechar{ℤ}{\ensuremath{\mathbb{Z}}}
-\newunicodechar{ℝ}{\ensuremath{\mathbb{R}}}
-\newunicodechar{ℚ}{\ensuremath{\mathbb{Q}}}
-\newunicodechar{≠}{\ensuremath{\neq}}
-\newunicodechar{≤}{\ensuremath{\leq}}
-\newunicodechar{≥}{\ensuremath{\geq}}
-\newunicodechar{∈}{\ensuremath{\in}}
-\newunicodechar{∉}{\ensuremath{\notin}}
-\newunicodechar{α}{\ensuremath{\alpha}}
-\newunicodechar{β}{\ensuremath{\beta}}
-\newunicodechar{γ}{\ensuremath{\gamma}}
-\newunicodechar{δ}{\ensuremath{\delta}}
-\newunicodechar{ε}{\ensuremath{\varepsilon}}
-\newunicodechar{φ}{\ensuremath{\phi}}
-\newunicodechar{ψ}{\ensuremath{\psi}}
-\newunicodechar{π}{\ensuremath{\pi}}
-\newunicodechar{σ}{\ensuremath{\sigma}}
-\newunicodechar{Γ}{\ensuremath{\Gamma}}
-\newunicodechar{Δ}{\ensuremath{\Delta}}
-\newunicodechar{Φ}{\ensuremath{\Phi}}
-\newunicodechar{Ψ}{\ensuremath{\Psi}}
-\newunicodechar{₁}{\ensuremath{_{1}}}
-\newunicodechar{₂}{\ensuremath{_{2}}}
-\newunicodechar{₃}{\ensuremath{_{3}}}
-\newunicodechar{₄}{\ensuremath{_{4}}}
-\newunicodechar{₅}{\ensuremath{_{5}}}
-\newunicodechar{₆}{\ensuremath{_{6}}}
-\newunicodechar{₇}{\ensuremath{_{7}}}
-\newunicodechar{₈}{\ensuremath{_{8}}}
-\newunicodechar{₉}{\ensuremath{_{9}}}
-\newunicodechar{₀}{\ensuremath{_{0}}}
 
 % Title page
 
