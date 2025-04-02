@@ -386,11 +386,11 @@ This sort of \texttt{cases} rule is therefore only suitable as an ad hoc rule.
 
 To support global \texttt{cases} rules as well, we provide a variant of the \texttt{cases} builder which avoids looping in some common cases.
 Consider the inductive predicate \texttt{All~P~xs}, which encodes the proposition that all elements of the list \texttt{xs} satisfy the predicate \texttt{P}:
-\begin{lstlisting}
+\begin{leancode}
 inductive All (P : α → Prop) : List α → Prop
 | nil  : All P []
 | cons : P x → All P xs → All P (x :: xs)
-\end{lstlisting}
+\end{leancode}
 When a goal contains a hypothesis \texttt{All P (x~::~xs)}, we almost always want to perform a case split on this hypothesis, leaving us with two simpler hypotheses \texttt{P~x} and \texttt{All~P~xs}.
 Crucially, neither of these hypotheses has the same form as the initial one, so there is no infinite regress.
 To take advantage of this insight, \Aesop{} allows users to annotate a \texttt{cases} rule with a \emph{pattern} which restricts the hypotheses to which the rule is applicable.
@@ -856,10 +856,9 @@ Specifically, for lemmas which require induction, we either add one or more call
 The latter is the most ergonomic way to perform functional induction in \Lean.
 
 Of the 10 lemmas \Aesop{} cannot prove, 4 involve existentially quantified statements with non-trivial witnesses, e.g.
-\begin{lstlisting}
-∀ (a : α) (l : List α), a ∈ l →
-  ∃ (s t : List α), l = s ++ a :: t
-\end{lstlisting}
+\begin{leancode}
+∀ (a : α) (l : List α), a ∈ l → ∃ (s t : List α), l = s ++ a :: t
+\end{leancode}
 \Aesop's quantifier instantiation method, which relies solely on unification, is too weak to determine the proper witnesses for each case of the induction.
 The other 6 unsolved lemmas fail either because a lemma is missing from the library (2) or because \Aesop's rule set misfires in specific situations (4).
 
@@ -904,16 +903,16 @@ We saw \texttt{All} earlier; \texttt{Any} is similar but encodes the fact that \
 The \texttt{cases} rule for \texttt{Any} makes good use of patterns: case analysis on a hypothesis which matches the pattern \verb|Any _ []| is safe since the hypothesis is contradictory; case analysis on a hypothesis which matches \verb|Any _ (_ :: _)| is unsafe but often useful.
 
 With the help of this \texttt{cases} rule, we prove some fundamental lemmas about \texttt{All} and \texttt{Any}, such as a weakening lemma for \texttt{All}:
-\begin{lstlisting}
+\begin{leancode}
 (∀ x, P x → Q x) → All P xs → All Q xs
-\end{lstlisting}
+\end{leancode}
 After induction on the \texttt{All} premise, \Aesop{} finishes the proof.
 We use this weakening lemma to prove that all elements of a list are members of that list: \texttt{All (•~∈~xs) xs}.
 The application of weakening requires support for metavariables since \texttt{P} is unconstrained and becomes a metavariable.
 Similarly, metavariables are crucial when proving existentially quantified lemmas, e.g.
-\begin{lstlisting}
+\begin{leancode}
 Any P xs ↔ ∃ a : α, P a ∧ a ∈ xs
-\end{lstlisting}
+\end{leancode}
 
 The prover itself, \texttt{Cal}, attempts to prove a sequent by breaking down connectives according to the classical sequent calculus rules and collecting lists
 of positive and negative propositional variables when they appear on either side of the sequent.
@@ -928,9 +927,9 @@ Here, \Aesop{} significantly reduces our workload: that permutations are symmetr
 
 As a consequence of the soundness and completeness of \texttt{Cal}, we additionally obtain soundness and completeness of its underlying proof system, formulated as an inductive predicate \texttt{Proof~Γ~Δ}.
 A key ingredient of the proof is this weakening lemma:
-\begin{lstlisting}
+\begin{leancode}
 Proof Γ Δ → Proof Γ (δ :: Δ)
-\end{lstlisting}
+\end{leancode}
 After induction on the premise, \Aesop{} proves the lemma automatically, apart from one case which requires an explicit application of the induction hypothesis.
 This is because two of the constructors of |Proof| allow us to apply arbitrary permutations to the sequents, which \Aesop's metavariable handling is too weak to find.
 These constructors also apply to every goal, so it is important that \Aesop{} is not limited to depth-first search, which might get lost in infinite permutations.
