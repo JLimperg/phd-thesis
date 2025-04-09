@@ -443,17 +443,17 @@ This yields the desired result: a partial script with holes marked by \tac{sorry
 \label{sec:static-reordering}
 
 The static reordering algorithm\footnote{Implemented in \texttt{Aesop/Script/StructureStatic.lean}.} is shown as Algorithm~\ref{alg:static-reordering}.
-Its main function, \textsc{reorder-static}, first sets up $\Var{tacticState}$.
+Its main function, \Proc{reorder-static}, first sets up $\Var{tacticState}$.
 This variable contains the goals of the current tactic state, so we initialise it with the pre-goal of the first step.
 (For the purposes of static reordering, metavariable assignments and declarations are not essential, so $\Var{tacticState}$ does not track the current metavariable context.)
 The remainder of the algorithm iteratively selects steps and applies them to the tactic state, simulating the effect of the step's tactic, until there are no goals left.
 
-The function \textsc{next-step}, which picks the next step to apply to a given tactic state, implements the actual reordering.
+The function \Proc{next-step}, which picks the next step to apply to a given tactic state, implements the actual reordering.
 If the first goal in the tactic state does not contain metavariables, we can pick the step that applies to this goal, since it cannot have any ordering constraints with regards to other steps.
 This gives us precisely the depth-first order we are after: always work on the first goal first.
 If the first goal in the tactic state does, however, contain metavariables, we perform no reordering, so we select the first step (according to the order in which the steps were generated) that applies to any goal in the tactic state.
 
-Once a step is chosen, the tactic state is updated to reflect its effect, using function \textsc{apply-step}.
+Once a step is chosen, the tactic state is updated to reflect its effect, using function \Proc{apply-step}.
 This simulates the effect of executing a step on the visible goals.
 It first replaces the step's pre-goal with its post-goals.
 Additionally, we must take into account that a step can solve goals other than its pre-goal.
@@ -461,7 +461,7 @@ In particular, if the pre-goal contains a metavariable $\mv{m}$, $\mv{m}$ is oft
 If the step then assigns $\mv{m}$ while solving some other goal, we must remove $\mv{m}$ from the tactic state.
 
 \begin{algorithm}
-  \Procedure{$\Fn{reorder-static}(\Var{steps})$}{
+  \Procedure{$\Proc{reorder-static}(\Var{steps})$}{
     \If{$\Var{steps}$ is empty}{
       \Return{$[]$}
     }
@@ -469,8 +469,8 @@ If the step then assigns $\mv{m}$ while solving some other goal, we must remove 
     $\Var{tacticState} \gets [g]$ \\
     $r \gets []$ \\
     \While{$\Var{tacticState}$ contains at least one goal}{
-      $\Var{step} \gets \Fn{next-step}(\Var{tacticState}, \Var{steps})$ \\
-      $\Var{tacticState} \gets \Fn{apply-step}(\Var{tacticState}, \Var{step})$ \\
+      $\Var{step} \gets \Proc{next-step}(\Var{tacticState}, \Var{steps})$ \\
+      $\Var{tacticState} \gets \Proc{apply-step}(\Var{tacticState}, \Var{step})$ \\
       Append $\Var{step}$ to $r$
     }
     \Return{$r$}
@@ -478,7 +478,7 @@ If the step then assigns $\mv{m}$ while solving some other goal, we must remove 
 
   \BlankLine
 
-  \Procedure{$\Fn{next-step}(\Var{tacticState}, \Var{steps})$}{
+  \Procedure{$\Proc{next-step}(\Var{tacticState}, \Var{steps})$}{
     \KwLet $g$ be the first goal in $\Var{tacticState}$ \\
     \eIf{$g$ does not contain metavariables}{
       \Return{the step for $g$ from $\Var{steps}$}
@@ -489,7 +489,7 @@ If the step then assigns $\mv{m}$ while solving some other goal, we must remove 
 
   \BlankLine
 
-  \Procedure{\Fn{apply-step}(\Var{tacticState}, (Φ, g, t, Ψ, G))}{
+  \Procedure{\Proc{apply-step}(\Var{tacticState}, (Φ, g, t, Ψ, G))}{
     \KwLet $G$ be $[g₁, \dots, gₙ]$ \\
     Replace $g$ with $g₁, \dots, gₙ$ in $\Var{tacticState}$ \\
     Remove from $\Var{tacticState}$ each goal $g'$ such that $g'$ is assigned in $Ψ$ but not in $Φ$ \\
@@ -508,7 +508,7 @@ It would likely be beneficial to limit this search to steps for goals that are c
 Fixing these issues would require us to track precisely which metavariables appear in goals in the tactic state.
 This can change when steps are applied.
 For example, a step can assign a metavariable $\mv{m}$ to a term containing a metavariable $\mv{m'}$; after this, any goals that previously contained $\mv{m}$ now contain $\mv{m'}$.
-Modelling these effects would add substantial complexity to \textsc{apply-step}, which does not seem warranted since the precision of static reordering is inherently limited anyway.
+Modelling these effects would add substantial complexity to \Proc{apply-step}, which does not seem warranted since the precision of static reordering is inherently limited anyway.
 
 \subsection{Dynamic Reordering}%
 \label{sec:dynamic-reordering}
@@ -518,33 +518,33 @@ This variant is based on the observation that even if reordering in the presence
 The algorithm\footnote{Implemented in \texttt{Aesop/Script/StructureDynamic.lean}.}, shown as Algorithm~\ref{alg:dynamic-reordering}, therefore reorders optimistically.
 
 \begin{algorithm}
-  \Procedure{$\Fn{reorder-dynamic}(\Var{steps}, Φ, G)$}{
+  \Procedure{$\Proc{reorder-dynamic}(\Var{steps}, Φ, G)$}{
     \eIf{$G$ is empty}{
       \Return{$([], Φ)$}
     }{
-      \KwTry $\Fn{go-structured}(\Var{steps}, Φ, G)$ \\
-      \KwOnFailure $\Fn{go-unstructured}(\Var{steps}, Φ, G)$
+      \KwTry $\Proc{go-structured}(\Var{steps}, Φ, G)$ \\
+      \KwOnFailure $\Proc{go-unstructured}(\Var{steps}, Φ, G)$
     }
   }
 
   \BlankLine
 
-  \Procedure{$\Fn{go-structured}(\Var{steps}, Φ, G)$}{
+  \Procedure{$\Proc{go-structured}(\Var{steps}, Φ, G)$}{
     \KwLet $g$ be the first goal in $G$ \\
     \KwLet $s$ be the unique step from $\Var{steps}$ with pre-goal $g$ \\
-    \Return{$\Fn{apply-step}(\Var{steps}, Φ, G, g, s)$}
+    \Return{$\Proc{apply-step}(\Var{steps}, Φ, G, g, s)$}
   }
 
   \BlankLine
 
-  \Procedure{$\Fn{go-unstructured}(\Var{steps}, Φ, G)$}{
+  \Procedure{$\Proc{go-unstructured}(\Var{steps}, Φ, G)$}{
     \KwLet $s$ be the first step in $\Var{steps}$ whose pre-goal $g$ is in $G$ \\
-    \Return{$\Fn{apply-step}(\Var{steps}, Φ, G, g, s)$}
+    \Return{$\Proc{apply-step}(\Var{steps}, Φ, G, g, s)$}
   }
 
   \BlankLine
 
-  \Procedure{$\Fn{apply-step}(\Var{steps}, Φ, G, g, s)$}{
+  \Procedure{$\Proc{apply-step}(\Var{steps}, Φ, G, g, s)$}{
     \KwLet step $s$ be $(Φ^{\pre}, g, t, Φ^{\post}, G^{\post})$ \\
     Run $t$ in tactic state $(Φ, [g])$, producing tactic state $(Ψ, G')$ \\
     \eIf{$(Φ^{\post}, G^{\post}) \aeq (Ψ, G')$}{
@@ -554,7 +554,7 @@ The algorithm\footnote{Implemented in \texttt{Aesop/Script/StructureDynamic.lean
       \KwLet $G'$ be $[g₁, \dots, gₙ]$ \\
       Replace $g$ with $g₁, \dots, gₙ$ in $G$ \\
       Remove from $G$ each goal that is assigned in $Ψ$ \\
-      $(\Var{script}, Ω) \gets \Fn{reorder-dynamic}(\Var{steps}, Ψ, G)$ \\
+      $(\Var{script}, Ω) \gets \Proc{reorder-dynamic}(\Var{steps}, Ψ, G)$ \\
       \Return{$(s' ∷ \Var{script}, Ω)$}
     }{
       \KwFailure
@@ -566,48 +566,48 @@ The algorithm\footnote{Implemented in \texttt{Aesop/Script/StructureDynamic.lean
 \end{algorithm}
 
 At its core, dynamic reordering is a straightforward backtracking algorithm.
-Given a list of tactic steps, a metavariable context $Φ$ and a list of goals $G$, the function \textsc{reorder-dynamic} first tries to solve the goals in a structured manner.
-This means it executes the \textsc{go-structured} function, which applies the step for the first goal in $G$ and recurses into the resulting goal list.
-If this fails, \textsc{reorder-dynamic} calls the \textsc{go-unstructured} function, which applies the chronologically first step corresponding to any goal in $G$ and similarly recurses into the resulting goals.
-The result of \textsc{reorder-dynamic} is a reordered sequence of steps and the metavariable context that results from applying the steps (in that order) to the pre-goals $G$ in context $Φ$.
+Given a list of tactic steps, a metavariable context $Φ$ and a list of goals $G$, the function \Proc{reorder-dynamic} first tries to solve the goals in a structured manner.
+This means it executes the \Proc{go-structured} function, which applies the step for the first goal in $G$ and recurses into the resulting goal list.
+If this fails, \Proc{reorder-dynamic} calls the \Proc{go-unstructured} function, which applies the chronologically first step corresponding to any goal in $G$ and similarly recurses into the resulting goals.
+The result of \Proc{reorder-dynamic} is a reordered sequence of steps and the metavariable context that results from applying the steps (in that order) to the pre-goals $G$ in context $Φ$.
 
-Applying the steps is somewhat more subtle than in the static variant of the algorithm, so the function \textsc{apply-step} is more complex.
+Applying the steps is somewhat more subtle than in the static variant of the algorithm, so the function \Proc{apply-step} is more complex.
 We first run the step's tactic $t$ on the current goal $g$ in the current metavariable context $Φ$.
-If the tactic fails, \textsc{apply-step} implicitly also fails.
+If the tactic fails, \Proc{apply-step} implicitly also fails.
 If the tactic succeeds, we check whether the produced goals $G'$ (in the produced context $Ψ$) are equal to the expected goals $G^{\post}$ of the step (in the step's post-context $Φ^{\post}$).
 Here we use the equality from Sec.~\ref{sec:equality}: the goals in $G'$ should be equal to the goals in $G^{\post}$ up to names of fvars and metavariables.
 This is needed since different runs of the same tactic (even in the same metavariable context) will almost always generate different names.
 Furthermore, we use the variant $\aeq$, so we allow differences in whether a metavariable is assigned.
 This is needed to account for the expected effects of reordering: if a tactic $t₁$ assigns a metavariable and a tactic $t₂$ was run after $t₁$ in the original order, but now $t₂$ is run before $t₁$, then we cannot expect the metavariable to be assigned after $t₂$.
-If the goals are not equal in this sense, \textsc{apply-step} again fails.
+If the goals are not equal in this sense, \Proc{apply-step} again fails.
 
 If the goals are equal, the equality check yields a partial bijective map $σ$ that associates metavariables in $Φ^{\post}$ with their corresponding metavariables in $Ψ$.
 We use this map to update the steps, replacing each pre-goal $g^{\pre}$ with its corresponding goal $σ(g^{\pre})$ if $σ(g^{\pre})$ is defined.
 Without this update, when we later look up the step for, say, a goal $g$ produced by the current step, we would not find anything because the step's pre-goal is a goal that is equal to $g$, but it is not $g$ itself.
 
-The remainder of \textsc{apply-step} is similar to the function of the same name from Algorithm~\ref{alg:static-reordering}.
+The remainder of \Proc{apply-step} is similar to the function of the same name from Algorithm~\ref{alg:static-reordering}.
 We construct the new list of goals by replacing the pre-goal $g$ with the produced goals $G'$; then we then recurse into these goals.
 If the recursion is successful, we have found a script that solves the new list of goals, so we return this script with the current step prepended (as well as the resulting metavariable context).
 If the recursion is unsuccessful, we implicitly fail.
 
 Assuming that all steps are well-formed, the tactic $t$, when run in tactic state $(Φ^{\pre}, [g])$, produces $(Φ^{\post}, G^{\post})$.
-Hence, \textsc{apply-step} fails only when the input metavariable context $Φ$ differs from $Φ^{\pre}$.
-This can happen when \textsc{apply-step} is called after we have reordered some steps, i.e.\ after at least one call to \textsc{go-structured}.
+Hence, \Proc{apply-step} fails only when the input metavariable context $Φ$ differs from $Φ^{\pre}$.
+This can happen when \Proc{apply-step} is called after we have reordered some steps, i.e.\ after at least one call to \Proc{go-structured}.
 But it cannot happen when we execute the steps in the original order.
-As a result, \textsc{reorder-dynamic}, which in the worst case falls back to a sequence of \textsc{go-unstructured} calls, cannot fail.
+As a result, \Proc{reorder-dynamic}, which in the worst case falls back to a sequence of \Proc{go-unstructured} calls, cannot fail.
 
 Note that the step prepended to the script is not quite the original step.
 Rather, it is the step $\step{Φ}{g}{t}{Ψ}{G'}$ which retains the pre-goal $g$ and tactic $t$, but contains the pre-context $Φ$, the post-context $Ψ$ and the post-goals $G'$.
 This is necessary because the old step's pre-context, post-context and post-goals are only $\aeq$-equal to $Φ$, $Ψ$ and $G'$; but when we later build a structured script from the reordered steps, each step's tactic must produce precisely its post-state.
-Due to this update of the step, \textsc{reorder-dynamic} does not, in fact, merely reorder the steps but rather builds a new sequence of steps (with the same tactics).
+Due to this update of the step, \Proc{reorder-dynamic} does not, in fact, merely reorder the steps but rather builds a new sequence of steps (with the same tactics).
 
-Being a straightforward backtracking algorithm, \textsc{reorder-dynamic} has exponential complexity in the number of steps $n$.
-In the worst case, \textsc{go-structured} always succeeds except for the last step in each chain of \textsc{go-structured} calls.
-Thus the first step takes $n-1$ \textsc{go-structured} calls until we hit a failure and switch to \textsc{go-unstructured}.
-There we apply one step, then take another $n-2$ \textsc{go-structured} calls until we hit a failure, and so on.
+Being a straightforward backtracking algorithm, \Proc{reorder-dynamic} has exponential complexity in the number of steps $n$.
+In the worst case, \Proc{go-structured} always succeeds except for the last step in each chain of \Proc{go-structured} calls.
+Thus the first step takes $n-1$ \Proc{go-structured} calls until we hit a failure and switch to \Proc{go-unstructured}.
+There we apply one step, then take another $n-2$ \Proc{go-structured} calls until we hit a failure, and so on.
 
 However, this worst-case behaviour rarely occurs in practice, for two reasons.
-First, most proofs contain no metavariables, in which case reordering cannot fail, so we run $n$ \textsc{go-structured} calls.
+First, most proofs contain no metavariables, in which case reordering cannot fail, so we run $n$ \Proc{go-structured} calls.
 (In fact, Aesop's default configuration always uses static structuring in this case, which is guaranteed to produce a perfectly structured script.)
 Second, checking that each step produced the desired result -- up to names and metavariable assignments -- makes it unlikely that the algorithm applies a long chain of tactics only to eventually discover that the proof cannot be completed.
 
@@ -668,32 +668,32 @@ If a step is focusable, we can run the step's descendants without referring to a
 Hence, as the terminology suggests, we can focus on the step's pre-goal before running the step and its descendants.
 
 We now consider Algorithm~\ref{alg:sscript}, which converts a sequence of steps to a structured script.
-Its sole function, \textsc{sscript}, takes a sequence of steps $\Var{steps}$, a tactic state $\Var{ts}$, a start position $i$ and a stop position $j$.
+Its sole function, \Proc{sscript}, takes a sequence of steps $\Var{steps}$, a tactic state $\Var{ts}$, a start position $i$ and a stop position $j$.
 We assume that a step tree for $\Var{steps}$ has been constructed previously, and that we can therefore determine the number of siblings of a step $s ∈ \Var{steps}$, as well as whether $s$ is focusable (and if so, what its maximal child index is).
 
-The \textsc{sscript} function then returns a new tactic state and a structured script.
+The \Proc{sscript} function then returns a new tactic state and a structured script.
 The structured script corresponds to the subsequence of $\Var{steps}$ from $i$ to $j$, and the tactic state is the tactic state that results from running this subsequence (or the corresponding structured script) on the initial tactic state $\Var{ts}$.
 As in Sec.~\ref{sec:static-reordering}, we do not need to consider the tactic states' metavariable contexts, so tactic states are modelled as lists of goals.
 
 \begin{algorithm}
-  \Procedure{$\Fn{sscript}(\Var{steps}, \Var{ts}, i, j)$}{
+  \Procedure{$\Proc{sscript}(\Var{steps}, \Var{ts}, i, j)$}{
     \If{$i > j$}{
       \Return{$(\Var{ts}, \Fn{empty})$}
     }
     $s \gets \Var{steps}[i]$ \\
     \KwLet $p$ be the position of the pre-goal of $s$ in $\Var{ts}$ \\
     \eIf{$s$ is not focusable or $s$ has no siblings}{
-      $\Var{ts} \gets \Fn{apply-step}(\Var{ts}, s)$ \\
-      $(\Var{ts}, t) \gets \Fn{sscript}(\Var{steps}, \Var{ts}, i+1, j)$ \\
+      $\Var{ts} \gets \Proc{apply-step}(\Var{ts}, s)$ \\
+      $(\Var{ts}, t) \gets \Proc{sscript}(\Var{steps}, \Var{ts}, i+1, j)$ \\
       \Return{$(\Var{ts}, \mathrm{on}(p, s, t))$}
     }{
       \KwLet $k$ be the maximal child index of $s$ \\
       \KwLet $g$ be the pre-goal of $s$ \\
-      $\Var{nts} \gets \Fn{apply-step}([g], s)$ \\
-      $(\_, \Var{ns}) \gets \Fn{sscript}(\Var{steps}, \Var{nts}, i+1, k)$ \\
+      $\Var{nts} \gets \Proc{apply-step}([g], s)$ \\
+      $(\_, \Var{ns}) \gets \Proc{sscript}(\Var{steps}, \Var{nts}, i+1, k)$ \\
       $h \gets \Fn{on}(0, s, \Var{ns})$ \\
       Remove $g$ from $ts$ \\
-      $(t, ts) \gets \Fn{sscript}(\Var{steps}, \Var{ts}, k+1, j)$ \\
+      $(t, ts) \gets \Proc{sscript}(\Var{steps}, \Var{ts}, k+1, j)$ \\
       \Return{$(\Var{ts}, \mathrm{fas}(p, h, t))$}
     }
   }
@@ -707,7 +707,7 @@ The algorithm's base case is $i > j$, in which case we are done and return the e
 For $i ≤ j$, we consider the step at position $i$ in the sequence $\Var{steps}$.
 If this step is not focusable or has no siblings, we render it in an unstructured manner, converting it into an $\mathrm{on}$ node.
 The node's tail script is generated by a recursive call, starting at position $i + 1$ in the tactic state that results from applying the step $s$ to the initial tactic state $\Var{ts}$.
-We reuse the function \textsc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
+We reuse the function \Proc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
 
 If the current step $s$ is focusable and has siblings, we render it in a structured manner, as a $\mathrm{fas}$ node.
 To that end, we first generate the $h$ script.
