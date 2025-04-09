@@ -9,14 +9,13 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, fit, shapes}
 \usepackage{minted}
-\usepackage[colorlinks]{hyperref}
+\usepackage[colorlinks,allcolors=cslightblue]{hyperref}
 \usepackage{newunicodechar}
 \usepackage{csquotes}
 \usepackage{pgfplots}
 \usepackage[noend]{algorithm2e}
 \usepackage{siunitx}
 \usepackage{booktabs}
-\usepackage[x11names]{xcolor}
 
 % Fonts
 
@@ -43,10 +42,20 @@
   BoldFont = *-Bold
 ]
 
+% Colourblind-Safe Palette
+
+% Source: Paul Tol's Medium Contrast via
+% https://cran.r-project.org/web/packages/khroma/vignettes/tol.html
+\definecolor{csyellow}{HTML}{EECC66}
+\definecolor{csrose}{HTML}{EE99AA}
+\definecolor{cslightblue}{HTML}{6699CC}
+\definecolor{csbrown}{HTML}{997700}
+\definecolor{csred}{HTML}{994455}
+\definecolor{csblue}{HTML}{004488}
+
 % URLs
 
-\renewcommand\UrlFont{\color{blue}\rmfamily}
-\urlstyle{rm}
+\urlstyle{same}
 
 % Listings
 
@@ -191,7 +200,10 @@
       {TODO Prüfungsdatum}
 
   \pagenumbering{roman}
-  \tableofcontents
+  {
+    \hypersetup{linkcolor=black}
+    \tableofcontents
+  }
 
   \mainmatter%
   \pagenumbering{arabic}
