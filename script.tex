@@ -832,7 +832,7 @@ what is the runtime cost of script generation (with static or dynamic reordering
   \centering
   \small
   \begin{tabular}{lcccc|cccc}
-    \textbf{Config} & $\mathbf{\bar{A}}$ & $\mathbf{A_{50}}$ & $\mathbf{A_{95}}$ & $\mathbf{A_{99}}$ & $\mathbf{\bar{S}}$ & $\mathbf{S_{50}}$ & $\mathbf{S_{95}}$ & $\mathbf{S_{99}}$ \\
+    \textbf{Config} & $\mean{\mathbf{A}}$ & $\mathbf{A_{50}}$ & $\mathbf{A_{95}}$ & $\mathbf{A_{99}}$ & $\mean{\mathbf{S}}$ & $\mathbf{S_{50}}$ & $\mathbf{S_{95}}$ & $\mathbf{S_{99}}$ \\
     \midrule
     \multicolumn{9}{l}{\textbf{All scripts (n = 6395)}} \\
     Static     & 426 & 170 & 1521 & 4299 & 104 & 37 & 378 & 1171 \\
@@ -845,8 +845,8 @@ what is the runtime cost of script generation (with static or dynamic reordering
     Dynamic    & 821 & 361 & 5535 & 6844 & 143 & 53 & 497 & 3502 \\
   \end{tabular}
   \caption{Results of the performance evaluation.
-    $\bar{A}$ is the average time taken by each Aesop call (including script generation); $A_{50}$ is the median time; $A_{95}$ the $95^{\mathrm{th}}$ percentile time; and $A_{99}$ the $99^{\mathrm{th}}$ percentile time.
-    $\bar{S}$, $S_{50}$, $S_{95}$ and $S_{99}$ are the corresponding times for script generation.
+    $\mean{A}$ is the average time taken by each Aesop call (including script generation); $A_{50}$ is the median time; $A_{95}$ the $95^{\mathrm{th}}$ percentile time; and $A_{99}$ the $99^{\mathrm{th}}$ percentile time.
+    $\mean{S}$, $S_{50}$, $S_{95}$ and $S_{99}$ are the corresponding times for script generation.
     The top part of the table contains timings from the static, optimised dynamic and dynamic configurations across 6395 Aesop calls in Mathlib.
     The bottom part contains corresponding timings for those 74 Aesop calls which generate proofs with metavariables.
     All times are in milliseconds.}%
