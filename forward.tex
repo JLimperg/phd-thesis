@@ -54,7 +54,7 @@ In addition to this \emph{incrementality}, the forward state satisfies two other
         We therefore want to avoid redundant unifications.
 \end{itemize}
 
-Our evaluation (Sec.~\ref{sec:evaluation}) shows that this new implementation of forward reasoning in Aesop substantially outperforms the previous, naive implementation on synthetic benchmarks.
+Our evaluation (Sec.~\ref{sec:forward:evaluation}) shows that this new implementation of forward reasoning in Aesop substantially outperforms the previous, naive implementation on synthetic benchmarks.
 The implementation, benchmarks and evaluation data are available in a supplement to this paper~\cite{ForwardSupplement} and the new implementation is already available in the newest version of Aesop.
 
 \section{Preliminaries}
@@ -80,7 +80,7 @@ The \emph{shared variables of slot $i$}, $\vars(i)$, are those variables that ap
 
 If $h : C$ is a hypothesis and $C$ matches the type $A$ of slot $i$, we say that $h$ \emph{matches} $i$.
 Matching induces a substitution $σ$ such that $A[σ]$ is definitionally equal to $C$; we define $\sub_{i}(h) ≔ σ$.
-What exactly \enquote{matching} means is discussed in Sec.~\ref{sec:implementation}.
+What exactly \enquote{matching} means is discussed in Sec.~\ref{sec:forward:implementation}.
 
 A \textit{match} $m$ for a given rule $r$ with $n$ slots is a list containing at least one and at most $n$ hypotheses.
 We interpret $m$ as a partial map from slots of $r$ to hypotheses, so $\dom(m) = \{i \mid 1 ≤ i ≤ |m| \}$ and for each slot $i ∈ \dom(m)$, $m(i)$ is the hypothesis assigned to $i$.
@@ -106,7 +106,7 @@ This prevents us from constructing $r~a~b$ in two different but ultimately redun
 The term orders used in various saturation calculi have a similar effect.
 
 \section{Naive Forward Reasoning}%
-\label{sec:naive}
+\label{sec:forward:naive}
 
 Before this work, Aesop used what we call \emph{naive forward reasoning}~\cite{Aesop}.
 This approach treats forward rules essentially like any other Aesop rule.
@@ -125,7 +125,7 @@ Moreover, the whole process is repeated when we proceed to another goal with a s
 In particular, the contexts of subgoals produced by whatever rule is eventually applied to the current goal are likely to be similar to the current context, but the naive algorithm does not exploit these similarities.
 
 \section{Incremental Forward Reasoning}%
-\label{sec:incremental}
+\label{sec:forward:incremental}
 
 With the weaknesses of the naive approach in mind, we introduce an incremental, stateful solution to the problem of finding complete matches.
 The main idea is to store, for each goal $Γ ⊢ A$, the partial matches implied by the hypotheses in $Γ$, and to reuse these partial matches for subgoals $Δ ⊢ B$.
@@ -428,7 +428,7 @@ Since $h₃$ matches slot $i = 2$, the matches that can be extended by $h₃$ ar
 This produces the complete match $[h₂, h₃]$, so we can add a new hypothesis of type $C~a~b$.
 
 \section{Implementation}%
-\label{sec:implementation}
+\label{sec:forward:implementation}
 
 Implementing the preceding technique efficiently requires some care, particularly in the context of dependent type theory.
 
@@ -490,7 +490,7 @@ Second, we observe that the variable indices are only queried for hypotheses at 
 Hence, we delay the insertion of hypotheses at $i$ until there is at least one match in slot $i - 1$.
 
 \section{Evaluation}%
-\label{sec:evaluation}
+\label{sec:forward:evaluation}
 
 There are unfortunately no standard benchmarks for Aesop-like tactics, and since Aesop is not expected to solve most goals without an extensive, manually curated set of rules, benchmarks for push-button theorem provers such as TPTP~\cite{TPTP} are not meaningful.
 Additionally, forward rules are little used by Aesop's main client, the Mathlib library~\cite{Mathlib}.
@@ -509,7 +509,7 @@ Benchmark code and data are available in our supplement~\cite{ForwardSupplement}
 The results shown below were obtained on a MacBook Pro with an Apple~M2 Pro processor and \SI{32}{GB} of RAM, averaging over 20 runs per benchmark.
 
 \para{Transitivity Benchmark.}
-Our first benchmark is a scaled-up variant of the transitivity example from Sec.~\ref{sec:incremental}.
+Our first benchmark is a scaled-up variant of the transitivity example from Sec.~\ref{sec:forward:incremental}.
 Given some relation $≺$ on natural numbers, we register the lemma $\All{x~y}{x ≺ y → y ≺ z → x ≺ z}$ as the sole forward rule and set up a goal with hypotheses $h₁ : a ≺ a + 1, \dots, hₙ : a + n - 1 ≺ a + n$, where either $a = 0$ (yielding easy unification problems) or $a = 100$.
 Saturating this goal adds $n(n-1)/2$ hypotheses to the context.
 
