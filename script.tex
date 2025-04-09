@@ -1,4 +1,4 @@
-\newcommand{\tac}[1]{\ensuremath{\mathrm{\mathcolor{blue}{#1}}}}
+\newcommand{\tac}[1]{\ensuremath{\mathrm{\mathcolor{Red4}{#1}}}}
 \newcommand{\pre}{\mathrm{pre}}
 \newcommand{\post}{\mathrm{post}}
 \newcommand{\tacbullet}{\vcenter{\hbox{\scalebox{.7}{$\bullet\;\;$}}}}
@@ -82,7 +82,7 @@ Fig.~\ref{fig:big-example} shows a typical naive script on the left and an optim
 \end{figure*}
 
 It will be clear to any Lean user that the naive script has several issues.
-First, it sometimes works on the goals out of order, using the combinator \tac{on\_goal~2} to run a tactic on the second goal in the current list of goals.
+First, it sometimes works on the goals out of order, using the combinator $\tac{on\_goal}$ to run a tactic on the second goal in the current list of goals.
 This is unusual since human-written proof scripts overwhelmingly operate in a depth-first manner, manipulating the first goal until it is solved and only then moving on to the second goal.
 The optimised script permutes the tactics to obtain such a depth-first proof.
 
