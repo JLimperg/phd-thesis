@@ -15,6 +15,7 @@
 \usepackage{pgfplots}
 \usepackage[noend]{algorithm2e}
 \usepackage{siunitx}
+\usepackage{booktabs}
 
 % Fonts
 
@@ -68,9 +69,14 @@
 \SetKw{KwIn}{in}
 \SetKw{KwLet}{let}
 \SetKw{KwYield}{yield}
+\SetKw{KwTry}{try}
+\SetKw{KwOnFailure}{on-failure}
+\SetKw{KwFailure}{failure}
 \SetKwInOut{Input}{Input}
 \SetKwInOut{Output}{Output}
 \SetKwProg{Procedure}{Procedure}{}{}
+
+\SetArgSty{textnormal} % This changes the style of, e.g., if, return and while arguments, which use \emph by default
 
 % Formatting Commands
 
@@ -79,13 +85,15 @@
 \newcommand{\All}[2]{\ensuremath{∀\, #1.\; #2}}
 \newcommand{\Ex}[2]{\ensuremath{∃\, #1.\; #2}}
 \newcommand{\Lam}[2]{\ensuremath{λ\, #1.\; #2}}
-\newcommand{\Ty}[1]{\ensuremath{\mathrm{#1}}}
-\newcommand{\Fn}[1]{\ensuremath{\mathrm{#1}}}
-\newcommand{\Kw}[1]{\ensuremath{\mathrm{\mathbf{#1}}}}
-\newcommand{\Var}[1]{\ensuremath{\mathit{#1}}}
+\newcommand{\Ty}[1]{\ensuremath{{\operatorname{#1}}}}
+\newcommand{\Fn}[1]{\ensuremath{{\operatorname{#1}}}}
+\newcommand{\Kw}[1]{\ensuremath{{\operatorname{\mathbf{#1}}}}}
+\newcommand{\Var}[1]{\ensuremath{{\operatorname{\mathit{#1}}}}}
 \newcommand{\mv}[1]{\mathit{?#1}}
 \newcommand{\Type}{\Ty{Type}}
 \newcommand{\Prop}{\Ty{Prop}}
+\newcommand{\dom}{\ensuremath{\mathrm{dom}}}
+\newcommand{\cod}{\ensuremath{\mathrm{cod}}}
 
 % Hyphenation
 
@@ -168,8 +176,8 @@
 % Document
 
 \begin{document}
-  \pagenumbering{gobble}
   \frontmatter
+  \pagenumbering{gobble}
   \LMUTitle
       {Aesop\\White-Box Proof Automation for Lean}
       {Jannis Limperg}

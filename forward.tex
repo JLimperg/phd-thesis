@@ -1,6 +1,5 @@
 
 \newcommand{\vars}{\ensuremath{\mathrm{svars}}}
-\newcommand{\dom}{\ensuremath{\mathrm{dom}}}
 \newcommand{\sub}{\ensuremath{\mathrm{sub}}}
 \newcommand{\lvl}{\ensuremath{\mathrm{lvl}}}
 \newcommand{\Rules}{\ensuremath{\mathcal{R}}}
@@ -57,7 +56,7 @@ In addition to this \emph{incrementality}, the forward state satisfies two other
 \end{itemize}
 
 Our evaluation (Sec.~\ref{sec:evaluation}) shows that this new implementation of forward reasoning in Aesop substantially outperforms the previous, naive implementation on synthetic benchmarks.
-The implementation, benchmarks and evaluation data are available in a supplement to this paper~\cite{supplement} and the new implementation is already available in the newest version of Aesop.
+The implementation, benchmarks and evaluation data are available in a supplement to this paper~\cite{ForwardSupplement} and the new implementation is already available in the newest version of Aesop.
 
 \section{Preliminaries}
 
@@ -507,7 +506,7 @@ Instead of the natural number type of Lean's standard library, which has special
 Matching two concrete Peano natural numbers $n$ and $m$ involves comparing $\min(n, m)$ constructors.
 We can therefore use moderately large numbers to simulate the bigger matching problems that Aesop encounters, for example, in Mathlib's category theory development.
 
-Benchmark code and data are available in our supplement~\cite{supplement}.
+Benchmark code and data are available in our supplement~\cite{ForwardSupplement}.
 The results shown below were obtained on a MacBook Pro with an Apple~M2 Pro processor and \SI{32}{GB} of RAM, averaging over 20 runs per benchmark.
 
 \para{Transitivity Benchmark.}
