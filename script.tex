@@ -41,13 +41,13 @@ Fig.~\ref{fig:big-example} shows a typical naive script on the left and an optim
         \tac{intro}~l₁~l₂~x \\
         \tac{simp\_all} \\
         \tac{split} \\
-        \tac{rename\_i}~\mathit{x\_1}~\mathit{heq} \\
-        \tac{on\_goal}~2 ⇒ \tac{rename\_i}~\mathit{x\_1}~a~\mathit{as}~\mathit{heq} \\
+        \tac{rename\_i}~\Var{x\_1}~\Var{heq} \\
+        \tac{on\_goal}~2 ⇒ \tac{rename\_i}~\Var{x\_1}~a~\Var{as}~\Var{heq} \\
         \tac{simp\_all} \\
         \tac{split} \\
-        \tac{rename\_i}~\mathit{x\_2} \\
-        \tac{on\_goal}~2 ⇒ \tac{rename\_i}~\mathit{x\_2}~\mathit{a\_1}~\mathit{as\_1} \\
-        \tac{subst}~\mathit{heq} \\
+        \tac{rename\_i}~\Var{x\_2} \\
+        \tac{on\_goal}~2 ⇒ \tac{rename\_i}~\Var{x\_2}~\Var{a\_1}~\Var{as\_1} \\
+        \tac{subst}~\Var{heq} \\
         \tac{simp\_all} \\
         \tac{simp\_all}
       \end{array}
@@ -62,14 +62,14 @@ Fig.~\ref{fig:big-example} shows a typical naive script on the left and an optim
         \tac{intro}~l₁~l₂~x \\
         \tac{simp\_all~only}~[\mathrm{ne\_eq},\mathrm{head?}] \\
         \tac{split} \\
-        \tac{next}~\mathit{x\_1}~\mathit{heq} ⇒ \\
+        \tac{next}~\Var{x\_1}~\Var{heq} ⇒ \\
         \quad \tac{simp\_all~only}~[\mathrm{append\_eq\_nil}, \mathrm{false\_and}] \\
-        \tac{next}~\mathit{x\_1}~a~\mathit{as}~\mathit{heq} ⇒ \\
+        \tac{next}~\Var{x\_1}~a~\Var{as}~\Var{heq} ⇒ \\
         \quad \tac{split} \\
-        \quad \tac{next}~\mathit{x\_2} ⇒ \\
-        \quad \quad \tac{subst}~\mathit{heq} \\
+        \quad \tac{next}~\Var{x\_2} ⇒ \\
+        \quad \quad \tac{subst}~\Var{heq} \\
         \quad \quad \tac{simp\_all~only}~[\mathrm{not\_true\_eq\_false}] \\
-        \quad \tac{next}~\mathit{x\_2}~\mathit{a\_1}~\mathit{as\_1} ⇒ \\
+        \quad \tac{next}~\Var{x\_2}~\Var{a\_1}~\Var{as\_1} ⇒ \\
         \quad \quad \tac{simp\_all~only}~[\mathrm{reduceCtorEq}, \dots]
       \end{array}
     \]
@@ -443,9 +443,9 @@ This yields the desired result: a partial script with holes marked by \tac{sorry
 \label{sec:static-reordering}
 
 The static reordering algorithm\footnote{Implemented in \texttt{Aesop/Script/StructureStatic.lean}.} is shown as Algorithm~\ref{alg:static-reordering}.
-Its main function, \textsc{reorder-static}, first sets up $\mathit{tacticState}$.
+Its main function, \textsc{reorder-static}, first sets up $\Var{tacticState}$.
 This variable contains the goals of the current tactic state, so we initialise it with the pre-goal of the first step.
-(For the purposes of static reordering, metavariable assignments and declarations are not essential, so $\mathit{tacticState}$ does not track the current metavariable context.)
+(For the purposes of static reordering, metavariable assignments and declarations are not essential, so $\Var{tacticState}$ does not track the current metavariable context.)
 The remainder of the algorithm iteratively selects steps and applies them to the tactic state, simulating the effect of the step's tactic, until there are no goals left.
 
 The function \textsc{next-step}, which picks the next step to apply to a given tactic state, implements the actual reordering.
@@ -624,11 +624,11 @@ This is a tree with three different kinds of nodes:
 
 The empty node denotes the empty structured script.
 A node of the form $\mathrm{on}(p, s, t)$ denotes the application of the step $s$ to the goal at the (zero-based) position $p$, followed by the application of the tactics in the script $t$ (the \enquote{tail}).
-When a structured script is converted into Lean syntax, the node $\mathrm{on}(p, s, t)$ is displayed as $\tac{on\_goal}~p ⇒ \mathit{tac}; \bar{t}$, where $\mathit{tac}$ is the tactic of step $s$ and $\bar{t}$ is the sequence of tactics that results from rendering $t$.%
+When a structured script is converted into Lean syntax, the node $\mathrm{on}(p, s, t)$ is displayed as $\tac{on\_goal}~p ⇒ \Var{tac}; \bar{t}$, where $\Var{tac}$ is the tactic of step $s$ and $\bar{t}$ is the sequence of tactics that results from rendering $t$.%
 \footnote{In fact, $\tac{on\_goal}$ uses one-based positions, so $p$ must be incremented by one.}
-Lean's $\mathrm{on\_goal}$ tactic combinator runs the tactic $\mathit{tac}$ in a tactic state containing only the goal at the given position, with all other goals temporarily invisible.
+Lean's $\mathrm{on\_goal}$ tactic combinator runs the tactic $\Var{tac}$ in a tactic state containing only the goal at the given position, with all other goals temporarily invisible.
 The semicolon sequences tactics.
-As a special case, if the position is zero, the node is displayed as simply $\mathit{tac}; t$ since tactics by default target the first goal.
+As a special case, if the position is zero, the node is displayed as simply $\Var{tac}; t$ since tactics by default target the first goal.
 After reordering, this case is the most common one.
 
 A node of the form $\mathrm{fas}(p, h, t)$ (\enquote{focus and solve}) is displayed as $\tac{on\_goal}~p ⇒ \{ h \}; \bar{t}$.
@@ -668,11 +668,11 @@ If a step is focusable, we can run the step's descendants without referring to a
 Hence, as the terminology suggests, we can focus on the step's pre-goal before running the step and its descendants.
 
 We now consider Algorithm~\ref{alg:sscript}, which converts a sequence of steps to a structured script.
-Its sole function, \textsc{sscript}, takes a sequence of steps $\mathit{steps}$, a tactic state $\mathit{ts}$, a start position $i$ and a stop position $j$.
-We assume that a step tree for $\mathit{steps}$ has been constructed previously, and that we can therefore determine the number of siblings of a step $s ∈ \mathit{steps}$, as well as whether $s$ is focusable (and if so, what its maximal child index is).
+Its sole function, \textsc{sscript}, takes a sequence of steps $\Var{steps}$, a tactic state $\Var{ts}$, a start position $i$ and a stop position $j$.
+We assume that a step tree for $\Var{steps}$ has been constructed previously, and that we can therefore determine the number of siblings of a step $s ∈ \Var{steps}$, as well as whether $s$ is focusable (and if so, what its maximal child index is).
 
 The \textsc{sscript} function then returns a new tactic state and a structured script.
-The structured script corresponds to the subsequence of $\mathit{steps}$ from $i$ to $j$, and the tactic state is the tactic state that results from running this subsequence (or the corresponding structured script) on the initial tactic state $\mathit{ts}$.
+The structured script corresponds to the subsequence of $\Var{steps}$ from $i$ to $j$, and the tactic state is the tactic state that results from running this subsequence (or the corresponding structured script) on the initial tactic state $\Var{ts}$.
 As in Sec.~\ref{sec:static-reordering}, we do not need to consider the tactic states' metavariable contexts, so tactic states are modelled as lists of goals.
 
 \begin{algorithm}
@@ -704,9 +704,9 @@ As in Sec.~\ref{sec:static-reordering}, we do not need to consider the tactic st
 \end{algorithm}
 
 The algorithm's base case is $i > j$, in which case we are done and return the empty script.
-For $i ≤ j$, we consider the step at position $i$ in the sequence $\mathit{steps}$.
+For $i ≤ j$, we consider the step at position $i$ in the sequence $\Var{steps}$.
 If this step is not focusable or has no siblings, we render it in an unstructured manner, converting it into an $\mathrm{on}$ node.
-The node's tail script is generated by a recursive call, starting at position $i + 1$ in the tactic state that results from applying the step $s$ to the initial tactic state $\mathit{ts}$.
+The node's tail script is generated by a recursive call, starting at position $i + 1$ in the tactic state that results from applying the step $s$ to the initial tactic state $\Var{ts}$.
 We reuse the function \textsc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
 
 If the current step $s$ is focusable and has siblings, we render it in a structured manner, as a $\mathrm{fas}$ node.
@@ -753,15 +753,15 @@ A number of Lean tactics have structured variants.
 For example, case analysis on a list $l$ can be written in the following two ways:
 \[
   \begin{array}{ll}
-    \tac{cases}~l                               & \tac{cases}~l~\tac{with}\\
-    \tac{case}~\mathit{nil} ⇒ t₁                &|\; \mathit{nil} ⇒ t₁\\
-    \tac{case}~\mathit{cons}~x~\mathit{xs} ⇒ t₂ &|\; \mathit{cons}~x~\mathit{xs} ⇒ t₂
+    \tac{cases}~l                           & \tac{cases}~l~\tac{with}\\
+    \tac{case}~\Fn{nil} ⇒ t₁             &|\; \Fn{nil} ⇒ t₁\\
+    \tac{case}~\Fn{cons}~x~\Var{xs} ⇒ t₂ &|\; \Fn{cons}~x~\Var{xs} ⇒ t₂
   \end{array}
 \]
 
 While superficially similar, the two forms are structurally different.
 The first form is a sequence of three tactics: $\tac{cases}$ followed by two invocations of the $\tac{case}$ tactic, which acts like a bullet but focuses a named goal and allows us to give names to newly introduced variables.
-The second form is the structured variant of $\tac{cases}$: it is a single tactic which includes the patterns $\mathit{nil}$ and $\mathit{cons}~x~\mathit{xs}$ and of which the tactic scripts $t₁$ and $t₂$ are components.
+The second form is the structured variant of $\tac{cases}$: it is a single tactic which includes the patterns $\Fn{nil}$ and $\Fn{cons}~x~\Var{xs}$ and of which the tactic scripts $t₁$ and $t₂$ are components.
 As with the unstructured variant, the tactic scripts $t₁$ and $t₂$ are executed in a tactic state that only contains the corresponding goal.
 However, the crucial difference between the two forms is that the structured form focuses each subgoals -- and can therefore only be used if each subgoal is focusable -- while the unstructured form allows us to focus only some (or none) of the subgoals.%
 \footnote{It is technically possible to break out of the structured form, but this would be highly unusual.}
