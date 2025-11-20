@@ -1,9 +1,17 @@
-\addcontentsline{toc}{chapter}{\protect Zusammenfassung}
+\chapter{Conclusion}
 
+I have presented Aesop, a white-box proof automation tactic for Lean~4.
+Built on a foundation of conventional, straightforward tree-based search with user-provided rules, Aesop incorporates several innovations that have improved its usefulness as a pragmatic proof tool.
+Support for safe rules (following Isabelle's auto) allows users to optimise their rule sets, often considerably.
+A normalisation phase generalises Isabelle's simplifier integration and allows us to establish invariants that other rules can rely on.
+Best-first search enables searches with larger, less precisely targeted rule sets, while Aesop's particular design gives users enough control to effectively steer the search if necessary.
+Our incremental implementation of forward reasoning is much more efficient for certain rule sets, and script generation allows the use of slow, explosive rule sets that turn into straightforward proofs.
 
-\chapter*{Zusammenfassung}
+Largely unplanned, some of these features have also broadened Aesop's remit to new use cases.
+Best-first search enables Aesop-based neural theorem provers that involve much larger search spaces than typical Aesop invocations, where some form of prioritisation is necessary and pure depth-first search would be impractical.
+Script generation allows Aesop to be used as a preprocessor that does not necessarily finish a proof.
+The latter two modes have not, to my knowledge, been widely exploited in practice yet, but I believe they should enable novel future applications.
 
-Hier steht eine maximal einseitige Zusammenfassung der
-Dissertation.
-
-Dies ist ein neuer Absatz.
+Aesop's adoption throughout the Lean ecosystem, in formalisation projects and AI-based systems, shows that it is effective in practice.
+To me, this is the highest honour a tool can receive, so I would like to conclude this thesis by thanking the users of Aesop, who have collectively (and sometimes individually) spent considerable amounts of time designing rule sets for their particular domains.
+I hope you enjoyed, and continue to enjoy, using Aesop.
