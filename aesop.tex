@@ -13,28 +13,7 @@
 \chapter{Aesop}%
 \label{chap:aesop}
 
-% \author{Asta Halkjær From}
-% \affiliation{
-%   \institution{Technical University of Denmark}
-%   \department{DTU Compute}
-%   \streetaddress{Richard Petersens Plads, Bygning 324}
-%   \city{Kongens Lyngby}
-%   \postcode{2800}
-%   \country{Denmark}}
-% \email{ahfrom@dtu.dk}
-% \orcid{0000-0002-3601-0804}
-
-\section{Introduction}
-
-One of the biggest barriers to a more widespread adoption of interactive theorem provers is the tedium of proving lemmas which are entirely obvious to the human eye.
-The provers force us to explicitly demonstrate that $2n$ is even, that $[z, y, x]$ is a permutation of $[x, y, z]$ or that a homomorphism of groups is also a homomorphism of the underlying semigroups.
-This adds substantially to the cost of using theorem provers, which is still too high for many applications.
-
-To help address this issue, we present Aesop (Automated Extensible Search for Obvious Proofs), a new proof search tactic for the upcoming version 4 of the Lean theorem prover~\cite{Lean4}.
-In essence, Aesop is a tree-based search procedure which operates on a user-specified set of rules.
-The rules are arbitrary Lean tactics which, given a goal, either succeed --- generating zero or more subgoals --- or fail.
-Aesop applies these rules to the initial goal, then to the subgoals, etc., to build a search tree.
-On top of this basic setup, we provide the following features:
+In this chapter, I discuss the foundations of Aesop: tree-based search over user-defined rules similar to that of Rocq's and Isabelle's auto~\cite{IsabelleAuto}, with several additional features:
 \begin{itemize}
   \item
     Aesop uses a best-first search strategy, prioritising more promising rules (and their subgoals) over less promising ones.
@@ -56,26 +35,10 @@ On top of this basic setup, we provide the following features:
     To address this issue, we present a new algorithm which handles metavariables and is independent of the search strategy.
 \end{itemize}
 
-Users of Isabelle's auto~\cite{Isabelle,IsabelleAuto} will recognise some of these features.
-More broadly, Aesop stands in the tradition of \emph{white-box} proof automation tools, which also include Rocq's (e)auto, PVS's grind~\cite{PVS-tutorial} and ACL2's waterfall~\cite{ACL2}.
-White-box tools require users to curate a set of rules which the tool applies.
-In return, users gain control over the power-performance tradeoff: many explosive rules make the automation stronger but slower; few conservative rules make it weaker but faster.
-Due to their customisability, white-box tools can also serve as a foundation for domain-specific automation, using domain-specific rule sets.
+\para{Acknowledgements}
+This chapter closely follows the paper \emph{Aesop: White-Box Best-First Proof Search for Lean}~\cite{Aesop}, which is joint work with Asta Halkjær From.
+Limperg was funded by the NWO under the Vidi programme (project No.~016.Vidi.189.037, Lean Forward).
 
-In contrast, \emph{black-box} or \emph{push-button} tools such as hammers~\cite{Blanchette16}, which invoke external automated theorem provers to find proofs, or machine learning systems which write a tactic script~\cite{Bansal19,TacticToe,Han21,Lample22}, aim to operate with little or no user interaction.
-This makes them very convenient when they succeed, but the complex algorithms which deliver high success rates can be brittle.
-Sometimes a minor reformulation makes the difference between finding or not finding a proof.
-When a black-box tool does not find a proof or is slow to find one, it is often unclear how to improve the tool's performance.
-
-White-box and black-box tools thus have complementary strengths and weaknesses, and so we believe it is worthwhile to explore both approaches.
-Aesop is an attempt to move far to the white-box end of the spectrum while retaining some of the useful features of Isabelle's auto and other systems.
-This is why we choose tree-based search as a base: it is easy to understand and close to interactive proof, which helps users predict how their rules will affect the search.
-We choose best-first search with customisable prioritisation (rather than some opaque heuristic) to give users more control over Aesop's performance.
-And we introduce fixpoint-based normalisation as an intuitive and reliable way to establish invariants.
-Taken together, these features should enable users to design effective and reasonably efficient rule sets for many domains.
-
-Aesop is available as a Lean 4 library.\footnote{\url{https://github.com/JLimperg/aesop}}
-The specific version described here is available as a supplement to this paper.\footnote{\url{https://doi.org/10.5281/zenodo.7424818}}
 
 \section{Best-First Proof Search}%
 \label{sec:aesop:abstract-framework}
@@ -774,7 +737,6 @@ Now take a goal $G$ that can be proved by applying a sequence of rules from the 
 Then, we conjecture, our algorithm will also find a proof of $G$.
 Intuitively, this is because our algorithm only adds to the search tree, so it is not possible to apply a rule in such a way that another rule cannot be applied any more.
 Thus, since we assume a fair search strategy, each rule in the proving sequence of rules is applied eventually (unless the goal to which it would be applied is already proved).
-We plan to prove this conjecture in future work.
 
 
 \section{Case Studies}%
@@ -937,13 +899,7 @@ In particular, they require that rules behave uniformly for different metavariab
 
 We have presented Aesop, a white-box proof search tactic for Lean.
 Starting with a straightforward tree search framework, we have added features that increase the power of the search while keeping its semantics simple and transparent: best-first search with customisable prioritisation, which lets us effectively use rules that are only occasionally useful or that may loop; safe rules, which are useful both for performance and for debugging; normalisation, to establish invariants which other rules can rely on; and simplification, which enables equational reasoning.
-Taken together, these features should allow users to design effective and predictable rule sets.
+Taken together, these features allow users to design effective and predictable rule sets for many domains.
 
 To support goals with metavariables, we have developed a generic algorithm for tree-based search with metavariables.
 The algorithm is independent of the search strategy and of the underlying logic and is, we believe, as complete as the given rule set allows.
-
-
-\paragraph{Acknowledgements}
-We thank Jasmin Blanchette for advising us throughout the development process and giving detailed comments on drafts of this paper; Sebastian Ullrich for providing excellent feedback on early versions of Aesop; Gabriel Ebner for helping with Aesop's implementation; and the anonymous reviewers for providing comprehensive and insightful reviews.
-
-Limperg was funded by the NWO under the Vidi programme (project No.~016.Vidi.189.037, Lean Forward).

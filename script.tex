@@ -10,13 +10,8 @@
 \section{Introduction}%
 \label{sec:script:intro}
 
-In interactive theorem provers, white-box proof automation tactics such as Rocq's~\cite{Rocq} \tac{auto} and \tac{sauto}~\cite{sauto}, Isabelle's~\cite{Isabelle} \tac{auto}~\cite{IsabelleAuto} and Lean's~\cite{Lean4} Aesop~\cite{Aesop} provide a simple but effective and customisable way to automate straightforward proofs.
-These tactics search for a proof by applying proof steps, or \emph{rules}, that often translate directly into low-level tactics of the respective prover.
-For instance, Rocq's \tac{auto} applies a user-specified set of lemmas recursively until it finds a complete proof (or until no more lemmas can be applied or a depth limit is reached), and each application of a lemma translates into a call to the \tac{eapply} tactic.
-Instead of a lemma, \tac{auto} users can also directly specify a tactic to be tried during the search.
-Lean's Aesop supports additional kinds of rules, but the principle remains the same: almost every rule corresponds directly to one or more low-level tactic calls.
-
-This correspondence makes it fairly easy to output tactics that correspond to the rules used during the proof, and that therefore form a complete tactic proof.
+As we saw in Chapter~\ref{chap:aesop}, each of Aesop's rules corresponds fairly directly to a sequence of low-level tactic calls, e.g.\ \lean|apply| for backward rules and \lean|have| for forward rules.
+This correspondence makes it easy to output tactics that correspond to the rules used during the proof, and that therefore form a complete tactic proof.
 We call this a \emph{tactic script}.
 Generating a script can be helpful in three ways:
 \begin{itemize}
@@ -96,7 +91,7 @@ Such \enquote{non-terminal} use of \tac{simp\_all} is considered bad style becau
 To avoid this issue, the optimised script uses the variant \tac{simp\_all~only}, which explicitly enumerates the equations used by \tac{simp\_all}.
 Since this transformation also speeds up \tac{simp\_all}, it is in fact applied to all invocations, not just the non-terminal one.
 
-This paper describes a \emph{script optimiser} that performs all these optimisations (and more) automatically, producing the optimised script from Fig.~\ref{fig:big-example-optimised} and saving Aesop's users from the tedium of optimising the naive script by hand.
+This chapter describes a \emph{script optimiser} that performs all these optimisations (and more) automatically, producing the optimised script from Fig.~\ref{fig:big-example-optimised} and saving Aesop's users from the tedium of optimising the naive script by hand.
 The optimiser is a multi-stage pipeline somewhat similar to the optimisation pipeline of a compiler, but it optimises aesthetics rather than efficiency.
 It operates in three stages which address various deficiencies of the original script.
 After some preliminaries -- an introduction to Lean metaprogramming (Sec.~\ref{sec:script:background}); an overview of how naive scripts are generated; and an algorithm for comparing the results of two tactic calls (Sec.~\ref{sec:script:equality}) -- I discuss each optimiser stage in turn.
@@ -155,12 +150,15 @@ For example, tactic expressions of the form $\tacbullet \tac{rename\_i}~x₁ \do
 
 \medskip
 
-Concluding the paper, I evaluate the performance of script generation and the efficacy of dynamic structuring (Sec.~\ref{sec:script:evaluation}) and survey related work (Sec.~\ref{sec:script:related}).
+Concluding the chapter, I evaluate the performance of script generation and the efficacy of dynamic structuring (Sec.~\ref{sec:script:evaluation}) and survey related work (Sec.~\ref{sec:script:related}).
 The evaluation shows that script generation, both with static reordering and dynamic reordering, is fast enough in almost all cases.
 It also shows that dynamic reordering is more effective than static reordering, though the effect is small.
 
-The described optimisation pipeline is available in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}} and can already be used by contributors to Lean's mathematical library, Mathlib~\cite{Mathlib}, and by other Lean users.
-The supplement for this paper~\cite{ScriptSupplement} contains the exact version of Aesop described here, as well as all materials needed to reproduce the evaluation.
+The described optimisation pipeline is available in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}}.
+The supplement for this chapter~\cite{ScriptSupplement} contains the exact version of Aesop described here, as well as all materials needed to reproduce the evaluation.
+
+\para{Acknowledgements}
+This chapter is closely based on the paper \emph{Tactic Script Optimisation for Aesop}~\cite{Script}.
 
 \section{Background}%
 \label{sec:script:background}
@@ -243,7 +241,7 @@ First, each step must be \emph{well-formed}, meaning that $g^{\pre}$ must be dec
 Second, the steps must be \emph{faithful} to the rule.
 This means they must replicate the effect of the rule, so the pre-state of the first step must be the tactic state in which the rule was run and the post-state of the last step must be the tactic state that the rule produced.
 
-The optimiser assumes (as will we in the remainder of this paper) that all generated steps satisfy these conditions, but it can also check them as a debugging aid.
+The optimiser assumes (as will we in the remainder of this chapter) that all generated steps satisfy these conditions, but it can also check them as a debugging aid.
 Aesop's rule builders, which turn Lean declarations or tactics into rules, ensure that the constructed rules produce well-formed and faithful steps, with the sole exception of a low-level rule builder that can be used to directly register an arbitrary Lean metaprogram as a rule.
 
 For a rule that directly corresponds to a tactic, it is generally easy to generate a single step representing the rule.
@@ -902,7 +900,7 @@ The challenges addressed by these projects are usually quite specific to the for
 Huang~\cite{Huang1989,Huang1994,Huang1996} translates resolution proofs into natural deduction proofs (and later natural language proofs).
 In particular, he compresses multiple natural deduction steps into one \enquote{assertion-level} step that applies a theorem or definition.
 
-Pąk~\cite{Pak2015,Pak2014a,Pak2014b,Pak2013,Pak2010} optimises Mizar proofs by extracting lemmas for common deduction steps and by removing unnecessary references, assumptions, and so on.
+Pąk~\cite{Pak2015,Pak2014a,Pak2014b,Pak2013,Pak2010} optimises Mizar proofs by extracting lemmas for common deduction steps and by removing unnecessary references, assumptions, etc.
 Most closely related to my work is an optimisation that reorders proof steps.
 However, the objective of this reordering is not to enable structuring but to produce a linear sequence in which related proof steps are as close together as possible.
 Vyskocil, Stanovský and Urban~\cite{Vyskovil2010} also compress proofs via lemma extraction.
@@ -915,6 +913,8 @@ Here, the main challenge is to bridge the considerable gap between resolution pr
 Major issues include converting proofs by contradiction into direct proofs and encoding the skolemisation performed by ATPs.
 Some integrations also compress proofs by combining multiple proof steps performed by the ATP into one proof step of the proof assistant.
 This involves checking repeatedly whether the compressed proof still works, similar to my dynamic optimisations.
+
+% TODO Fabian's optimiser, ImProver
 
 \section{Conclusion}%
 \label{sec:script:concl}
@@ -932,12 +932,9 @@ Dynamic reordering is slightly better at structuring scripts than static reorder
 A natural continuation of this work would be to disentangle the optimiser from Aesop, making it available as a library for optimising arbitrary tactic scripts.
 This library could be used by any system that seeks to automatically produce human-readable tactic proofs, e.g.\ auto-formalisation tools based on large language models (LLMs).
 Perhaps an optimiser could even be applied to human-written scripts:
-using Lean might be more productive and fun if users could write functional but ugly proofs and the optimiser would automatically improve them.
+Lean users might become more productive if they could write functional but ugly proofs and the optimiser would automatically improve them.
 
 New use cases such as these would likely require additional optimisations.
 For example, LLMs tend to produce proofs containing irrelevant intermediate statements;
 script optimisation could conceivably be extended to remove these.
 Suggestions from the many linters available in Mathlib~\cite{vanDoorn2020} could also be automatically applied, turning them into optimisation passes.
-
-\paragraph{Acknowledgements}
-I am grateful to Jasmin Blanchette for his extensive comments on drafts of this paper, and to the anonymous reviewers for many helpful suggestions.

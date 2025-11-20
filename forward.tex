@@ -1,3 +1,5 @@
+% TODO integrate changes from latest paper version
+
 \newcommand{\vars}{\ensuremath{\mathrm{svars}}}
 \newcommand{\sub}{\ensuremath{\mathrm{sub}}}
 \newcommand{\lvl}{\ensuremath{\mathrm{lvl}}}
@@ -13,30 +15,17 @@
 
 \chapter{Incremental Forward Reasoning}
 
-\section{Introduction}
+In the previous chapter, I briefly discussed \emph{forward rules}, which attempt to derive additional facts from the hypotheses of a given goal.
+Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
+The added hypothesis $h₃ : a < c$ may then be used by subsequent rules.
 
-In many proof assistants, simple \enquote*{white-box} proof automation tactics based on tableau-style tree search play a substantial role in practice: Isabelle's~\cite{Isabelle} and Rocq's\footnote{The Rocq was previously called Coq.}~\cite{Rocq} auto~\cite{IsabelleAuto}, ACL2's \enquote{waterfall}~\cite{ACL2}, various PVS~\cite{PVS-tutorial,PVS} tactics, Lean's~\cite{Lean4} Aesop~\cite{Aesop}, etc.
-These tactics operate on \emph{goals} $Γ ⊢ A$, where the \emph{context} $Γ$ is a list of assumptions and $A$ is the proposition to be proved.
-Faced with an initial goal, the tactics try various user-specified \emph{rules}, which correspond to admissible inferences in the prover's logic.
-A successful rule reduces the current goal to zero or more subgoals, which are solved recursively until either a full proof is found or no rule applies to any open goal or the search times out.
-A typical rule is the $∧$-introduction lemma $A → B → A ∧ B$, which, when applied backwards, reduces a goal $Γ ⊢ A ∧ B$ to subgoals $Γ ⊢ A$ and $Γ ⊢ B$.
-
-In addition to such \emph{backwards rules}, most search tactics can also use arbitrary tactics as rules.
-For example, Aesop uses the cases tactic on disjunctive hypotheses, splitting goals of the form $Γ,\, h : A ∨ B ⊢ C$ into subgoals $Γ,\, h : A ⊢ C$ and $Γ,\, h : B ⊢ C$.
-Tactics implement arbitrary inferences; in particular, they can remove any hypothesis and add any provable proposition as a new hypothesis.
-
-ACL2, PVS and Aesop additionally provide special support for \emph{forward reasoning}, also known as \emph{forward chaining}, in the form of \emph{forward rules}.
-Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the single subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
-Hence, forward rules can be used to establish additional facts that may be relevant for other rules.
-For example, the Aeneas project~\cite{Aeneas} uses Aesop's forward rules in its proof automation to establish facts that are later used by an arithmetic decision procedure.
-
-Until recently, Aesop used what we call the \emph{naive algorithm} to apply forward rules.
+Until recently, Aesop used what I call the \emph{naive algorithm} to apply forward rules.
 When a forward rule was run on a goal, the rule would search the goal's context for all combinations of hypotheses satisfying its premises.
-This method is simple but involves much repeated work because in practice, contexts encountered during the search tend to be similar.
+This method is simple but involves much repeated work because, in practice, contexts encountered during the search tend to be similar.
 For example, the $∧$-introduction rule, when run on $Γ ⊢ A ∧ B$, produces subgoals $Γ ⊢ A$ and $Γ ⊢ B$, so the naive algorithm runs the same forward rules on the same context $Γ$ three times.
-More generally, any backwards rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
+More generally, any backward rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
 
-In this paper, we present an alternative way to apply forward rules that addresses this issue.
+In this chapter, I present an alternative way to apply forward rules that addresses this issue.
 The central idea is to remember, for each goal $Γ ⊢ A$, which forward rules can be partially applied to which sets of hypotheses.
 When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ ⊢ Aₙ$, the new contexts $Δᵢ$ are likely similar to $Γ$.
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
@@ -44,7 +33,7 @@ The update first deletes partial matches that include hypotheses no longer prese
 Afterwards it adds new partial matches for the hypotheses that are new in $Δᵢ$, extending the existing partial matches for a rule if the new hypothesis is compatible with them.
 Whenever this process produces a full match---i.e., all premises of a forward rule are satisfied by a set of hypothesis in $Δᵢ$---the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
 
-Our main contribution is a data structure, the \emph{forward state}, that organises the partial matches so that updates can be done efficiently.
+The main contribution of this chapter is a data structure, the \emph{forward state}, that organises the partial matches so that updates can be made efficiently.
 In addition to this \emph{incrementality}, the forward state satisfies two other desiderata:
 \begin{itemize}
   \item It is \emph{persistent}, i.e.\ forward states for parent and child goals share much of their structure.
@@ -56,6 +45,11 @@ In addition to this \emph{incrementality}, the forward state satisfies two other
 
 Our evaluation (Sec.~\ref{sec:forward:evaluation}) shows that this new implementation of forward reasoning in Aesop substantially outperforms the previous, naive implementation on synthetic benchmarks.
 The implementation, benchmarks and evaluation data are available in a supplement to this paper~\cite{ForwardSupplement} and the new implementation is already available in the newest version of Aesop.
+
+\para{Acknowledgements}
+This chapter is closely based on the paper \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Forward}, which is joint work with Xavier Généreux.
+Généreux's research was co-funded by the European Union (ERC, Nekoka, 101083038) and by the Fonds de recherche du Québec, 330205. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
+
 
 \section{Preliminaries}
 
@@ -102,7 +96,7 @@ If $m$ is complete, then $\sub(m)$ contains a term for every slot and every vari
 
 Note that matches represent only those partial applications where arguments are added without gaps.
 Hence, for a rule $r : A → B → C$, the applications $r~a~\_ : B \to C$ and $r~a~b : C$ for some $a : A$ and $b : B$ correspond to matches, but not $r~\_~b : A \to C$.
-This prevents us from constructing $r~a~b$ in two different but ultimately redundant ways.
+This is an important optimisation: it prevents us from constructing $r~a~b$ in two different but ultimately redundant ways.
 The term orders used in various saturation calculi have a similar effect.
 
 \section{Naive Forward Reasoning}%
@@ -820,7 +814,3 @@ Our evaluation shows substantial speedups on synthetic benchmarks, relative to A
 
 One obvious extension of our method would be to exploit redundancy not just between contexts of parent and child goals, but also between those of siblings or even unrelated goals.
 This would require no changes to the forward state data structure; we would only need to find pairs of goals that produce small diffs.
-
-\para{Acknowledgements.}
-We thank Jasmin Blanchette and Massin Guerdi for their very insightful comments on drafts of this paper.
-Généreux's research was co-funded by the European Union (ERC, Nekoka, 101083038) and by the Fonds de recherche du Québec, 330205. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
