@@ -15,7 +15,7 @@
 
 \section{Introduction}
 
-In many proof assistants, simple \enquote*{white-box} proof automation tactics based on tableau-style tree search play a substantial role in practice: Isabelle's~\cite{Isabelle} and Rocq's~\cite{Coq} auto~\cite{IsabelleAuto}, ACL2's \enquote{waterfall}~\cite{ACL2}, various PVS~\cite{PVS-tutorial,PVS} tactics, Lean's~\cite{Lean4} Aesop~\cite{Aesop}, etc.
+In many proof assistants, simple \enquote*{white-box} proof automation tactics based on tableau-style tree search play a substantial role in practice: Isabelle's~\cite{Isabelle} and Rocq's\footnote{The Rocq was previously called Coq.}~\cite{Rocq} auto~\cite{IsabelleAuto}, ACL2's \enquote{waterfall}~\cite{ACL2}, various PVS~\cite{PVS-tutorial,PVS} tactics, Lean's~\cite{Lean4} Aesop~\cite{Aesop}, etc.
 These tactics operate on \emph{goals} $Γ ⊢ A$, where the \emph{context} $Γ$ is a list of assumptions and $A$ is the proposition to be proved.
 Faced with an initial goal, the tactics try various user-specified \emph{rules}, which correspond to admissible inferences in the prover's logic.
 A successful rule reduces the current goal to zero or more subgoals, which are solved recursively until either a full proof is found or no rule applies to any open goal or the search times out.

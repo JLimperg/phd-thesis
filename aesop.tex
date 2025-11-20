@@ -57,7 +57,7 @@ On top of this basic setup, we provide the following features:
 \end{itemize}
 
 Users of Isabelle's auto~\cite{Isabelle,IsabelleAuto} will recognise some of these features.
-More broadly, Aesop stands in the tradition of \emph{white-box} proof automation tools, which also include Coq's (e)auto, PVS's grind~\cite{PVS-tutorial} and ACL2's waterfall~\cite{ACL2}.
+More broadly, Aesop stands in the tradition of \emph{white-box} proof automation tools, which also include Rocq's (e)auto, PVS's grind~\cite{PVS-tutorial} and ACL2's waterfall~\cite{ACL2}.
 White-box tools require users to curate a set of rules which the tool applies.
 In return, users gain control over the power-performance tradeoff: many explosive rules make the automation stronger but slower; few conservative rules make it weaker but faster.
 Due to their customisability, white-box tools can also serve as a foundation for domain-specific automation, using domain-specific rule sets.
@@ -911,14 +911,14 @@ This should make it possible to design predictable special-purpose rule sets for
 With larger rule sets, Aesop may also become somewhat unpredictable, but at least its transparency should make it easier to debug unexpected failures or performance issues.
 Of course, the downside of Aesop's simplicity is that it is considerably less powerful than, say, grind; for example, it does not currently have any support for arithmetic beyond that provided by Lean's simplifier.
 
-Even farther towards the white-box end of the scale lie Coq's auto and eauto.
+Even farther towards the white-box end of the scale lie Rocq's auto and eauto.
 These tactics perform backtracking depth-first search (up to some configurable depth limit) with arbitrary rules, so they are essentially Aesop without safe or normalisation rules and with a different search strategy.
 Matita's auto~\cite{Matita} augments eauto with a superposition calculus for equational reasoning and provides a GUI which allows users to inspect the search tree.
 
 A rare white-box tool not based on tree search is Isabelle's auto2~\cite{auto2}, which uses a saturation algorithm instead.
 This means that rules can be applied without backtracking, but the proof procedure is also farther removed from interactive proof and therefore perhaps less easy to customise.
 
-There are also black-box tools based on tree search, notably Coq's sauto~\cite{sauto} and the Agsy tool~\cite{Agsy} for Agda~\cite{Agda}.
+There are also black-box tools based on tree search, notably Rocq's sauto~\cite{sauto} and the Agsy tool~\cite{Agsy} for Agda~\cite{Agda}.
 These tools use fairly strong default rules, some of which could also be interesting for Aesop.
 But since they are push-button tools, their rules are also quite opaque.
 
