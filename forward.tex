@@ -13,7 +13,8 @@
 \newcommand{\powerset}{\ensuremath{\mathcal{P}}}
 \newcommand{\bigO}{\ensuremath{\mathcal{O}}}
 
-\chapter{Incremental Forward Reasoning}
+\chapter{Incremental Forward Reasoning}%
+\label{chap:forward}
 
 In the previous chapter, I briefly discussed \emph{forward rules}, which attempt to derive additional facts from the hypotheses of a given goal.
 Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
@@ -45,11 +46,6 @@ In addition to this \emph{incrementality}, the forward state satisfies two other
 
 Our evaluation (Sec.~\ref{sec:forward:evaluation}) shows that this new implementation of forward reasoning in Aesop substantially outperforms the previous, naive implementation on synthetic benchmarks.
 The implementation, benchmarks and evaluation data are available in a supplement to this paper~\cite{ForwardSupplement} and the new implementation is already available in the newest version of Aesop.
-
-\para{Acknowledgements}
-This chapter is closely based on the paper \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Forward}, which is joint work with Xavier Généreux.
-Généreux's research was co-funded by the European Union (ERC, Nekoka, 101083038) and by the Fonds de recherche du Québec, 330205. Views and opinions expressed are however those of the authors only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
-
 
 \section{Preliminaries}
 

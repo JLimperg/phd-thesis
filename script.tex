@@ -5,10 +5,8 @@
 \newcommand{\step}[5]{\ensuremath{(#1,\allowbreak #2,\allowbreak #3,\allowbreak #4,\allowbreak #5)}}
 \newcommand{\aeq}{\mathrel{\hat{≡}}}
 
-\chapter{Tactic Script Optimisation}
-
-\section{Introduction}%
-\label{sec:script:intro}
+\chapter{Tactic Script Optimisation}%
+\label{chap:script}
 
 As we saw in Chapter~\ref{chap:aesop}, each of Aesop's rules corresponds fairly directly to a sequence of low-level tactic calls, e.g.\ \lean|apply| for backward rules and \lean|have| for forward rules.
 This correspondence makes it easy to output tactics that correspond to the rules used during the proof, and that therefore form a complete tactic proof.
@@ -156,9 +154,6 @@ It also shows that dynamic reordering is more effective than static reordering, 
 
 The described optimisation pipeline is available in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}}.
 The supplement for this chapter~\cite{ScriptSupplement} contains the exact version of Aesop described here, as well as all materials needed to reproduce the evaluation.
-
-\para{Acknowledgements}
-This chapter is closely based on the paper \emph{Tactic Script Optimisation for Aesop}~\cite{Script}.
 
 \section{Background}%
 \label{sec:script:background}
