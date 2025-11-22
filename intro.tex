@@ -48,16 +48,38 @@ We write a goal with local context $Δ$ and target $T$ as $Δ ⊢ T$.
 In their most general form, rules are tactics themselves, but Aesop also provides \emph{rule builders} that create rules for specific lemmas.
 Rules are added by users, who often curate \emph{rule sets} for certain tasks.
 
-For example, the lemma that continuity of $f$ and $g$ implies continuity of $x ↦ f(x) + g(x)$ can be turned into a rule that reduces any goal of the form \enquote{$x ↦ f(x) + g(x)$ is continuous} into two subgoals, \enquote{$f$ is continuous} and \enquote{$g$ is continuous}.
+For example, the lemma that continuity of $f$ and $g$ implies continuity of $x ↦ f(x) + g(x)$ (\textsc{Add}) can be turned into a rule that reduces any goal of the form \enquote{$x ↦ f(x) + g(x)$ is continuous} into two subgoals, \enquote{$f$ is continuous} and \enquote{$g$ is continuous}.
 Similarly, we can register the following lemmas about continuity:
 \begin{itemize}
-  \item If $f$ and $g$ are continuous, then $x ↦ f(x)g(x)$ is continuous.
-  \item If $f$ and $g$ are continuous, then $x ↦ f(x) ∘ g(x)$ is continuous.
-  \item The constant function $x ↦ c$ is continuous for any $c$.
+  \item \textsc{Mul}: If $f$ and $g$ are continuous, then $x ↦ f(x)g(x)$ is continuous.
+  \item \textsc{Comp}: If $f$ and $g$ are continuous, then $x ↦ f(g(x))$ is continuous.
+  \item \textsc{Const}: The constant function $x ↦ c$ is continuous for any $c$.
 \end{itemize}
-Successive application of these rules allows Aesop to prove that $x ↦ f(2g(x) + 1)$ is continuous.
+By repeatedly applying these rules, Aesop can prove that $x ↦ f(f(x)g(x) + 1)$ is continuous.
 
-We can visualise the proof as the tree shown in Fig.~\ref{fig:intro:TODO}, which contains two alternating kinds of nodes, \emph{goal nodes} and \emph{rule application nodes} (also called \emph{rapp nodes}).
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[outer sep=auto, level distance=10mm, sibling distance=15mm]
+    \node {$x ↦ f(f(x)g(x) + 1)$ is continuous}
+    child {node[rectangle,draw] {\textsc{Comp}}
+      child[xshift=-3cm] {node {$f$ is continuous}
+        child {node[rectangle,draw] {assumption}}}
+      child[xshift=3cm] {node {$x ↦ f(x)g(x) + 1$ is continuous}
+        child {node[rectangle,draw] {\textsc{Add}}
+          child[xshift=-2cm] {node {$x ↦ f(x)g(x)$ is continuous}
+            child {node[rectangle,draw] {\textsc{Mul}}
+              child[xshift=-1.5cm] {node {$f$ is continuous}
+                child {node[rectangle,draw] {assumption}}}
+              child[xshift=1.5cm] {node {$g$ is continuous}
+                child {node[rectangle,draw] {assumption}}}}}
+          child[xshift=2cm] {node {$x ↦ 1$ is continuous}
+            child {node[rectangle,draw] {\textsc{Const}}}}}}};
+  \end{tikzpicture}
+  \caption{Proof of continuity of a particular function}%
+  \label{fig:intro:proof-tree}
+\end{figure}
+
+We can visualise the proof as the tree shown in Fig.~\ref{fig:intro:proof-tree}, which contains two alternating kinds of nodes, \emph{goal nodes} and \emph{rule application nodes} (also called \emph{rapp nodes}).
 A goal node represents a goal; the root goal is our initial conjecture.
 A rapp node represents a rule that was applied to prove its parent goal.
 The rule may require additional goals to be solved, which become children of the rapp node.
