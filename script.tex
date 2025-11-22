@@ -10,7 +10,7 @@
 
 As we saw in Chapter~\ref{chap:aesop}, each of Aesop's rules corresponds fairly directly to a sequence of low-level tactic calls, e.g.\ \lean|apply| for backward rules and \lean|have| for forward rules.
 This correspondence makes it easy to output tactics that correspond to the rules used during the proof, and that therefore form a complete tactic proof.
-We call this a \emph{tactic script}.
+I call this a \emph{tactic script}.
 Generating a script can be helpful in three ways:
 \begin{itemize}
   \item If a search is successful, the search tactic can be replaced with the generated script, which typically has much better performance.
@@ -133,7 +133,7 @@ In short, metavariables make tactics non-commutative.
 
 I propose two solutions for this issue.
 The first reorders the tactics in the script statically, i.e.\ without re-executing them.
-This is fast and simple, but in those parts of the proof that involve metavariables we must fall back on the original, unstructured order.
+This is fast and simple, but in those parts of the proof that involve metavariables, we must fall back on the original, unstructured order.
 We therefore obtain a partially structured proof.
 
 The second solution is based on the observation that while metavariables make tactics non-commutative in general, some tactics remain commutative.
