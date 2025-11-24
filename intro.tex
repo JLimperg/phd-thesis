@@ -23,7 +23,7 @@ ITPs are often also called \emph{proof assistants}, hinting at a vision that goe
 Compared to pen-and-paper mathematics, proof assistants can provide more immediate feedback to their users, indicating when and why an attempted proof step is wrong.
 They can also help users track the context and structure of their proofs, e.g. which cases need to be considered when a case distinction is made or which hypotheses are available at a given point in the proof.
 
-However, this vision of a helpful \enquote*{mathematics assistant} remains only partly realised.
+However, this vision of a helpful mathematical assistant remains only partly realised.
 Extensive training and experience is still required for a mathematically curious student to become a productive user of ITPs.
 The main cause of this is perhaps the requirement to spell out proofs in full detail, leaving nothing as an exercise for the reader.
 Compounding this issue, the minimalistic logics of proof assistants typically require explicit proof steps even for operations that are entirely obvious to humans.
@@ -39,7 +39,7 @@ A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referrin
 \section{Aesop}%
 \label{sec:intro:aesop}
 
-In this thesis, I introduce \emph{Aesop} (\enquote{Automatic Extensible Search for Obvious Proofs}), a tactic for the Lean~4 proof assistant.
+In this thesis, I introduce \emph{Aesop} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
 As the name suggests, Aesop's purpose is to automate the mathematically trivial goals that arise in many proofs---it is not expected to prove interesting theorems on its own.
 
 When searching for a proof, Aesop systematically applies \emph{rules} that reduce a \emph{goal} to zero or more subgoals.
@@ -85,6 +85,8 @@ A rapp node represents a rule that was applied to prove its parent goal.
 The rule may require additional goals to be solved, which become children of the rapp node.
 The leaf rapp nodes have no children, so nothing remains to be proved, and the tree represents a complete proof of the initial conjecture.
 
+% TODO simp, other rule builders
+
 Usually, Aesop is provided not with exactly the rules needed for a proof, but rather with a superset designed to prove similar goals as well.
 As a result, multiple rules may apply to any given goal.
 Aesop then considers all possible rule applications as sibling rapp nodes, and the proof tree becomes a search tree.
@@ -99,9 +101,9 @@ When searching for proofs, we need to answer two basic questions: which rule do 
 To address the first question, Aesop associates with each rule a \emph{success probability} between 0\% and 100\%.
 The success probability is given by the user when registering the rule.
 It should roughly approximate the probability that the rule, when successfully applied to an Aesop-provable goal, will lead to a successful proof of that goal.
-For example, ∧-introduction, which reduces a goal $P ∧ Q$ to subgoals $P$ and $Q$, has success probability 100\%: if $P ∧ Q$ is Aesop-provable, then almost certainly $P$ and $Q$ are as well.
-Meanwhile, left ∨-introduction, which reduces a goal $P ∨ Q$ to just $P$, has success probability 50\%, since $P$ and $Q$ are a priori equally likely to be Aesop-provable.
-In practice, the exact percentages generally do not affect the proof search very much, so we do not worry about whether the empirical success probability of left ∨-introduction is, in fact, 50\% or 57\%.
+For example, $∧$-introduction, which reduces a goal $P ∧ Q$ to subgoals $P$ and $Q$, has success probability 100\%: if $P ∧ Q$ is Aesop-provable, then almost certainly $P$ and $Q$ are as well.
+Meanwhile, left $∨$-introduction, which reduces a goal $P ∨ Q$ to just $P$, has success probability 50\%, since $P$ and $Q$ are a priori equally likely to be Aesop-provable.
+In practice, the exact percentages generally do not affect the proof search very much, so we do not worry about whether the empirical success probability of left $∨$-introduction is, in fact, 50\% or 57\%.
 
 Using the success probabilities, Aesop implements a simple \emph{best-first} strategy, answering the question of which goal to solve first.
 Each goal is associated with a \emph{priority} (also a percentage), with the root goal having priority 100\%.
@@ -145,6 +147,7 @@ The simplest way to do this is to give up on goal independence in the presence o
 Once a set of sibling goals contains a metavariable, the goals are treated as one unit.
 Applying a rule to one of the goals yields a derived set of goals in which all other goals are copied (possibly with updated metavariable assignments).
 This approach is used in HyperTree Proof Search (HTPS) (TODO ref), an LLM-based theorem proving methodology (TODO check).
+% TODO move discussion of HTPS to related work in the relevant chapter
 
 Aesop opts for a different, novel approach.
 When a rule application assigns a metavariable, sibling goals dependent on that metavariable (and certain non-sibling goals on the same search tree branch) are copied and treated as additional children of the rule application.
@@ -168,28 +171,28 @@ This increases search parallelism and, in Aesop's scheme, avoids unnecessary cop
 
 From its inception, Aesop has supported forward as well as backward rules.
 These are rules that derive facts from the hypotheses available in an Aesop goal and add them to the context for use by other rules.
-For example, given a function $f$, a lemma $h : \All{x : ℝ}{0 < f x}$ and a context containing $a, b : ℝ$, the forward rule for $h$ adds hypotheses $h₁ : 0 < f~a$ and $h₂ : 0 < f~b$.
+For example, given a function $f$, a lemma $\Var{h} : \All{x : ℝ}{0 < f~x}$ and a context containing $a, b : ℝ$, the forward rule for $\Var{h}$ adds hypotheses $\Var{h₁} : 0 < f~a$ and $\Var{h₂} : 0 < f~b$.
 These could be used, for example, by Lean's \emph{positivity} tactic to establish positivity of expressions containing $f~a$ and $f~b$.
 
-Aesop's initial implementation of forward rules, briefly described in Chapter~\ref{chap:aesop}, is very naive.
-When considering a goal with hypotheses $h₁ : H₁, \dots, hₙ : Hₙ$ during the search, Aesop checks for each forward rule $r : \All{(x₁ : X₁) \dots (xₘ : Xₘ), Y}$ whether there is a type-correct substitution $x₁ ↦ h_{i₁}, \dots, xₘ ↦ h_{iₘ}$, i.e.\ a type-correct assignment of hypotheses to premises of $r$.
-If so, the conclusion of $r$, $Y[h_{i₁}, \dots, h_{iₘ}]$, is added as a new hypothesis (unless it is already present).
+Aesop initially used an implementation of forward rules, briefly described in Chapter~\ref{chap:aesop}, that is very naive.
+When considering a goal with hypotheses $\Var{h₁} : H₁, \dots, \Var{hₙ} : Hₙ$ during the search, Aesop checks for each forward rule $r : \All{(x₁ : X₁) \dots (xₘ : Xₘ)}{Y}$ whether there is a type-correct substitution $x₁ ↦ \Var{h_{i₁}}, \dots, xₘ ↦ \Var{h_{iₘ}}$, i.e.\ a type-correct assignment of hypotheses to premises of $r$.
+If so, the conclusion of $r$, $Y[\Var{h_{i₁}}, \dots, \Var{h_{iₘ}}]$, is added as a new hypothesis (unless it is already present).
 We index the final premise of $r$ and match the premises back-to-front on the assumption that later premises are more specific than earlier premises.
 
 A crucial weakness of this scheme is that it is stateless: the matching process is repeated for every goal and every forward rule (subject to indexing), even when the same rule was already tried on essentially the same goal.
-This is a common case: backward rules produce subgoals with exactly the same hypotheses as their parent goals; forward rules only add hypotheses; and even Aesop's \emph{simp} pass usually changes only select hypotheses.
+This is a common case: backward rules produce subgoals with exactly the same hypotheses as their parent goals; forward rules only add hypotheses; and even Aesop's \tac{simp} pass usually changes only select hypotheses.
 
 Recent versions of Aesop therefore use a novel incremental mechanism for forward rules.
 Each goal is associated with a \emph{forward state} that indexes \emph{partial applications} of forward rules to the goal's hypotheses.
-For instance, given a forward rule $r : \All{x~y : ℕ}{x < y → y < x → ⊥}$ and a goal with hypotheses $a : ℕ,\, b : ℕ,\, h₁ : a < b$, the forward state stores the fact that $r~a~b~h₁$ is a type-correct partial application of $r$.
-If a rule then creates a subgoal with additional hypothesis $h₂ : b < a$, the stored partial application is completed and the conclusion of $r$, $⊥$, is added as a new hypothesis.
+For instance, given a forward rule $r : \All{x~y : ℕ}{x < y → y < x → ⊥}$ and a goal with hypotheses $a : ℕ,\, b : ℕ,\, \Var{h₁} : a < b$, the forward state stores the fact that $r~a~b~\Var{h₁}$ is a type-correct partial application of $r$.
+If a rule then creates a subgoal with additional hypothesis $\Var{h₂} : b < a$, the stored partial application is completed and the conclusion of $r$, $⊥$, is added as a new hypothesis.
 
 To make this process efficient, we index each premise of a forward rule in a discrimination tree (TODO ref).
-This allows us to quickly determine that the hypothesis $h₂ : b < a$ matches both non-dependent premises of $r$, $x < y$ and $y < x$.
+This allows us to quickly determine that the hypothesis $\Var{h₂} : b < a$ matches both non-dependent premises of $r$, $x < y$ and $y < x$.
 Additionally, we store the partial rule applications in a custom data structure that indexes them by the values given to dependent premises, here $x$ and $y$.
-This allows us to quickly look up partial applications compatible with the substitution $x ↦ a,\, y ↦ b$ that results from matching $h₂$ against the rule's second premise, $y < x$.
-The lookup returns $r~a~b~h₁$, which we therefore extend to $r~a~b~h₁~h₂$ and report as a complete forward rule application.
-If the rule had additional premises, $r~a~b~h₁~h₂$ would instead be indexed in the forward state, to be completed by future hypotheses.
+This allows us to quickly look up partial applications compatible with the substitution $x ↦ a,\, y ↦ b$ that results from matching $\Var{h₂}$ against the rule's second premise, $y < x$.
+The lookup returns $r~a~b~\Var{h₁}$, which we therefore extend to $r~a~b~\Var{h₁}~\Var{h₂}$ and report as a complete forward rule application.
+If the rule had additional premises, $r~a~b~\Var{h₁}~\Var{h₂}$ would instead be indexed in the forward state, to be completed by future hypotheses.
 
 Making this scheme practical requires careful performance engineering.
 As with much type-theoretic proof automation, a major concern is matching and indexing expressions up to definitional equality, which is expensive.
@@ -203,16 +206,17 @@ For a more natural evaluation, we adapt the benchmark used by lean-auto (TODO re
 In this scenario, there is little difference between the naive and optimised approach, perhaps because Aesop -- not being designed to be a push-button theorem prover -- solves few non-trivial goals that would require a substantial number of forward rule applications.
 Hence, the better scaling of the incremental approach does not come into play (TODO confirm).
 In the absence of natural case studies involving substantial forward reasoning -- explained, perhaps, by the fact that forward rules used to be so inefficient -- the impact of our incremental approach remains somewhat unclear.
+% TODO update for eval results
 
 \section{Script Generation and Optimisation}
 
 When Aesop finds a proof, or at least makes progress towards one, it applies a series of rules that translate fairly directly into lower-level Lean tactics.
-For example, an application of a backward rule $r$ corresponds to \texttt{apply~r}; an application of a forward rule to \texttt{have~h~:=~r~\dots}.
+For example, an application of a backward rule $r$ corresponds to $\tac{apply}~r$; an application of a forward rule to $\tac{have}~\Var{h}~\tac{:=}~r~\dots$.
 It is therefore easy (if not entirely trivial) to generate a \emph{tactic script} that can replace a given Aesop call.
 Doing so has advantages in two scenarios.
 
 First, a script can replace an Aesop call that closes a goal.
-The script typically has much better performance since it performs no search and can optimise certain tactics, e.g.\ use \texttt{simp only [\dots]} instead of \texttt{simp}.
+The script typically has much better performance since it performs no search and can optimise certain tactics, e.g.\ use $\tac{simp~only}~[\dots]$ instead of $\tac{simp}$.
 It is also stable with respect to changes to the Aesop rule set (though, conversely, less flexible when definitions or lemmas change).
 
 Second, a script for an Aesop call that does not find a full proof may serve as the start of a manual proof.
@@ -231,11 +235,11 @@ The optimiser bears some similarity to an optimising compiler or autoformatter.
 It operates in three stages.
 
 First, individual tactics are rewritten into a more performant or more idiomatic form.
-For example, we try to use the stock \texttt{unfold} tactic instead of Aesop's \texttt{aesop\_unfold}, which has slightly different semantics for performance reasons.
+For example, we try to use the stock \tac{unfold} tactic instead of Aesop's \tac{aesop\_unfold}, which has slightly different semantics for performance reasons.
 Since the semantics are different, we check whether the two tactics actually produce the same output, i.e., the same goals, which they usually do.
 This check is possible because tactics are effectively pure functions of their input goals, and unlike a typical optimising compiler, we know that our script only needs to work for one specific set of initial goals.
 
-Second, we structure the script, reordering the tactics into depth-first order and making use of Lean's structuring facilities, e.g.\ the \texttt{case}, \texttt{next} and \texttt{·} tactic combinators.
+Second, we structure the script, reordering the tactics into depth-first order and making use of Lean's structuring facilities, e.g.\ the \tac{case}, \tac{next} and $\tacbullet$ tactic combinators.
 Reordering is not always possible when goals contain metavariables, since tactics may behave differently depending on whether a metavariable has already been solved in the proof of another goal.
 I propose two techniques to address this issue: a static method that misses some opportunities for reordering, and a dynamic method that reorders as much as possible.
 The second method is dynamic in the sense that it tries every possible reordering, checking that the reordered tactics have the same behaviour as the original ones.
@@ -338,8 +342,8 @@ It also remains to be seen whether LLMs are similarly successful in software ver
 
 For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is adoption, so I am happy to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
 Recent versions of Mathlib call Aesop around 7000 times (TODO ref), often through wrapper tactics that call Aesop with a specialised rule set.
-The \texttt{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
-For some such use cases, many uses of Aesop have been replaced with more efficient specialised tactics such as \texttt{fun\_prop}, but these are often less general.
+The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
+For some such use cases, many uses of Aesop have been replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
 Anecdotally, the script generation functionality is used a fair amount for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since it leaves no trace in the final proof, there is no way to quantify this use.
 
 Even so, many Mathlib theories have not been thoroughly annotated to build effective Aesop rule sets, limiting the effectiveness of Aesop even on goals where it could easily perform well.
@@ -348,7 +352,7 @@ A tool that suggests good Aesop annotations, perhaps using an LLM to determine w
 
 Outside Mathlib, Aesop is used in various formalisation projects (TODO refs).
 It is also used in the nascent-in-Lean software verification domain, for example by the Loom multi-modal verifier (TODO ref) to dispatch verification conditions.
-Geoffrey Irving's \texttt{interval} tactic (TODO ref) for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
+Geoffrey Irving's \tac{interval} tactic (TODO ref) for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 Aeneas (TODO ref) uses a custom implementation of forward rules, inspired by Aesop's, in its proof automation.
 
 Aesop is also used in larger, push-button provers.

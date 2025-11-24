@@ -246,7 +246,7 @@ Given a term $f$ of type $\All{\vec{x} : \vec{T}}{P~\vec{x}}$, the apply builder
 The arguments $\vec{x}$ are either inferred (by unification or type-class search) or become subgoals.
 
 In the notation $P~\vec{x}$, $P$ is an arbitrary type-valued function (e.g.\ $\Lam{x~y}{x = y + 1}$), so $P~\vec{x}$ is essentially an arbitrary type-valued term involving the variables $\vec{x}$.
-However, due to the inherent limitations of higher-order unification, the apply builder cannot support all functions $P$; it uses the same heuristics as Lean's apply tactic to support a useful subset.
+However, due to the inherent limitations of higher-order unification, the apply builder cannot support all functions $P$; it uses the same heuristics as Lean's \tac{apply} tactic to support a useful subset.
 Similar caveats also apply to some of the following rule builders.
 
 
@@ -282,7 +282,7 @@ Since the matched hypotheses are removed, destruct rules do not generally apply 
 
 Given an inductive family $I$ with arguments (parameters and indices) $\vec{x} : \vec{T}$, the cases builder creates a rule which performs case analysis on any hypothesis $h : I~\vec{x}$.
 For example, the cases rule for \Ty{Or}, the inductive type behind the notation $P ∨ Q$, reduces the goal $h : P ∨ Q ⊢ T$ to two subgoals $h : P ⊢ T$ and $h : Q ⊢ T$.
-To perform this case analysis, we use Lean's built-in cases tactic, which uses the standard elimination principle for $I$.
+To perform this case analysis, we use Lean's built-in \tac{cases} tactic, which uses the standard elimination principle for $I$.
 
 To perform case analysis according to a non-standard elimination principle, users can use the \emph{view pattern}~\cite{ViewPattern}: define a data type $J$ whose constructors correspond to the desired cases, register a function $f : I → J$ as a destruct rule and register a cases rule for $J$.
 With this setup, the goal $h : I ⊢ T$ is first reduced to $h : J ⊢ T$ and then $h$ is split into the desired cases.
@@ -318,7 +318,7 @@ Unfortunately the restriction is somewhat tricky to implement since Lean does no
 
 \subsubsection{tactic}
 
-The last and most fundamental rule builder, tactic, allows users to register any tactic as a rule.
+The last and most fundamental rule builder, \tac{tactic}, allows users to register any tactic as a rule.
 The tactic can generate arbitrary subgoals (justified by a proof term that is later checked by Lean's kernel).
 We only require that tactic rules either change the goal or fail, so they cannot be no-ops.
 
@@ -332,7 +332,7 @@ To make Aesop practical, we should leverage this existing automation.
 
 To that end, we integrate simplification into the normalisation process, adding a built-in normalisation rule which runs the simplifier on the entire goal (target type and hypotheses).
 This invocation of the simplifier uses the default global set of rewrite rules, plus a separate Aesop-specific rule set.
-Aesop users can add rules to this set by using a special simp rule builder.
+Aesop users can add rules to this set by using a special \tac{simp} rule builder.
 
 An important detail of the simplifier integration concerns how local hypotheses are used.
 Lean's simplifier can be configured to use them in two ways.
@@ -396,21 +396,21 @@ Each Lean definition is annotated with one of several \emph{transparency modes},
 Most definitions have default transparency and are not unfolded by the unification methods used by automation tactics; only those with reducible transparency are.
 Aesop's indexing follows this scheme.
 This, along with a convention that only non-recursive definitions are tagged as reducible, ensures that discrimination tree indexing does not miss any possible matches (with rare exceptions), but it also weakens certain rules.
-For example, a rule that proves the goal $a ∷ as = b ∷ bs$ could also prove $[a] \mathbin{++} as = [b] \mathbin{++} bs$ since the two goals unify once the list concatenation operator $\mathbin{++}$ is unfolded.
+For example, a rule that proves the goal $a ∷ \Var{as} = b ∷ \Var{bs}$ could also prove $[a] \mathbin{++} \Var{as} = [b] \mathbin{++} \Var{bs}$ since the two goals unify once the list concatenation operator $\mathbin{++}$ is unfolded.
 But this operator has default transparency, so the index does not unfold it and the rule is never tried on the second goal.
-To compensate, we can register a simplification rule which normalises $[a] \mathbin{++} as$ to $a ∷ as$.
+To compensate, we can register a simplification rule which normalises $[a] \mathbin{++} \Var{as}$ to $a ∷ \Var{as}$.
 
 
 \subsection{Default Rules}%
 \label{sec:aesop:builtin}
 
 Aesop's default rules perform uncontroversial reasoning steps, mostly pertaining to the logical connectives.
-Hypotheses $h : P ∧ Q$ are eliminated during normalisation, yielding separate hypotheses $h_{1} : P$ and $h_{2} : Q$, and similar for products $P × Q$.
+Hypotheses $h : P ∧ Q$ are eliminated during normalisation, yielding separate hypotheses $\Var{h₁} : P$ and $\Var{h₂} : Q$, and similar for products $P × Q$.
 Goals of the form $Γ ⊢ P ∧ Q$ are reduced to $Γ ⊢ P$ and $Γ ⊢ Q$ by registering $∧$-introduction as a low-priority safe rule.
 For sum-like types such as disjunction, the respective elimination rule, which splits the goal into two subgoals, is safe with low priority.
 The respective introduction rules, which select one branch of the sum, are unsafe with 50\% success probability.
 
-Universally quantified goals $Γ ⊢ \All{\vec{x} : \vec{T}}{P~\vec{x}}$ are normalised to $Γ,\, \vec{x} : \vec{T} ⊢ P~x$.
+Universally quantified goals $Γ ⊢ \All{\vec{x} : \vec{T}}{P~\vec{x}}$ are normalised to $Γ,\, \vec{x} : \vec{T} ⊢ P~\vec{x}$.
 When a goal with target $P~\vec{x}$ contains a hypothesis $h : \All{\vec{y}}{P~\vec{y}}$, $h$ is applied as an unsafe rule.
 We give this rule 75\% success probability, assuming that when a local hypothesis can be applied, it is usually a good idea to do so.
 In the special case where $h$ has no premises, it is applied safely and proves the goal.
@@ -662,9 +662,9 @@ Additionally, normalisation rules are applied in a fixpoint loop, so there is no
 Hence, we simply forbid normalisation rules from creating or assigning metavariables.
 
 This restriction is, for the most part, unobtrusive in practice, with one unfortunate exception.
-The current implementation of cases rules uses Lean's built-in cases tactic.
-When a goal contains a metavariable, cases may replace this metavariable with a new one, which to Aesop looks as if an existing metavariable had been assigned and a new one created.
-I have not found a reliable way to detect this situation, so cases normalisation rules (which could be used, for example, to split a hypothesis $h : A ∧ B$ into $h_{1} : A$ and $h_{2} : B$), are currently unsupported.
+The current implementation of cases rules uses Lean's built-in \tac{cases} tactic.
+When a goal contains a metavariable, \tac{cases} may replace this metavariable with a new one, which to Aesop looks as if an existing metavariable had been assigned and a new one created.
+I have not found a reliable way to detect this situation, so cases normalisation rules (which could be used, for example, to split a hypothesis $h : A ∧ B$ into $h₁ : A$ and $h₂ : B$), are currently unsupported.
 
 
 \subsection{Synthesis of Dropped Metavariables}%
@@ -885,7 +885,7 @@ To that end, we first define the type \Ty{Form} of propositional formulas.
 Given an interpretation \Var{i} of propositional variables~\Var{Φ}, the predicate $\Ty{Val} : \Ty{Form}~Φ → \Prop$ gives the truth value of a formula.
 Aesop proves, after manual induction over \Ty{Form}, that if \Var{i} is decidable, then so is \Ty{Val}.
 
-Satisfiability of formulas extends to satisfiability of sequents: a sequent with premises \Var{Γ} and conclusions \Var{Δ} is valid if, whenever all premises are true, at least one conclusion is true.
+Satisfiability of formulas extends to satisfiability of sequents: a sequent with premises $Γ$ and conclusions $Δ$ is valid if, whenever all premises are true, at least one conclusion is true.
 Formally, $\Ty{All}~(\Ty{Val}~i)~Γ$ implies $\Ty{Any}~(\Ty{Val}~i)~Δ$.
 We saw \Ty{All} earlier; \Ty{Any} is similar but encodes the fact that \emph{some} element in the list satisfies the predicate.
 The cases rule for \Ty{Any} makes good use of patterns: case analysis on a hypothesis that matches the pattern $\Ty{Any}~\_~[]$ is safe since the hypothesis is contradictory; case analysis on a hypothesis which matches $\Ty{Any}~\_~(\_ ∷ \_)$ is unsafe but often useful.
@@ -904,7 +904,7 @@ Similarly, metavariables are crucial when proving lemmas involving existential q
 
 The prover itself, \Ty{Cal}, attempts to prove a sequent by breaking down connectives according to the classical sequent calculus rules, collecting lists of positive and negative propositional variables when they appear on either side of the sequent.
 A branch of the proof terminates successfully when the same variable occurs both positively and negatively, corresponding to the usual \emph{Axiom} rule.
-We use $\Ty{Any}~(• ∈ \Var{ys})~\Var{xs}$ to check if two lists \Var{xs} and \Var{ys} share a common element.
+We use $\Ty{Any}~(• ∈ \Var{ys})~\Var{xs}$ to check if two lists $\Var{xs}$ and $\Var{ys}$ share a common element.
 The computational behaviour of \Ty{Cal} thus depends on the decidability of \Ty{Any}, which is proved using Aesop.
 We verify soundness and completeness of the prover simultaneously, using induction on the call structure of \Ty{Cal}.
 The main theorem states that \Ty{Cal} proves a sequent if and only if the sequent is valid for all decidable interpretations.
@@ -918,7 +918,7 @@ A key ingredient of the proof is this weakening lemma:
   \Ty{Proof}~Γ~Δ → \Ty{Proof}~Γ~(δ ∷ Δ)
 \]
 After induction on the premise, Aesop proves the lemma automatically, apart from one case which requires an explicit application of the induction hypothesis.
-This is because two of the constructors of |Proof| allow us to apply arbitrary permutations to the sequents, which Aesop's metavariable handling is too weak to find.
+This is because two of the constructors of \Ty{Proof} allow us to apply arbitrary permutations to the sequents, which Aesop's metavariable handling is too weak to find.
 These constructors also apply to every goal, so it is important that Aesop is not limited to depth-first search, which might get lost in infinite permutations.
 
 
