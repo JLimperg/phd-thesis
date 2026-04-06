@@ -27,12 +27,12 @@ In this chapter, I discuss the foundations of Aesop: tree-based search over user
     For example, hypotheses of the form $P_{1} ∧ \dots ∧ P_{n}$ are split into separate hypotheses $P_{i}$, establishing the invariant that no hypothesis is a conjunction.
   \item
     The normalisation phase includes an invocation of Lean's simplifier, which performs rewriting with user-specified, possibly conditional equations.
-    This allows us to benefit from the large collection of simplification rules which are typically defined by Lean projects.
+    This allows us to benefit from the large collection of simplification rules typically registered in Lean projects.
   \item
-    With best-first search, it is not obvious how to deal with metavariables which appear in multiple goals.
+    With best-first search, it is not obvious how to handle metavariables that appear in multiple goals.
     In search procedures based on backtracking, such as depth-first search, if a metavariable assignment turns out to be wrong, we can simply backtrack it and try a different one (assuming that the theorem prover's data structures efficiently support this).
     By contrast, a best-first algorithm must be able to consider multiple assignments in parallel.
-    To address this issue, I introduce a new algorithm which handles metavariables and is independent of the search strategy.
+    To address this issue, I introduce a novel, complete strategy for metavariables that is independent of the search strategy.
 \end{itemize}
 
 \section{Best-First Proof Search}%
@@ -46,12 +46,12 @@ For now, I assume that goals do not contain metavariables, which simplifies the 
 \subsection{Goals and Rules}%
 \label{sec:aesop:goals-rules}
 
-Assume a set of \emph{goals} given by the underlying logic. These could, for example, be first-order sequents or higher-order formulas.
-In Lean, they are structures of the form $\vec{h} : \vec{T} ⊢ U$, where $\vec{h}$ is a list of hypotheses with types $\vec{T}$ and $U$ is a type.
-Each hypothesis may depend on earlier hypotheses (so $\vec{h}$ is a telescope) and $U$ may depend on all hypotheses.
-$U$ is the goal's \emph{target}.
+We assume a set of \emph{goals} given by the underlying logic.
+These could, for example, be first-order sequents or higher-order formulas.
+In Lean, they are metavariables $Δ ⊢ \mv{x} : T$.
+When the goal's name does not matter, we write $Δ ⊢ T$, or $⊢ T$ if $Δ$ is empty.
 
-Further assume a finite set of \emph{rules}, which are partial functions that map a goal to a finite set of goals.
+We further assume a finite set of \emph{rules}, which are partial functions that map a goal to a finite set of goals.
 When a goal is in the domain of a rule, the rule is \emph{applicable} to the goal.
 In the Aesop implementation, rules are arbitrary tactics.
 
@@ -85,9 +85,10 @@ At any point during the search, a node (goal or rapp) is in one of three states:
 
 The state of a node matters only insofar as it is necessary to determine the state of its parent node, then the parent's parent, etc., until we ultimately learn whether the root goal is proved or stuck.
 This means that nodes can become \emph{irrelevant} during the search.
-For example, if a goal $⊢ P ∨ Q$ has child rapps for left $∨$-introduction (with subgoal $⊢ P$) and right $∨$-introduction (with subgoal $⊢ Q$), and $⊢ P$ is already proved, then $⊢ P ∨ Q$ is also proved and there is no point in trying to prove $⊢ Q$.
+For example, if a goal $⊢ P ∨ Q$ has child rapps for left $∨$-introduction (with subgoal $⊢ P$) and right $∨$-introduction (with subgoal $⊢ Q$), and $⊢ P$ is already proved, then $⊢ P ∨ Q$ is also proved and there is no need to prove $⊢ Q$.
 In general, a node is irrelevant if at least one of its ancestors, including the node itself, is already proved or stuck.
-Incidentally, when the search terminates successfully, the root goal becomes proved and therefore, by our definition, irrelevant. So \enquote{irrelevant} means \enquote{irrelevant for the rest of the search}, not \enquote{irrelevant for the proof}.
+Incidentally, when the search terminates successfully, the root goal becomes proved and therefore, by our definition, irrelevant.
+So \enquote{irrelevant} means \enquote{irrelevant for the rest of the search}, not \enquote{irrelevant for the proof}.
 
 
 \subsection{Search Algorithm}%
@@ -103,21 +104,20 @@ The loop exits when the root goal becomes proved or stuck (or when one of severa
 Which goal is expanded first, and along which rule, is determined by a best-first search strategy.
 Usually, best-first search is realised by a heuristic which ranks goals and rules according to simple numeric properties, e.g.\ the size of a goal or the number of subgoals of a rule.
 This goes against Aesop's white-box philosophy since the heuristics tend to be fixed (so users cannot easily change them) and opaque (so users cannot easily predict which goals will be prioritised).
-Instead, we use a scheme whereby the rules carry a user-defined priority which is used to rank both goals and rules.
+Instead, we use a scheme whereby the rules carry a user-defined priority that is used to rank both goals and rules.
 
 Specifically, Aesop users give each rule a \emph{success probability} between 0\% and 100\%.
 This probability is a rough estimate of how useful a rule is, i.e.\ how likely it is to lead to a proof.
 For example, left and right $∨$-introduction could each be given a success probability of 50\%.
 
 For rules whose success probability is less obvious, it appears sufficient in practice to pick probabilities from a six-point scale: last resort (1\%), low (25\%), medium (50\%), high (75\%) and almost always (99\%).
-The probabilities could also be determined by automated methods, for example by determining the actual success probability of each rule in an existing corpus of proofs.
-But while such automated tuning would perhaps improve Aesop's overall performance in a larger library, it would also likely make some previously successful proofs fail, leading to maintenance challenges.
+The probabilities could also be determined by computing the actual success probability of each rule in a representative proof corpus.
+But while such automated tuning may improve Aesop's overall performance in a larger library, it may also make some previously successful proofs fail, leading to maintenance challenges.
 
-From the rules' success probabilities we derive, for each goal in the search tree, a \emph{priority} between 0\% and 100\%.
-The root goal has priority 100\%.
-Then, whenever we apply a rule $R$ to a goal $G$, the priority of the subgoals is the priority of $G$ multiplied with the success probability of $R$.
+From the rules' success probabilities we inductively derive, for each goal in the search tree, a \emph{priority} between 0\% and 100\%.
+The root goal has priority 100\%, and whenever we apply a rule $R$ to a goal $G$, the priority of the subgoals is the priority of $G$ multiplied with the success probability of $R$.
 In each iteration of the search loop, Aesop picks the highest-priority goal and expands it along the rule with the highest success probability.
-We could also allow rules to give different priorities to their subgoals, e.g.\ to prioritise goals which are known to quickly become unprovable if the initial goal is unprovable.
+We also allow rules to give different priorities to their subgoals, e.g.\ to prioritise goals which are known to quickly become unprovable if the initial goal is unprovable, though this is little used.
 
 \subsection{Safe and Unsafe Rules}%
 \label{sec:aesop:safe}
@@ -126,25 +126,25 @@ So far, we have treated all rules as \emph{unsafe}.
 An unsafe rule is one that does not necessarily preserve provability: when applied to a provable goal $G$, it may generate unprovable subgoals.
 This means that we must continue to expand both $G$ and the subgoals.
 
-However, in practice there are many rules which preserve provability and are therefore \emph{safe}.
+However, in practice, many rules preserve provability and are therefore \emph{safe}.
 For instance, $∧$-introduction is safe: to prove $Γ ⊢ P ∧ Q$, it suffices to prove $Γ ⊢ P$ and $Γ ⊢ Q$.
-So after this rule has been applied, the original goal $Γ ⊢ P ∧ Q$ does not need to be considered any more, shrinking the search space.
+Hence, after this rule has been applied, the original goal $Γ ⊢ P ∧ Q$ does not need to be considered any more, shrinking the search space.
 
-To take advantage of this insight, Aesop, like Isabelle's auto, lets users mark rules as safe.
-To accommodate these safe rules, we split the expansion of a goal $G$ into two phases.
+To take advantage of this property, Aesop, like Isabelle's auto, lets users mark rules as safe.
+To accommodate safe rules, we split the expansion of a goal $G$ into two phases.
 First, Aesop tries to apply all safe rules to $G$.
 If one of them succeeds, the resulting subgoals are added to the tree as usual.
 An unsafe rule would then re-insert $G$ into the goal queue that is maintained throughout the search, to give other rules a chance to fire.
-For safe rules, we simply skip this step, ensuring that $G$ is never expanded again.
-If no safe rules are applicable to $G$, Aesop moves to the second phase, in which unsafe rules are applied as explained above.
+For safe rules, we skip this step, ensuring that $G$ is never expanded again.
+If no safe rules are applicable to $G$, Aesop moves to the second phase, in which unsafe rules are applied as previously discussed.
 
-Safe rules are considered to have success probability 100\%, so the subgoals of a safe rule receive the same priority as the parent goal.
+Safe rules are treated as if they had success probability 100\%, so the subgoals of a safe rule receive the same priority as the parent goal.
 To control the order in which safe rules are tried, users can give them an integer priority.
-This order does not affect provability --- assuming that rules marked as safe are actually safe --- but it does affect the search performance.
+This order does not affect provability (assuming that rules marked as safe are actually safe), but it does affect the search performance.
 For instance, suppose we have, in addition to safe $∧$-introduction, a safe rule $R$ that transforms a hypothesis $h : A$ into $h : B$.
 Then for the goal $h : A ⊢ P ∧ Q$, it is better to apply $R$ before $∧$-introduction; otherwise we would have to apply $R$ twice.
 
-In practice, the distinction between safe and unsafe rules can be tricky since safe rules must preserve provability relative to the whole rule set.
+In practice, safety is a somewhat subtle propertly since safe rules must preserve provability relative to the whole rule set.
 When we mark $∧$-introduction as safe, we require the rest of the rule set to maintain the invariant that whenever we can prove $Γ ⊢ P ∧ Q$, we can also prove $Γ ⊢ P$ and $Γ ⊢ Q$.
 This invariant can be violated, for example, by registering an unsafe rule $R$ which proves $P ∧ Q$: the rule will never be
 applied since any goal $Γ ⊢ P ∧ Q$ gets split by \enquote*{safe} $∧$-introduction before $R$ can be tried.
@@ -198,14 +198,11 @@ A typical Aesop proof workflow looks like this:
 Once the proof is complete, we collect the manual steps and turn them into Aesop rules.
 This allows Aesop to prove the initial goal $G$ fully automatically -- and hopefully other, similar goals as well.
 
-To report the safe goals, we must address one minor complication.
 It is possible for the search to terminate before all safe goals have been generated.
 For example, suppose $∧$-introduction is registered as a safe rule, and we search for a proof of the goal $⊥ ∧ (P ∧ Q)$.
-Then the safe goals are $⊥$, $P$ and $Q$.
-But Aesop may terminate after the first $∧$-introduction, realising that the goal $⊥$ cannot be proved, without ever applying the second $∧$-introduction to $P ∧ Q$.
-So it would wrongly report $⊥$ and $P ∧ Q$ as safe goals.
-Hence, we must expand all relevant safe rules (here: $∧$-introduction on $P ∧ Q$) before computing the safe goals.
-
+Then Aesop may terminate after the first $∧$-introduction, realising that the goal $⊥$ cannot be proved, without ever applying the second $∧$-introduction to $P ∧ Q$.
+In this case, it would be wrong to report $⊥$ and $P ∧ Q$ as the safe goals.
+Instead, we must exhaustively expand the applicable safe rules (possibly recursively) and only then report the correct safe goals $⊥$, $P$ and $Q$.
 
 \subsection{Multi-Rules}
 
@@ -215,7 +212,7 @@ If more than one constructor can be applied, it is more natural (and slightly fa
 Such rules are called \emph{multi-rules}.
 
 Unsafe multi-rules are a straightforward generalisation of unsafe regular rules and require almost no changes to the search procedure.
-Safe and normalisation multi-rules are trickier.
+Safe and normalisation multi-rules are more subtle.
 Normalisation multi-rules are not allowed at all since normalisation cannot branch.
 Safe multi-rules could be allowed, but their behaviour would be unintuitive: the whole raison d'être of safe rules is that they, too, do not branch.
 So safe multi-rules are also forbidden.
@@ -235,13 +232,13 @@ We now instantiate the best-first search framework to obtain a practical proof m
 \label{sec:aesop:rule-builders}
 
 Aesop rules are arbitrary tactics, but it would be highly inconvenient if users had to write a tactic whenever they want to add, say, a lemma as a rule.
-Aesop therefore provides several \emph{rule builders} which register theorems, definitions or types as rules. Rules are registered either locally, i.e.\ for a single Aesop invocation, or globally in a rule set.
+Aesop therefore provides several \emph{rule builders} which register theorems, definitions or types as rules.
+Rules can be registered locally -- for a section or for a single Aesop invocation -- or in a global rule set.
 Rule sets are collections of rules which can be activated or deactivated for each Aesop invocation.
 A distinguished default rule set is activated by default.
+Rules from a rule set can also be scoped to a particular namespace.
 
-
-\subsubsection{apply}
-
+\para{Apply.}
 Given a term $f$ of type $\All{\vec{x} : \vec{T}}{P~\vec{x}}$, the apply builder creates a rule which applies $f$ to goals $Γ ⊢ P~\vec{y}$.
 The arguments $\vec{x}$ are either inferred (by unification or type-class search) or become subgoals.
 
@@ -250,36 +247,36 @@ However, due to the inherent limitations of higher-order unification, the apply 
 Similar caveats also apply to some of the following rule builders.
 
 
-\subsubsection{constructors}
-
+\para{Constructors.}
 The constructors builder creates a rule which applies the constructors of an inductive type $I$.
 The rule has the same effect as if each constructor of $I$ had been added as an apply rule, except that these apply rules are combined into one multi-rule.
 
 
-\subsubsection{forward}
-
-Given a term $f : \All{\vec{x} : \vec{T}}{P~\vec{x}}$, the forward builder creates a rule which performs forward reasoning with $f$.
+\para{Forward.} Given a term $f : \All{\vec{x} : \vec{T}}{P~\vec{x}}$, the forward builder creates a rule which performs forward reasoning with $f$.
 This means that whenever a goal's local context contains hypotheses $\vec{h} : \vec{T}$, the rule adds a new hypothesis $h' : P~\vec{h}$.
 For example, the left $∧$-elimination lemma $\All{A~B}{A ∧ B → A}$, when used as a forward rule, reduces the goal $h : A ∧ B ⊢ T$ to $h : A ∧ B,\, h' : A ⊢ T$.
 If there are multiple sets of hypotheses with types $\vec{T}$, one new hypothesis is added for each set.
 
 More generally, users can partition the arguments $\vec{x}$ into \emph{immediate} arguments $\vec{a} : \vec{A}$ and \emph{non-immediate} arguments $\vec{b} : \vec{B}$.
-Then, Aesop searches only for hypotheses $\vec{h} : \vec{A}$ corresponding to the immediate arguments and, if successful, adds a hypothesis of type $\All{\vec{b} : \vec{B}}{P~\vec{h}~\vec{b}}$.
+Aesop then searches only for hypotheses $\vec{h} : \vec{A}$ corresponding to the immediate arguments and, if successful, adds a hypothesis of type $\All{\vec{b} : \vec{B}}{P~\vec{h}~\vec{b}}$.
 (This notation suggests that the immediate arguments must precede the non-immediate ones, but in fact they can be interleaved freely.)
 So the immediate arguments must be \enquote*{immediately available} as hypotheses while the non-immediate ones remain premises to be proved later. By default -- and in the example above -- all arguments which cannot be inferred are considered immediate.
 
 In the example, the left $∧$-elimination rule is again applicable to the subgoals it generated.
 This is a general issue with forward rules: when a rule applies to a set of hypotheses $\vec{h}$, the subgoals still contain $\vec{h}$, so the rule is still applicable.
-To prevent this sort of looping, whenever a forward rule tries to add a hypothesis $h : T$, we check whether any forward rule that was applied earlier on this branch of the search tree already added a hypothesis $h' : T$.
+To prevent this sort of looping, whenever a forward rule tries to add a hypothesis $h : T$, we check whether there is already a hypothesis $h' : T'$ with $T'$ reducibly definitionally equal to $T$.
 If so, the new hypothesis is not added and the rule fails.
 
 The destruct builder is a variant of the forward builder that removes any hypotheses that matched the immediate arguments.
 If we use left $∧$-elimination as a destruct rule, it reduces the goal $h : A ∧ B ⊢ T$ to $h : A ⊢ T$.
 Since the matched hypotheses are removed, destruct rules do not generally apply to their own subgoals, so there is no need to prevent cycles.
 
+The initial version of Aesop used a naive algorithm to apply forward rules.
+For each goal, this algorithm iterated through the forward rules (subject to the indexing discussed in Section~\ref{sec:aesop:indexing}) and the goal's hypotheses, looking for sets of hypotheses to match the rules' immediate arguments.
+Chapter~\ref{chap:forward} discusses a more sophisticated approach that caches much of this highly redundant work.
 
-\subsubsection{cases}
 
+\para{Cases.}
 Given an inductive family $I$ with arguments (parameters and indices) $\vec{x} : \vec{T}$, the cases builder creates a rule which performs case analysis on any hypothesis $h : I~\vec{x}$.
 For example, the cases rule for \Ty{Or}, the inductive type behind the notation $P ∨ Q$, reduces the goal $h : P ∨ Q ⊢ T$ to two subgoals $h : P ⊢ T$ and $h : Q ⊢ T$.
 To perform this case analysis, we use Lean's built-in \tac{cases} tactic, which uses the standard elimination principle for $I$.
@@ -288,14 +285,14 @@ To perform case analysis according to a non-standard elimination principle, user
 With this setup, the goal $h : I ⊢ T$ is first reduced to $h : J ⊢ T$ and then $h$ is split into the desired cases.
 
 Like forward rules, cases rules for recursive types, such as lists or trees, can loop.
-A cases rule for the List type splits the goal $l : \Ty{List}~α ⊢ P~l$ into two goals $⊢ P~[]$ and $a : α,\, l : \Ty{List}~α ⊢ P~(a ∷ l)$, and the same rule is again applicable to the second goal.
+A cases rule for the \Ty{List} type splits the goal $l : \Ty{List}~α ⊢ P~l$ into two goals $⊢ P~[]$ and $a : α,\, l : \Ty{List}~α ⊢ P~(a ∷ l)$, and the same rule is again applicable to the second goal.
 
 One solution for this problem is to register the cases rule as an unsafe rule with very low priority.
 Aesop then uses it only as a last resort.
 This method is simple and effective, but it is problematic if Aesop does not find a proof: once there are no other rules left to apply, the cases rule is, as before, applied ad infinitum.
 This sort of cases rule is therefore only suitable as an ad hoc rule.
 
-To support global cases rules as well, I provide a variant of the cases builder which avoids looping in some common cases.
+To support global cases rules as well, I provide a variant of the cases builder that avoids looping in some common cases.
 Consider the inductive predicate $\Ty{All}~P~\Var{xs}$, which encodes the proposition that all elements of the list \Var{xs} satisfy the predicate \Var{P}:
 \[
   \begin{array}{ll}
@@ -306,14 +303,13 @@ Consider the inductive predicate $\Ty{All}~P~\Var{xs}$, which encodes the propos
 \]
 When a goal contains a hypothesis $\Ty{All}~P~(x ∷ \Var{xs})$, we almost always want to perform a case split on this hypothesis, leaving us with two simpler hypotheses $P~x$ and $\Ty{All}~P~\Var{xs}$.
 Crucially, neither of these hypotheses has the same form as the initial one, so there is no infinite regress.
-To take advantage of this insight, Aesop allows users to annotate a cases rule with a \emph{pattern} which restricts the hypotheses to which the rule is applicable.
+To take advantage of this property, Aesop allows users to annotate a cases rule with a \emph{pattern} which restricts the hypotheses to which the rule is applicable.
 In the example, we would use the pattern $\Ty{All}~\_~(\_ ∷ \_)$ to ensure that an \Ty{All} hypothesis is only split if it refers to a non-empty list.
 Multiple patterns can also be given; the rule is then applied if at least one of the patterns matches a hypothesis.
 
 I also considered a third solution to the infinite regress issue: we could stipulate that once a cases rule has been applied to a hypothesis, it cannot be applied again to the descendants of that hypothesis; or, more generally, that it can only be applied to the first $n$ descendants.
 The vast majority of proofs should still work for, say, $n = 3$.
-Unfortunately the restriction is somewhat tricky to implement since Lean does not provide a reliable way to associate metadata with a hypothesis, but we want to support this in the future.
-% TODO future work?
+Unfortunately the restriction is difficult to implement since Lean does not provide a reliable way to associate metadata with a hypothesis.
 
 
 \subsubsection{tactic}
@@ -327,7 +323,7 @@ We only require that tactic rules either change the goal or fail, so they cannot
 \label{sec:aesop:simp}
 
 Lean's simplifier, which performs rewriting with a user-provided set of conditional rewrite rules, is used heavily in all big Lean projects.
-In particular, Mathlib~\cite{Mathlib}, a large library of formalised mathematics which contains most Lean code written to date, defines an extensive set of simplifier rules.
+In particular, Mathlib~\cite{Mathlib} defines an extensive set of simplifier rules.
 To make Aesop practical, we should leverage this existing automation.
 
 To that end, we integrate simplification into the normalisation process, adding a built-in normalisation rule which runs the simplifier on the entire goal (target type and hypotheses).
@@ -339,11 +335,11 @@ Lean's simplifier can be configured to use them in two ways.
 First, local equations can be used as rewrite rules, transforming the goal $h : x = y ⊢ P~x$ into $h : x = y ⊢ P~y$.
 This can be dangerous since local equations are not necessarily oriented in a way that works well with other rules.
 For example, a rule that proves $P~x$ may not fire any more.
-Worse, a rogue equation can easily make the simplifier loop.
+Worse, an unsuitable equation can easily make the simplifier loop.
 
-Second, local hypotheses which are propositions (but not equations) can be rewritten to truth values, transforming the goal $h_{1} : P,\, h_{2} : ¬ Q ⊢ P ∨ Q$ first into $\dots ⊢ ⊤ ∨ ⊥$ and then, via a global rewrite rule, into $\dots ⊢ ⊤$.
+Second, local hypotheses that are propositions (but not equations) can be rewritten to truth values, transforming the goal $h_{1} : P,\, h_{2} : ¬ Q ⊢ P ∨ Q$ first into $\dots ⊢ ⊤ ∨ ⊥$ and then, via a global rewrite rule, into $\dots ⊢ ⊤$.
 This functionality allows the simplifier to perform some propositional reasoning.
-In particular, conditional rewrite rules such as $P → x = y$ are, by default, used only if the antecedent $P$ simplifies to $⊤$.
+In particular, conditional rewrite rules such as $P → x = y$ are, by default, used only if the premise $P$ simplifies to $⊤$.
 
 In practice, it seems that, despite the danger of rewriting with local equations, letting the simplifier use local hypotheses substantially increases Aesop's utility.
 This behaviour is therefore enabled by default, but users can disable it for specific Aesop invocations.
@@ -353,8 +349,8 @@ This behaviour is therefore enabled by default, but users can disable it for spe
 \label{sec:aesop:indexing}
 
 So far, we have pretended that when a goal is expanded, all registered Aesop rules are tried in order of priority.
-But Aesop is intended to be used with a large rule set, so this naive approach would be prohibitively slow.
-We therefore add a \emph{rule index} which, given a goal $G$, efficiently determines a small subset of rules that may apply to $G$.
+But Aesop is intended to be used with a large rule set, so this naive approach would be slow.
+We therefore add a \emph{rule index} that, given a goal $G$, efficiently determines a small subset of rules that may apply to $G$.
 
 The index offers several \emph{indexing schemes}. An indexing scheme determines, given a rule and a goal, whether the rule is potentially applicable to the goal.
 Currently, three schemes are implemented:
@@ -377,34 +373,31 @@ Currently, three schemes are implemented:
 The first two schemes are implemented by one discrimination tree each.
 A discrimination tree is a trie-like data structure that maps expressions $T$ to arbitrary data (here: rules) and enables efficient retrieval of all values in the map whose key $T$ may unify with a query expression
 $U$~\cite{DiscriminationTrees}.
-(In Lean 4, discrimination trees are also used to index typeclass instances and simplifier lemmas.)
+In Lean, discrimination trees are also used to index typeclass instances and simplifier lemmas.
 For the by-target scheme, we query the discrimination tree with the goal's target.
 For the by-hypothesis scheme, we query the discrimination tree once per hypothesis.
 The disjunction scheme is implemented by inserting the rule into the relevant discrimination trees multiple times with different keys.
 
 Most rule builders have a natural indexing scheme.
-The exception is the tactic builder, which wraps arbitrary tactics.
-For tactic rules, users can specify a suitable indexing scheme themselves, if there is one.
+The exception is the tactic builder, which wraps arbitrary tactics; for such tactic rules, users can manually specify a suitable indexing scheme.
 
 When an indexed rule matches a goal, we communicate to the rule the set of \emph{match locations}.
 Each match location is either the goal's target or a specific hypothesis.
 Using the match locations, a cases rule, for example, does not need to scan the hypotheses of the goal to find those of the right type.
 Instead, it can immediately focus on the hypotheses that were matched by its indexing scheme.
 
-Like other Lean proof methods, notably the simplifier, the indexing schemes perform unification up to \emph{reducible} computation.
-Each Lean definition is annotated with one of several \emph{transparency modes}, which govern how eagerly the definition is unfolded during unification.
-Most definitions have default transparency and are not unfolded by the unification methods used by automation tactics; only those with reducible transparency are.
-Aesop's indexing follows this scheme.
-This, along with a convention that only non-recursive definitions are tagged as reducible, ensures that discrimination tree indexing does not miss any possible matches (with rare exceptions), but it also weakens certain rules.
+Like other Lean proof methods, notably the simplifier, the indexing schemes perform unification at reducible transparency.
+Along with a convention that only non-recursive definitions are tagged as reducible, this ensures that discrimination tree indexing does not miss any possible matches (with rare exceptions).
+However, it also weakens certain rules.
 For example, a rule that proves the goal $a ∷ \Var{as} = b ∷ \Var{bs}$ could also prove $[a] \mathbin{++} \Var{as} = [b] \mathbin{++} \Var{bs}$ since the two goals unify once the list concatenation operator $\mathbin{++}$ is unfolded.
 But this operator has default transparency, so the index does not unfold it and the rule is never tried on the second goal.
-To compensate, we can register a simplification rule which normalises $[a] \mathbin{++} \Var{as}$ to $a ∷ \Var{as}$.
+To compensate, we can, for example, register a simplification rule that normalises $[a] \mathbin{++} \Var{as}$ to $a ∷ \Var{as}$.
 
 
 \subsection{Default Rules}%
 \label{sec:aesop:builtin}
 
-Aesop's default rules perform uncontroversial reasoning steps, mostly pertaining to the logical connectives.
+Aesop's default rules perform uncontroversial reasoning steps mostly pertaining to the logical connectives.
 Hypotheses $h : P ∧ Q$ are eliminated during normalisation, yielding separate hypotheses $\Var{h₁} : P$ and $\Var{h₂} : Q$, and similar for products $P × Q$.
 Goals of the form $Γ ⊢ P ∧ Q$ are reduced to $Γ ⊢ P$ and $Γ ⊢ Q$ by registering $∧$-introduction as a low-priority safe rule.
 For sum-like types such as disjunction, the respective elimination rule, which splits the goal into two subgoals, is safe with low priority.
@@ -412,7 +405,7 @@ The respective introduction rules, which select one branch of the sum, are unsaf
 
 Universally quantified goals $Γ ⊢ \All{\vec{x} : \vec{T}}{P~\vec{x}}$ are normalised to $Γ,\, \vec{x} : \vec{T} ⊢ P~\vec{x}$.
 When a goal with target $P~\vec{x}$ contains a hypothesis $h : \All{\vec{y}}{P~\vec{y}}$, $h$ is applied as an unsafe rule.
-We give this rule 75\% success probability, assuming that when a local hypothesis can be applied, it is usually a good idea to do so.
+We give this rule 75\% success probability, assuming that when a local hypothesis can be applied, it is often a good idea to do so.
 In the special case where $h$ has no premises, it is applied safely and proves the goal.
 
 Existentially quantified hypotheses are split eagerly.
@@ -428,46 +421,42 @@ This is safe since $t$, having been removed from the goal, can never appear in a
 Symmetrically, if $u$ is a local hypothesis, we substitute $t$ for $u$ and remove $u$ and $h$.
 
 Goals of the form $Γ ⊢ P ↔ Q$ are split into subgoals $Γ ⊢ P → Q$ and $Γ ⊢ Q → P$.
-Hypotheses of type $P ↔ Q$ are treated like equalities $P = Q$ by appealing to propositional extensionality, an axiom which Lean uses pervasively.
+Hypotheses of type $P ↔ Q$ are treated like equalities $P = Q$ by appealing to propositional extensionality, an axiom that Lean uses pervasively.
 
-The only default rule which does not pertain to logical connectives (apart from some rules for technicalities) is a low-priority safe case-splitting rule.
-If a goal's target contains an if-then-else or match expression, then this rule performs a case split on $t$, producing a simpler goal for each possible case.
+The only default rule that does not pertain to logical connectives (apart from some rules for technicalities) is a low-priority safe case-splitting rule.
+If a goal's target contains an if-then-else or match expression, then this rule performs a case split on the discriminant, producing a simpler goal for each possible case.
 A similar rule applies to hypotheses containing such expressions, with even lower priority.
 
 Designating so many default rules as safe can lead to unintuitive results.
 For example, as mentioned in Sec.~\ref{sec:aesop:safe}, splitting a goal with target $P ∧ Q$ into goals with targets $P$ and $Q$ is unsafe if the rule set contains an unsafe rule which proves $P ∧ Q$, but not rules which prove $P$ and $Q$.
-However, I believe it would be worse to make these rules unsafe, both for performance and because the printing of safe goals, which is an important debugging aid, becomes less useful if the safe rules are overly conservative.
+However, I believe it would be worse to make these rules unsafe, both for performance and because the printing of safe goals, which is an important debugging aid, becomes less useful if the safe rules are too conservative.
 
 
 \section{Best-First Proof Search with Metavariables}%
 \label{sec:aesop:mvars}
 
 We now extend the search algorithm to support goals containing metavariables.
-A \emph{metavariable} (sometimes called schematic variable, existential variable or just free variable) is an expression which represents a typed term to be determined later.
-For instance, the goal $\mv{m} > 0 ∧ \mv{m} < 3$, where $\mv{m}$ is a metavariable of type $ℕ$, can be proved if $\mv{m}$ is assigned the value $1$ ($\mv{m} ≔ 1$) or if $\mv{m}$ is assigned the value $2$.
-
 In interactive proofs, metavariables are created when we use a tactic without specifying all relevant information.
 A typical example is $∃$-introduction, which reduces a goal $\Ex{w}{P~w}$ to $P~\mv{w}$, leaving the witness $\mv{w}$ to be determined later.
-Of course, the witness can also be specified up front, but using a metavariable can be convenient: perhaps we can reduce $P~\mv{w}$ to $\mv{w} = 0$, in which case we can appeal to the reflexivity of equality to prove the goal, assigning $\mv{w} ≔ 0$ as a side-effect.
+Of course, the witness can also be specified up front, but using a metavariable can be convenient: perhaps we can reduce $P~\mv{w}$ to $\mv{w} = 0$, in which case we can appeal to the reflexivity of equality to prove the goal, assigning $\mv{w} ≔ 0$ as a side effect.
 
 Mirroring the interactive use of metavariables, Aesop allows rules like $∃$-introduction to create and assign metavariables.
-This way of handling existential quantification is obviously incomplete since only witness terms induced by a subsequent rule application are considered.
+This way of handling existential quantification is complete in theory since we could always have a rule that assigns the correct witness to the metavariable.
+In practice, it is highly incomplete since only witness terms induced by a subsequent unification are considered.
 But it is also cheap, reasonably effective and familiar to users from their interactive proofs.
 
 Another important class of rules which create metavariables are transitivity rules, which reduce a goal $x ≤ z$ to subgoals $x ≤ \mv{y}$ and $\mv{y} ≤ z$.
-These rules illustrate the main challenge of dealing with metavariables: they couple goals.
-A metavariable represents the same term everywhere it appears.
-So when we apply, say, reflexivity to the first subgoal $x ≤ \mv{y}$, we assign $\mv{y} ≔ x$ as a side-effect and the second subgoal becomes $x ≤ z$.
-\emph{How} the first subgoal is proved now determines how, and indeed whether, we can prove the second.
+These rules illustrate the main challenge of dealing with metavariables: they \emph{couple} goals.
+A metavariable represents the same term everywhere it appears, so when we apply, say, reflexivity to the first subgoal $x ≤ \mv{y}$, we assign $\mv{y} ≔ x$ as a side effect and the second subgoal becomes $x ≤ z$.
+Hence, \emph{how} the first subgoal is proved now determines how, and indeed whether, we can prove the second.
 
-This is a problem because the search procedure assumes that goals are independent.
+This is a problem because the search procedure outlined so far assumes that goals are independent.
 When we apply the reflexivity rule to $x ≤ \mv{y}$, we do not intend to commit to the resulting assignment $\mv{y} ≔ x$ for the remainder of the search.
 We may, after all, have an assumption $x ≤ a$ in the context which induces another instance of the second subgoal: $a ≤ z$ with $\mv{y} ≔ a$.
 And since we are doing best-first search, we may visit the second subgoal first and apply a rule which assigns $\mv{y} ≔ b$, changing the first subgoal to $x ≤ b$.
 The search procedure should consider all these possibilities.
 
-If we were to use a search strategy based on backtracking, such as depth-first search, this would be easy.
-We would merely have to ensure that when a rule application is backtracked, any metavariable assignments it has performed are erased.
+If we were to use a search strategy based on backtracking, such as depth-first search, this would be straightforward: we would merely have to ensure that when a rule application is backtracked, any metavariable assignments it has performed are erased.
 But for best- or breadth-first search, all assignments must be considered in parallel.
 So for the above example, the search tree must reflect the fact that we may prove any of the sets of goals $\{x ≤ x, x ≤ z\}$, $\{x ≤ a, a ≤ z\}$ and $\{x ≤ b, b ≤ z\}$.
 In the remainder of this section, I present an extension of the search algorithm that achieves this.
@@ -477,10 +466,10 @@ In the remainder of this section, I present an extension of the search algorithm
 \label{sec:aesop:mvars-overview}
 
 To see the core issue with metavariables, suppose we have a rapp $R$ with subgoals $G[\mv{x}]$ and $H[\mv{x}]$ that depend on $?x$.
-$G$ and $H$ are \emph{m-coupled} (\enquote{metavariable-coupled}), meaning they share a metavariable $\mv{x}$ such that if $G$ is proved for some assignment $\mv{x} ≔ a$, then we must also prove $H[\mv{x} ≔ a]$ (i.e.\ $H$ with $a$ substituted for $\mv{x}$) to get a proof of the parent rapp $R$.
+$G$ and $H$ are \emph{m-coupled} (\emph{metavariable-coupled}), meaning they share a metavariable $\mv{x}$ such that if $G$ is proved for some assignment $\mv{x} ≔ a$, then we must also prove $H[\mv{x} ≔ a]$ (i.e.\ $H$ with $a$ substituted for $\mv{x}$) to get a proof of the parent rapp $R$.
 We can view $H[\mv{x} ≔ a]$ as a \enquote*{virtual subgoal} of the rule which proves $G$.
 
-My solution for this issue is simply to make the virtual subgoal an actual subgoal: when a rule $S$ is applied to $G$ and assigns $\mv{x} ≔ a$, then $H[\mv{x} ≔ a]$ is added as an additional subgoal of the $S$ rapp.
+Aesop's solution for this issue is simply to make the virtual subgoal an actual subgoal: when a rule $S$ is applied to $G$ and assigns $\mv{x} ≔ a$, then $H[\mv{x} ≔ a]$ is added as an additional subgoal of the $S$ rapp.
 The additional subgoal is called an \emph{m-copy} of $H$.
 Symmetrically, when a rule $T$ is applied to $H$ and assigns $\mv{x} ≔ b$, then $G[\mv{x} ≔ b]$ is added as an additional subgoal of $T$.
 
@@ -544,7 +533,6 @@ To prove $R$, it therefore suffices to prove $G_{3}$ (plus any other subgoals of
 
 Fig.~\ref{fig:mvars-proved} visualises this example.
 Proved nodes are underlined.
-The dotted boxes around goals will become relevant shortly.
 We have added an additional subgoal of $R$, $G_{4}$, which is not m-coupled to $G_{3}$ and therefore needs to be proved separately.
 To keep the figure simple, each goal is proved by a single rule application with one subgoal, but in general, there could be an entire subtree between, say, $G_{3}$ and $R_{1}$.
 Moreover, the figure shows a proof attempt in which we happen to apply exactly those rules that lead to a proof.
@@ -564,10 +552,9 @@ These data could also be computed on demand; we only cache them for efficiency.
 
 In each goal node, we store the set of metavariables that the goal depends on.
 These are the metavariables that occur in the goal's hypotheses and in its target type.
-We assume for simplicity that assigned metavariables are immediately substituted everywhere, so only unassigned metavariables can occur in a goal.
+We assume for the purposes of exposition that assigned metavariables are immediately substituted everywhere, so only unassigned metavariables can occur in a goal.
 Additionally, metavariables occurring in the goal may in turn depend on other metavariables, since the type or context of a metavariable may contain other metavariables.
-We collect these recursively.
-The recursion terminates since cyclic dependencies between metavariables are not allowed.
+We collect these recursively, which terminates since cyclic dependencies between metavariables are not allowed.
 Obtaining the metavariables that occur in an expression is reasonably cheap since Lean optimises the common case in which an expression does not contain any metavariables.
 
 In each rapp node, we store two additional pieces of information.
@@ -582,7 +569,7 @@ Note that $G_{1}$ and $G_{3}$ do not have a metavariable in common, but they are
 In the figure, metavariable clusters are indicated by dotted boxes around sets of goals, but all clusters except for one are trivial, containing only one goal each.
 
 Formally, for two goals $G$ and $H$ we write $G \sim H$ if there is a metavariable on which both $G$ and $H$ depend.
-We define $\approx$ as the transitive closure of $\sim$.
+Let $\approx$ be the transitive closure of $\sim$.
 Since $\sim$ is already reflexive and symmetric, $\approx$ is an equivalence relation, and the metavariable clusters of a rapp are the equivalence classes of the rapp's subgoals with respect to $\approx$.
 
 Metavariable clusters can be viewed as a third type of node in the tree.
@@ -603,7 +590,6 @@ The definition of irrelevance also remains unchanged: a node (which can now also
 
 When a search tree contains no metavariables, each goal is only m-coupled to itself, so there is one metavariable cluster per goal.
 The metavariable-free version of the algorithm from Sec.~\ref{sec:aesop:abstract-framework} then emerges as a special case of the metavariable-encumbered one.
-% TODO duplicate
 
 
 \subsection{Copying}%
@@ -626,19 +612,16 @@ Second, we may discover multiple goals $H_{1}, \dots, H_{k}$ which are copies of
 Note that we copy only the sibling goals themselves and not their subtrees.
 This means that any rules which were applied to the sibling goals must be re-applied to their copies.
 In general, this is necessary because the copied goals have different types and hypotheses (on account of the metavariable substitution we applied to them), so re-applying the rules may yield different results.
-But it is still somewhat inefficient.
-A possible solution to this issue is discussed in Sec.~\ref{sec:aesop:mvars-discussion}.
+But it is somewhat inefficient; a possible solution is discussed in Sec.~\ref{sec:aesop:mvars-discussion}.
 
 
 \subsection{Interaction with Safe Rules}%
 \label{sec:aesop:mvars-safe}
 
 Most safe rules become unsafe if they assign metavariables.
-This applies even to straightforward rules such as proof by assumption.
-Consider goals $h_{1} : α,\, h_{2} : β ⊢ \mv{x}$ and $⊢ β → \mv{x}$.
-If we prove the first goal via $h_{1}$, the second goal may well become unprovable.
-If we use $h_{2}$ instead, the second goal is trivial.
-So proof by assumption does not preserve provability in the presence of metavariables.
+For example, consider goals $h_{1} : α,\, h_{2} : β ⊢ \mv{x}$ and $⊢ β → \mv{x}$.
+If we prove the first goal via $h_{1}$, the second goal may well become unprovable; if we use $h_{2}$ instead, the second goal is trivial.
+So even proof by assumption does not preserve provability in the presence of metavariables.
 
 Accordingly, Aesop treats any safe rule that assigns a metavariable as unsafe.
 This means that when expanding a goal $G$, we first run the safe rules applicable to $G$, as usual.
@@ -646,8 +629,8 @@ Whenever one of these rules assigns at least one metavariable, we do not add the
 Instead, we treat the rule as failed but store its result (subgoals and some metadata) in a list of \emph{postponed} safe rapps.
 We then continue to apply the remaining safe rules.
 If one of them succeeds without assigning metavariables, we apply it directly and discard the postponed rapps.
-Otherwise -- if all safe rules either fail or assign metavariables -- we apply the unsafe rules as usual, but we also add the postponed rapps as unsafe rules with success probability 90\%.
-When Aesop selects a postponed rapp to be applied as an unsafe rule, it does not re-execute the rule but simply adds its stored result to the search tree.
+Otherwise -- if all safe rules either fail or assign metavariables -- we apply the unsafe rules as usual, but we also treat the postponed rapps as unsafe rules with success probability 90\%.
+When Aesop selects a postponed rapp to be applied as an unsafe rule, it does not re-execute the rule but just adds its stored result to the search tree.
 
 In principle, one could imagine a safe rule that only assigns metavariables safely and thus does not need to become unsafe.
 But in practice, I have yet to encounter such a rule.
@@ -657,9 +640,9 @@ But in practice, I have yet to encounter such a rule.
 \label{sec:aesop:mvars-norm}
 
 For normalisation rules, metavariable assignments must be restricted even more than for safe rules.
-Since normalisation rules must also be safe, we have the same issue as with safe rules.
+Since normalisation rules must be safe, we have the same issue as with safe rules.
 Additionally, normalisation rules are applied in a fixpoint loop, so there is no natural way to postpone a normalisation rule.
-Hence, we simply forbid normalisation rules from creating or assigning metavariables.
+Hence, we forbid metavariable creation or assignment in normalisation rules.
 
 This restriction is, for the most part, unobtrusive in practice, with one unfortunate exception.
 The current implementation of cases rules uses Lean's built-in \tac{cases} tactic.
@@ -674,11 +657,10 @@ Recall that when a rule $R$ is applied to a goal $G[\mv{x}]$, there must be at l
 If this is not the case, $\mv{x}$ has been dropped, and so far we have disallowed dropped metavariables.
 
 However, this restriction turns out to be too harsh.
-One application -- Jesse Vogel's Duck tool\footnote{\url{https://github.com/jessetvogel/duck}}, which aims to use Aesop to find examples of structures with certain properties in algebraic geometry -- provided this simple example: under the assumption that the integers form a ring and that every ring $R$ has a ring automorphism $\Fn{id} : \Ty{RingHom}~R~R$, show
+Consider this example, due to Jesse Vogel: under the assumption that the integers form a ring and that every ring $R$ has a ring automorphism $\Fn{id} : \Ty{RingHom}~R~R$, show
 \[
   \Ex{R : \Ty{Ring}}{\Ty{RingHom}~R~R}
 \]
-
 To prove this goal, Aesop first applies $∃$-introduction, obtaining the goal $\Ty{RingHom}~\mv{R}~\mv{R}$.
 It then tries to apply $\Fn{id}$, which proves the goal without assigning $\mv{R}$, so $\mv{R}$ is dropped.
 Since this is forbidden, the application of $\Fn{id}$ fails and the goal cannot be proved.
@@ -688,9 +670,8 @@ But at the same time, we must take care not to violate the conditions that led u
 \begin{itemize}
   \item
     Dropped metavariables must be assigned eventually.
-    This is necessary in dependent type theory since the type of a metavariable could be uninhabited.
-    An unassigned metavariable of type $T$ corresponds to an assumption that we can inhabit $T$.
-    (The situation would be different in a logic that only has inhabited types, such as the logic of Isabelle/HOL.)
+    This is necessary in dependent type theory since the type of a metavariable could be uninhabited, and an unassigned metavariable of type $T$ corresponds to an assumption that we can inhabit $T$.
+    (The situation is different for logics that only have inhabited types, e.g.\ HOL.)
   \item
     When we prove a goal $G[\mv{x}]$ and drop $\mv{x}$ in the process, we must ensure that related goals containing $\mv{x}$ are proved as well.
 \end{itemize}
@@ -710,7 +691,7 @@ If this were not the case, we could end up with a solution $a$ for the subgoal $
 \subsection{Summary}%
 \label{sec:aesop:mvars-summary}
 
-Putting everything together, I provide pseudocode for the procedure that adds a new rapp to the search tree as Algorithm~\ref{alg:aesop:add-rapp}.\footnote{The corresponding real code is in \texttt{Aesop/\allowbreak Tree/\allowbreak AddRapp.lean}.}
+I provide pseudocode for the procedure that adds a new rapp to the search tree as Algorithm~\ref{alg:aesop:add-rapp}.\footnote{The corresponding real code is in \texttt{Aesop/\allowbreak Tree/\allowbreak AddRapp.lean}.}
 It shows the most involved parts of metavariable handling, including the copying procedure.
 
 \begin{algorithm}
@@ -787,25 +768,24 @@ Identifying goals by their origin, we exclude copies of goals on the path and co
 
 The search algorithm we have discussed is conceptually attractive for two reasons.
 First, it is a strict and fairly simple generalisation of the algorithm without metavariables.
-Second, it is very general: it works for any search strategy and makes almost no assumptions about how rules interact with metavariables.
-We only require that rules limit their assignments to metavariables appearing in the goals to which the rules are applied.
+Second, it is very general: it works for any search strategy and makes no assumptions about how rules interact with metavariables, except that rules limit their assignments to metavariables appearing in the goals to which the rules are applied.
 
 The downside of this generality is some inefficiency.
-In particular, as mentioned in Sec.~\ref{sec:aesop:mvars-copying}, our algorithm treats goals which are m-copies of each other as entirely independent, so a rule applied to one has no effect on the others.
+In particular, as mentioned in Sec.~\ref{sec:aesop:mvars-copying}, our algorithm treats goals that are m-copies of each other as entirely independent, so a rule applied to one has no effect on the others.
 For an example of how this leads to inefficiency, suppose the goal $h : n < \mv{x} ⊢ A$ appears in the search tree.
 Then, during the search, we likely create a number of m-copies of this goal with different instantiations for $\mv{x}$.
 Now consider a rule $R : B → A$.
 When this rule is applied to one m-copy of the goal, we could recognise that $R$ is independent of the instantiation of $\mv{x}$ and therefore applies to every m-copy.
 As it stands, our algorithm does not take advantage of this optimisation opportunity.
 However, the optimisation is also valid only for certain rules.
-A rule which searches for contradictory hypotheses $n < 0$ (where $n$ is a natural number) is not independent of the instantiation of $\mv{x}$ and therefore cannot be shared between m-copies of the goal.
+A rule that searches for contradictory hypotheses $n < 0$ (where $n$ is a natural number) is not independent of the instantiation of $\mv{x}$ and therefore cannot be shared between m-copies of the goal.
 
-I believe that our algorithm is as complete as possible, in the following sense.
+I conjecture that the proposed algorithm is as complete as possible, in the following sense.
 Suppose we use a fair search strategy, i.e.\ one which guarantees that every rule will eventually be applied to every goal.
 Take a goal $G$ that can be proved by applying a sequence of rules from the rule set, creating and assigning arbitrary metavariables in the process.
-Then, I conjecture, the algorithm will also find a proof of $G$.
+Then the algorithm will also find a proof of $G$.
 Intuitively, this is because we only add to the search tree, so it is not possible to apply a rule in such a way that another rule cannot be applied any more.
-Thus, under the assumption of a fair search strategy, each rule in the proving sequence of rules is applied eventually, unless the goal to which it would be applied is already proved.
+Thus, by fairness, each rule in the proving sequence of rules is applied eventually, unless the goal to which it would be applied is already proved.
 
 
 \section{Case Studies}%
@@ -822,16 +802,16 @@ Perhaps as a result, there is currently no standard benchmark for white-box proo
 \subsection{Lists}%
 \label{sec:aesop:lists}
 
-As a first test of Aesop, we port some lemmas about lists from Lean 3 to Lean 4.
-% TODO discuss Lean 3
-We consider the Mathlib file \textsf{data/list/basic.lean}.
+As a first test of Aesop, we port some lemmas about lists from Lean~3 to Lean~4.
+(When this case study was created, Mathlib had not yet been ported to Lean~4.)
+We consider the Lean~3 Mathlib file \textsf{data/list/basic.lean}.
 This file contains many lemmas about basic list functions such as \textsf{length}, \textsf{append} and \textsf{reverse}, and about predicates such as subset and membership.
-We take the first 200 of these lemmas and port them to Lean 4.
+We take the first 200 of these lemmas and port them to Lean~4.
 
 Of the 200 lemmas, 16 which merely state definitional equations are excluded.
 (Such lemmas are used to register definitional equations with the simplifier; Aesop trivially proves them.)
-For lemmas which reference notations or concepts that are not available in Lean 4, we either add the necessary definitions or, in 11 cases, exclude the lemma.
-Some of the remaining 173 lemmas are already proved in Lean 4, in which case we re-prove them.
+For lemmas which reference notations or concepts that are not available in Lean~4, we either add the necessary definitions or, in 11 cases, exclude the lemma.
+Some of the remaining 173 lemmas are already proved in Lean~4, in which case we re-prove them.
 If these lemmas are registered as global simplifier rules, we remove them first; otherwise Aesop's job would be very easy.
 
 Whenever we prove a lemma that makes a good global Aesop rule, we add the lemma to the global Aesop rule set.
@@ -840,8 +820,8 @@ We also add a few lemmas about other concepts (injective/surjective/involutive f
 With this setup, Aesop proves 109 (63\%) of the list lemmas outright.
 If we manually perform induction where necessary (which Aesop by design does not do), Aesop proves 163 (94\%) of the lemmas.
 Specifically, for lemmas that require induction, we either add one or more calls to the induction tactic (after possibly unfolding some definitions and introducing hypotheses) or we write the lemma as a match statement, use a recursive call to prove the induction hypotheses and let Aesop do the rest.
-The latter is the most ergonomic way to perform functional induction in Lean.
-% TODO mention functional induction
+The latter was, at the time the case study was created, the most ergonomic way to perform functional induction in Lean.
+(Now, there is a dedicated \lean|fun_induction| tactic.)
 
 Of the 10 lemmas Aesop cannot prove, 4 involve non-trivial instantiations of existential quantifiers, e.g.
 \[
@@ -851,7 +831,7 @@ Aesop's quantifier instantiation method, which relies solely on unification, is 
 The other 6 unsolved lemmas fail either because a lemma is missing from the library (2) or because Aesop's rule set misfires in specific situations (4).
 
 Of the 163 lemmas Aesop (plus induction) can prove, 48 (29\%) require local rules; the rest are solved using only global rules.
-By far the most common local rule, with 25 occurrences, is a low-priority unsafe rule which performs a case split on hypotheses of type \Ty{List}.
+By far the most common local rule, with 25 occurrences, is a low-priority unsafe rule that performs a case split on hypotheses of type \Ty{List}.
 Since each such case split produces another hypothesis of type \Ty{List}, this rule can loop, so it is not suitable as a global rule.
 But for lemmas which require such a case split, we can add the rule and due to its low priority, Aesop applies it only as a last resort.
 This ensures that if a proof is found, it is found quickly.
@@ -864,21 +844,21 @@ In our case study, this happens two times; in both cases, Aesop succeeds once we
 
 To get a broad idea of how fast Aesop is, I also ran a small benchmark involving this case study.
 For the benchmark, I prepared a version of the case study in which all lemmas are proved by hand.
-The proofs are written in the runtime-efficient style of Mathlib (most proofs are translated from Lean 3), meaning they involve no expensive tactics except the simplifier, which moreover is always given the exact set of lemmas it should simplify with.
+The proofs are written in the runtime-efficient style of Mathlib (most proofs are translated from Lean~3), meaning they involve no expensive tactics except the simplifier, which moreover is always given the exact set of lemmas it should simplify with.
 Thus, the hand-written version of the case study has close to optimal performance.
 I then compared the total time Lean takes to typecheck the hand-written version and the Aesop version of the case study, averaging over 10 runs each.
-On one particular machine, the hand-written version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045).
+On my machine, the hand-written version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045).
 This means delegating all proofs to Aesop resulted in a slowdown of 2.53x.
 When run on other machines, the benchmark yielded slowdowns of 2.59x and 2.60x.
 
-It is perhaps not surprising that Aesop is fairly successful in this case study: most of the lemmas are very simple.
-But automating trivial goals about basic data structures is still an important part of making interactive theorem provers less onerous to use, and many lemmas that are straightforward consequences of facts known to Lean could perhaps have been elided if Aesop had been available at the time.
+It is perhaps not surprising that Aesop is fairly successful in this case study -- most of the lemmas are very simple.
+But automating trivial goals about basic data structures is still an important part of making interactive theorem provers less onerous to use, and many lemmas that are straightforward consequences of other lemmas could perhaps have been elided if Aesop had been available at the time.
 
 
 \subsection{Propositional Sequent Calculus Prover}%
 \label{sec:aesop:leanprover}
 
-As a second test of Aesop, we consider a small prover for propositional logic~\cite{Villadsen20} in Lean 4.
+As a second test of Aesop, we consider a small prover for propositional logic~\cite{Villadsen20} in Lean~4.
 We use Aesop to verify the soundness and completeness of both the prover and the sequent calculus proof system it is based on.
 
 To that end, we first define the type \Ty{Form} of propositional formulas.
@@ -888,7 +868,7 @@ Aesop proves, after manual induction over \Ty{Form}, that if \Var{i} is decidabl
 Satisfiability of formulas extends to satisfiability of sequents: a sequent with premises $Γ$ and conclusions $Δ$ is valid if, whenever all premises are true, at least one conclusion is true.
 Formally, $\Ty{All}~(\Ty{Val}~i)~Γ$ implies $\Ty{Any}~(\Ty{Val}~i)~Δ$.
 We saw \Ty{All} earlier; \Ty{Any} is similar but encodes the fact that \emph{some} element in the list satisfies the predicate.
-The cases rule for \Ty{Any} makes good use of patterns: case analysis on a hypothesis that matches the pattern $\Ty{Any}~\_~[]$ is safe since the hypothesis is contradictory; case analysis on a hypothesis which matches $\Ty{Any}~\_~(\_ ∷ \_)$ is unsafe but often useful.
+The cases rule for \Ty{Any} makes good use of patterns: case analysis on a hypothesis that matches the pattern $\Ty{Any}~\_~[]$ is safe since the hypothesis is contradictory; case analysis on a hypothesis that matches $\Ty{Any}~\_~(\_ ∷ \_)$ is unsafe but often useful.
 
 With the help of this cases rule, we prove some fundamental lemmas about \Ty{All} and \Ty{Any}, such as a weakening lemma for \Ty{All}:
 \[
@@ -910,14 +890,14 @@ We verify soundness and completeness of the prover simultaneously, using inducti
 The main theorem states that \Ty{Cal} proves a sequent if and only if the sequent is valid for all decidable interpretations.
 
 Since the prover rearranges formulas, the proof relies on the fact that \Ty{All} and \Ty{Any} respect list permutations, as encoded by an inductive predicate taken from the Agda standard library.\footnote{\url{https://github.com/agda/agda-stdlib/blob/ebfb8814b4330b314da8fb9cae527e6a6fab01aa/src/Data/List/Relation/Binary/Permutation/Propositional.agda}}
-Here, Aesop significantly reduces our workload: that permutations are symmetric, that they are preserved by \Fn{map} and that \Ty{All} and \Ty{Any} respect permutations can be proven automatically after we perform induction.
+Here, Aesop significantly reduces our workload: it proves automatically (after induction) that permutations are symmetric, that they are preserved by \Fn{map} and that \Ty{All} and \Ty{Any} respect permutations.
 
 As a consequence of the soundness and completeness of \Ty{Cal}, we additionally obtain soundness and completeness of its underlying proof system, formulated as an inductive predicate $\Ty{Proof}~Γ~Δ$.
 A key ingredient of the proof is this weakening lemma:
 \[
   \Ty{Proof}~Γ~Δ → \Ty{Proof}~Γ~(δ ∷ Δ)
 \]
-After induction on the premise, Aesop proves the lemma automatically, apart from one case which requires an explicit application of the induction hypothesis.
+After induction on the premise, Aesop proves the lemma automatically, apart from one case that requires an explicit application of the induction hypothesis.
 This is because two of the constructors of \Ty{Proof} allow us to apply arbitrary permutations to the sequents, which Aesop's metavariable handling is too weak to find.
 These constructors also apply to every goal, so it is important that Aesop is not limited to depth-first search, which might get lost in infinite permutations.
 
@@ -926,7 +906,7 @@ These constructors also apply to every goal, so it is important that Aesop is no
 \label{sec:aesop:related-work}
 
 The closest relative of Aesop is Isabelle's auto~\cite{Isabelle,IsabelleAuto}.
-Like Aesop, it performs a tree-based search with integrated simplification and it distinguishes between safe and unsafe rules.
+Like Aesop, it performs a tree-based search with integrated simplification, and it distinguishes between safe and unsafe rules.
 Aesop adds a best-first strategy (auto is depth-first) and normalisation as a separate phase.
 It also adds a number of rule builders apart from auto's intro, elim and destruct rules, though some of these can be emulated with auxiliary Isabelle tools.
 
@@ -955,7 +935,7 @@ There are also black-box tools based on tree search, notably Rocq's sauto~\cite{
 These tools use fairly strong default rules, some of which could also be interesting for Aesop.
 But since they are push-button tools, their rules are also quite opaque.
 
-For Lean 3, Mathlib~\cite{Mathlib} already contains some search tactics which are currently being ported to Lean 4: continuity, measurability, tidy, tautology and finish.
+For Lean~3, Mathlib~\cite{Mathlib} already contains some search tactics which are currently being ported to Lean~4: continuity, measurability, tidy, tautology and finish.
 These tactics perform essentially depth-first search with various rule sets, so Aesop should supersede them.
 However, finish uses e-matching and so makes better use of unoriented equations.
 

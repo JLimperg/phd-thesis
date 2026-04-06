@@ -1,5 +1,3 @@
-% TODO reducibility, computation, unification
-
 \chapter{Background}%
 \label{chap:background}
 
@@ -10,7 +8,7 @@ However, Lean's approach to metaprogramming is more sparsely documented (TODO re
 
 \section{Lean's Extensible Compilation Pipeline}
 
-At a high level, Lean's typechecking and compilation pipeline follows is similar to that of other interactive theorem provers.
+At a high level, Lean's typechecking and compilation pipeline is similar to that of other interactive theorem provers.
 First, the \emph{parser} translates the input text into a concrete syntax tree, represented by the \lean|Syntax| type.
 The \emph{elaborator} then translates \lean|Syntax| into the abstract syntax tree of Lean's core type theory (TODO ref), represented by the \lean|Expr| type (and by various types of top-level declarations).
 Most of the compilation process happens here, including implicit argument inference, typeclass synthesis, termination checking and tactic execution.
@@ -19,38 +17,37 @@ Those who do not wish to trust even the kernel (which is vulnerable to, e.g., me
 Lean programs can also be compiled to native code, using a \emph{compiler} that branches off in the elaborator.
 
 Lean is made remarkably extensible via a number of interlocking mechanisms.
-First, Lean is implemented in Lean (and bootstrapped via a previous version, compiled to C).
-Then, in a somewhat daring move, the entire compiler API is exposed as a library.
-This means that Lean libraries have direct access to all relevant data structures (\lean|Syntax|, \lean|Expr|, etc.) and to the functions that Lean itself uses to manipulate them.
-For example, Lean includes many functions that match or construct expressions of a particular shape, and we can use these in our own metaprograms.
+First, Lean is implemented in Lean (bootstrapped via a previous version), and the API of the entire Lean system is exposed as a library.
+As a result, Lean code has direct access to all internal data structures (\lean|Syntax|, \lean|Expr|, etc.) and to the functions that Lean itself uses to manipulate them.
+For example, Lean includes many functions that construct or deconstruct expressions of a particular shape, and we can use these in our own metaprograms.
 
-Second, users can freely register new parsing functions for certain \emph{syntax categories}.
-A syntax category, such as \lean|command|, \lean|term| or \lean|tactic|, is conceptually just a list of parsing functions.
-To parse a top-level command in the input text, Lean then tries every registered parsing function from the \lean|command| syntax category, which may in turn refer to the other syntax categories.
+Second, users can register new parsers for certain \emph{syntax categories}.
+A syntax category, such as \lean|command|, \lean|term| or \lean|tactic|, is essentially just a list of parsers.
+To parse a top-level command in the input text, Lean then tries every registered parser from the \lean|command| syntax category, which may in turn refer to other syntax categories.
+To ease the definition of parsers, Lean provides the \lean|syntax| command that uses a domain-specific language resembling BNF grammars.
 For example, the parser for a simplified version of Lean's \lean|abbrev| command could be defined as
 \begin{leancode}
   syntax (name := "abbrevP")
     "abbrev " ident " : " term " := " term : command
 \end{leancode}
-We use an embedded domain-specific language provided by Lean that simplifies the definition of parsing functions.
-The \lean|syntax| command effectively desugars to a function \lean|abbrevP| that first matches the token \lean|abbrev|, then an identifier, then a colon token, and so on.
+The \lean|syntax| command desugars to a parsing function \lean|abbrevP| that first matches the token \lean|abbrev|, then an identifier, then a colon token, and so on.
 This function is registered in the \lean|command| syntax category, so it is tried whenever a command needs to be parsed.
-Note that the type and body of the \lean|abbrev| are \lean|term|s, so the \lean|abbrevP| parser implicitly uses whichever parsing functions for terms happen to be registered at the time it is executed.
+The type and body of the \lean|abbrev| are \lean|term|s, so when the \lean|abbrevP| parser is executed, it uses whichever parsers are registered in the \lean|term| category at the time.
 
-The registering of parsing functions (and various other pieces of configurations) is done via environment extensions.
-These are effectively mutable reference cells that are created when the module defining an environment extension is first imported.
-The environment extension for parsers stores lists of parsing functions for each syntax category, and the \lean|syntax| command modifies the environment extension reference cell to add the \lean|abbrevP| function.
-As a result, our custom \lean|abbrev| command can be parsed already directly after the \lean|syntax| command.
+Parsers are registered in \emph{environment extensions}, a general extensibility mechanism.
+These are mutable reference cells that are created when the module defining an environment extension is first imported.
+The environment extension for parsers stores lists of parsers for each syntax category, and the \lean|syntax| command modifies the environment extension reference cell to add the \lean|abbrevP| function.
+As a result, our custom \lean|abbrev| command can be parsed directly after the \lean|syntax| command.
 Additionally, environment extension modifications are serialised in the \lean|olean| files produced for each Lean module and are loaded when the module is imported.
-So whenever the module containing the \lean|syntax| declaration is imported, the \lean|abbrevP| function is added to the parser environment extension.
+Hence, whenever the module containing the \lean|syntax| declaration is imported, the \lean|abbrevP| function is added to the parser environment extension.
 
-Since the parser is extensible, the structure that it parses into -- the \lean|Syntax| concrete syntax tree -- must also be extensible.
+Since Lean's parser is extensible, the structure that it parses into -- the \lean|Syntax| concrete syntax tree -- must also be extensible.
 In fact, it is best understood as a parse tree that effectively records which parsers were applied and which tokens or identifiers they consumed.
 For instance, Fig.~\ref{fig:background:parse-tree} (TODO fig) shows the \lean|Syntax| tree generated by parsing the text \lean|abbrev n : Nat := 0 + 1| with the \lean|abbrevP| function.
 The top-level node carries the name of the parser that was applied, here \lean|abbrevP|.
 Its children record either tokens and identifiers that were consumed (\lean|abbrev|, \lean|n|, etc.) or recursive parser applications, here the \lean|TODO| term parser function that parses an application.
 
-Since the \lean|Syntax| tree is extensible, the elaborator must also be extensible.
+Extensibility of the \lean|Syntax| tree, in turn, implies extensibility of the elaborator.
 Lean again uses the environment extension mechanism to implement this.
 It expects us to define, for each registered parser function, a corresponding elaboration function, and to register it in an environment extension for elaboration functions.
 For our \lean|abbrev| command:
@@ -65,7 +62,7 @@ The function receives a \lean|Syntax| tree as input.
 The \lean|commandElab| attribute registers the function in the relevant environment extension, instructing the elaborator to execute it whenever the syntax tree produced by the parser starts with an \lean|abbrevP| node.
 Hence, we can assume that the input is of this form.
 We then match the syntax tree, extracting the syntactic components of the \lean|abbrev| command.
-The form of matching used here is syntactic sugar that expands to a complicated nested match on the \lean|Syntax| tree.
+The form of matching used here is syntactic sugar that expands to a complicated nested destructuring of the \lean|Syntax| tree.
 
 The elaboration function operates in the \lean|CommandElabM| monad, which allows access to various parts of Lean's internal state.
 It is part of a family of monads used in different parts of the elaborator.
@@ -73,52 +70,78 @@ In particular, this monad allows us to add top-level declarations to Lean's envi
 These are primitive commands, containing core type theory expressions, that are ultimately checked by the kernel and serialised to the \lean|olean| files.
 To construct declarations and the expressions therein, we can use all functions from the Lean APIs, including functions that elaborate terms, using any elaboration functions currently registered.
 
-If we had defined a custom term syntax, the elaboration function would have type \lean|Syntax → TermElabM Expr|.
-Term elaboration is by far the biggest part of the elaborator, so it can be understood largely as a translator from concrete syntax trees to expressions.
+If we had defined a custom term syntax, the elaboration function would have type \lean|Syntax → TermElabM Expr|, where the \lean|TermElabM| monad encapsulates the term elaborator's state.
+Term elaboration is by far the biggest part of the elaborator, so elaboration can be understood largely as translation from \lean|Syntax| to \lean|Expr|.
+
+The inverse of elaboration, \emph{delaboration}, converts expressions into \lean|Syntax| trees that can then be pretty-printed to obtain Lean code.
+The delaboration stage is not perfect -- it occasionally produces code that is not idiomatically formatted or even fails to compile.
+This can cause rare issues in applications relying on delaboration, such as the tactic script optimiser in Chapter~\ref{chap:script}.
 
 \section{Expressions and Metavariables}
 
-In this thesis, I largely abstract from the details of how Aesop constructs particular expressions, even though this is a substantial part of the Aesop implementation.
-Hence, there is no need to exhaustively discuss expressions.
-The digital book \emph{Metaprogramming in Lean 4} (TODO ref) contains a detailed discussion, but for us, it suffices to think of expressions as abstract syntax trees of a fairly simple dependent type theory (TODO ref).
+Expressions are abstract syntax trees of Lean's fairly standard core dependent type theory (TODO ref).
+They are the proof objects that are ultimately checked by Lean's kernel.
+In this thesis, I largely abstract from the details of how Aesop constructs particular expressions (even though this is a substantial part of Aesop's implementation), so there is no need to exhaustively discuss the different expression forms.
+Detailed introductions can be found in the Lean source code (TODO link) and in the digital book \emph{Metaprogramming in Lean 4} (TODO ref).
 
-However, one particular type of expression will repeatedly concern us: metavariables.
-These represent holes or placeholders in an expression.
-Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context}.
-We write $\mv{x} : T$ to indicate the type.
-The local context is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
+However, one particular type of expression will repeatedly concern us: metavariables\footnote{In other systems, metavariables are variously called schematic variables, existential variables or just variables.}, which we can view as holes or placeholders in an expression.
+Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context} $Δ$.
+We write $Δ ⊢ \mv{x} : T$, or $\mv{x} : T$ if $Δ$ can be inferred from the context.
+The local context $Δ$ is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
 Each fvar is identified by a globally unique internal name and has a type and a user-facing name.
-When we view metavariables as placeholders, the fvars represent variables that are currently in scope, so in the expression $\Lam{(n : ℕ)~(x : \mathrm{Fin}~n)}{\mv{y}}$ the metavariable $\mv{y}$ has a local context containing at least the fvars $n : ℕ$ and $x : \mathrm{Fin}~n$.
+We write $y : U$ for an fvar of type $U$, or $\vec{y} : \vec{U}$ for a list of fvars $y₁ : U₁, y₂ : U₂, \dots$.
+
+When we view metavariables as expression placeholders, the fvars represent variables that are currently in scope.
+Hence, in the expression $\Lam{(n : ℕ)~(x : \mathrm{Fin}~n)}{\mv{y}}$ the metavariable $\mv{y}$ has a local context containing at least the fvars $n : ℕ$ and $x : \mathrm{Fin}~n$.
 (It may contain additional fvars if the expression appears under additional binders.)
 The type of $\mv{y}$ could be, for example, $\mathrm{Fin}~n$.
-Types of later fvars may contain earlier fvars (e.g.\ the type of $x$ contains $n$), making local contexts \emph{telescopes}.
+Types of later fvars may contain earlier fvars -- e.g.\ the type of $x$ contains $n$ --, so local contexts are \emph{telescopes}.
 
 Once we are ready to fill the hole represented by a metavariable $\mv{x} : T$, we \emph{assign} to the metavariable an expression $e$.
 This assignment, written $\mv{x} ≔ e$, is valid if $e$ contains only the fvars present in the metavariable's local context and $e$ has type $T$.
 Conceptually, this replaces the metavariable with its assignment everywhere it appears.
 
-Metavariables are registered in a \emph{metavariable context} that maps each metavariable's internal name to its local context, type and assignment (if any).
+Metavariables are registered in a \emph{metavariable context} that maps each metavariable's internal name to its local context, type and potentially assignment.
 Hence, a metavariable is only valid in a metavariable context that contains its internal name.
+We usually work in a global metavariable context that is part of the state of the various elaborator monads.
 
-Metavariables can also be seen as goals, and I use the two terms interchangeably.
-This view is particularly natural for metavariables whose types are propositions according to the Curry-Howard correspondence.
-The fvars are then \emph{hypotheses} and the type of the metavariable (also called its \emph{target}) is a statement to be proved.
+Metavariables can also be seen as \emph{goals}, and I use the two terms interchangeably.
+This view is particularly natural for metavariables whose types are propositions.
+The fvars are then \emph{hypotheses} and the type of the metavariable, also called its \emph{target}, is a statement to be proved.
 
-\section{Tactics}
+\subsection{Definitional Equality, Reducibility and Unification}%
+\label{sec:background:unification}
 
-Tactics are an imperative domain-specific language for constructing expressions (usually proofs, i.e.\ expressions inhabiting a propositional type).
+In Lean, as in standard type theory, two expressions $t$ and $u$ are \emph{definitionally equal} (also called \emph{judgementally equal}) if they are equal up to computation.
+For instance, $(\Lam{x}{x})~y$ is definitionally equal to $y$.
+
+Lean stratifies definitional equality along several \emph{transparency} levels that indicate which definitions can be unfolded when checking definitional equality.
+At \emph{default} transparency, most definitions can be unfolded, but we often use the more restrictive \emph{reducible} transparency at which only definitions marked \lean|@[reducible]| or \lean|abbrev| are unfolded.
+This speeds up definitional equality checking since much fewer possible computation steps must be considered.
+However, it also means that users have to unfold more definitions manually.
+
+When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level as well.
+In fact, the same Lean function is used for unification and for definitional equality checking.
+Lean's unification is complete for a decidable first-order fragment (TODO ref) and supports some higher-order features, but it is necessarily incomplete for general higher-order unification problems (TODO ref).
+Aesop uses this unification procedure throughout, so whenever we discuss unification, we mean Lean's implementation rather than the mathematical notion on which it is based.
+
+
+\section{Tactics}%
+\label{sec:background:tactics}
+
+Tactics are a stateful domain-specific language for constructing expressions (usually proofs, i.e.\ expressions inhabiting a propositional type).
 We enter \enquote*{tactic mode} with the \lean|by| keyword; anything following it is parsed as a term of the tactic language.
 The syntax of each tactic is declared by registering a custom parser function as above (in the \lean|tactic| syntax category).
 
 The elaboration function of a tactic has type \lean|Syntax → TacticM Unit|, so tactics are elaborated in the \lean|TacticM| monad and change the state of the proof via side effects.
-The defining feature of \lean|TacticM| is that it grants access to the current \emph{tactic state}, a list of goals.
+The defining feature of \lean|TacticM| is that it grants access to the current \emph{tactic state}, a list of goals/metavariables.
 Initially, this list contains an initial goal whose target is the inferred type of the \lean|by| block.
 The local context of this goal consists of the variables in scope at the \lean|by|.
 Tactics then usually replace the first goal in the current tactic state with zero or more subgoals.
 (They can also operate on multiple or zero goals.)
 Goals that are removed from the tactic state are expected to be assigned a proof expression usually containing the subgoal metavariables.
 This scheme ensures that once the tactic state is empty, we can replace each metavariable with its assignment and obtain a metavariable-free expression that can replace the \lean|by| block.
-In this way, tactics function as a DSL for constructing expressions.
+Hence, tactics function as a domain-specific language for constructing expressions.
 
 I sometimes use a simplified model of tactics, pretending that the \lean|TacticM| monad's state contains only a metavariable context and tactic state.
 (In reality, it also contains various pieces of state related, for example, to term elaboration.)

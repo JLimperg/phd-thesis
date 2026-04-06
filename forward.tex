@@ -16,7 +16,7 @@ In the previous chapter, I briefly discussed \emph{forward rules}, which attempt
 Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
 The added hypothesis $h₃ : a < c$ may then be used by subsequent rules.
 
-Until recently, Aesop used the \emph{naive algorithm} from the previous chapter to apply forward rules.
+Initially, Aesop used the \emph{naive algorithm} from the previous chapter to apply forward rules.
 When a forward rule was run on a goal, the rule would search the goal's context for all combinations of hypotheses satisfying its premises.
 This method is simple but involves much repeated work because, in practice, contexts encountered during the search tend to be similar.
 For example, the $∧$-introduction rule, when run on $Γ ⊢ A ∧ B$, produces subgoals $Γ ⊢ A$ and $Γ ⊢ B$, so the naive algorithm runs the same forward rules on the same context $Γ$ three times.
@@ -28,7 +28,7 @@ When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ 
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
 The update first deletes partial matches that include hypotheses no longer present in $Δᵢ$.
 Afterwards it adds new partial matches for the hypotheses that are new in $Δᵢ$, extending the existing partial matches for a rule if the new hypothesis is compatible with them.
-Whenever this process produces a full match---i.e., all premises of a forward rule are satisfied by a set of hypothesis in $Δᵢ$---the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
+Whenever this process produces a full match -- i.e., all premises of a forward rule are satisfied by a set of hypothesis in $Δᵢ$ -- the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
 
 The main contribution of this chapter is a data structure, the \emph{forward state}, that organises the partial matches so that updates can be made efficiently.
 In addition to this \emph{incrementality}, the forward state satisfies two other desiderata:
@@ -183,7 +183,7 @@ The number of shared variables tends to be small in practice, so these intersect
 
 From these observations we can directly derive two procedures for adding hypotheses and matches to the rule state.
 The procedures maintain the invariants of the variable indices while reporting any complete matches discovered during this process.
-Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$---i.e., it contains the hypotheses of $Γ$ and all partial matches of $r$ that can be derived from them---then the rule state obtained from $\addHyp(h : T)$ corresponds to $Γ,\, h : T$.
+Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- i.e., it contains the hypotheses of $Γ$ and all partial matches of $r$ that can be derived from them -- then the rule state obtained from $\addHyp(h : T)$ corresponds to $Γ,\, h : T$.
 
 \begin{algorithm}
   \Input{A hypothesis $h : T$}
@@ -256,7 +256,7 @@ We have so far only considered rules where for each slot $i > 1$, the set of sha
 However, there are also rules such as $\All{x~y}{P~x → Q~y → R~x~y}$, where slot~2 ($Q~y$) shares no variables with slot~1 ($P~x$).
 In this case, any match at level 1 can be extended with any hypothesis at level 2, since the two slots are independent.
 
-To account for this fact, we partition the set of premises of each rule into maximal subsets of premises connected by shared variables, called \emph{variable clusters}, using the same construction as Aesop's \emph{metavariable clusters}~\cite{Aesop}.
+To account for this fact, we partition the set of premises of each rule into maximal subsets of premises connected by shared variables, called \emph{variable clusters}, using the same construction as Aesop's \emph{metavariable clusters} from Chapter~\ref{chap:aesop}.
 The variable clusters share no variables with each other, so each can be treated as a separate rule with its own rule state.
 Finding a complete match for a rule then amounts to finding one complete match for each of its clusters.
 The slots within each cluster can be ordered to ensure that each slot shares at least one variable with the previous slots.
@@ -421,19 +421,11 @@ This produces the complete match $[h₂, h₃]$, so we can add a new hypothesis 
 Implementing the preceding technique efficiently requires some care, particularly in the context of dependent type theory.
 
 \para{Matching.}
-In type theory, types contain programs and matching (or, more generally, unification) is expected to respect definitional equality, i.e.\ equality up to evaluation.
-For instance, a theorem with premise $P~2$, where $P$ is some predicate, should apply to a hypothesis of type $P~((\Lam{x}{x})~2)$ since the two types are definitionally equal.
-As a result, matching premises and hypotheses is arbitrarily expensive in theory and a major cost centre in practice.
-We therefore seek to avoid redundant invocations of the matching procedure.
-
-To limit the cost of matching, we match with \emph{reducible transparency}.
-Lean has multiple transparency levels that determine which constants are unfolded.
-\enquote{Reducible} is the most restrictive of these, so we unfold few (and, in practice, only non-recursive) definitions.
-Additionally, we use Lean's usual approximation of higher-order matching, which is complete for first-order matching problems and heuristically solves some higher-order problems.
-Either of these limitations render forward reasoning incomplete, but since the same matching algorithm is used throughout Lean, users are used to this source of incompleteness.
+As discussed in Chapter~\ref{chap:background}, unification in Lean, and generally in type theory, is expensive.
+When we match (i.e., unify) rule premises with hypotheses, we therefore use reducible transparency.
+As a result, users may have to perform some unfoldings manually or add corresponding Aesop rules.
 
 \para{Variable Index Implementation}
-
 The hypothesis index $H$ and the match index $M$ of a rule state have the same domain and are combined into one map.
 This map, whose domain is a set of triples $(x, i, t)$, is represented by three nested maps.
 The first two of these, whose keys are variable names $x$ and slot indices $i$, are persistent hash maps.
@@ -464,15 +456,15 @@ As a result, we may fail to identify redundant matches, but these are detected o
 \para{Lazy Insertion.}
 Adding a hypothesis to a rule state is cheap, but not free: it involves one unification for each slot that the hypothesis may match, according to a discrimination tree index, followed by several operations on the variable indices.
 We therefore delay insertions in two ways.
-First, observe that complete matches can only be generated once all slots have been filled.
+First, we observe that complete matches can only be generated once all slots have been filled.
 Therefore, hypotheses are matched against slots and inserted into the variable indices only once we have found a potentially matching hypothesis for each slot.
-Second, observe that the variable indices are only queried for hypotheses at a slot $i > 1$ when a match is added at slot $i - 1$.
+Second, we observe that the variable indices are only queried for hypotheses at a slot $i > 1$ when a match is added at slot $i - 1$.
 Hence, we delay the insertion of hypotheses at $i$ until there is at least one match in slot $i - 1$.
 
 \para{Phased Insertion}
-We delay insertions yet further by taking advantage of Aesop's partitioning of rules into several \emph{phases}.
-When Aesop tries to solve a goal, it first normalises it, using only rules tagged with the \emph{normalisation} phase.
-Then it tries to apply rules from the \emph{safe} phase, and only when all of them fail does it consider rules from the \emph{unsafe} phase.
+We delay insertions yet further by taking advantage of Aesop's partitioning of rules into several phases.
+When Aesop tries to solve a goal, it first normalises it, using only rules tagged with the normalisation phase.
+Then it tries to apply rules from the safe phase, and only when all of them fail does it consider rules from the unsafe phase.
 
 This means that we can delay updates to the rule states of normalisation rules until we start working on the goal; updates to safe rules until normalisation is finished; and updates to unsafe rules until we have applied all the safe rules.
 Sometimes, this allows us to avoid expensive operations, e.g.\ when a goal is solved only by safe rules and no unsafe rules need to be considered at all.
@@ -657,7 +649,7 @@ And indeed, Fig.~\ref{fig:forward:erase-noprecomp} shows that while both approac
 
 Fig.~\ref{fig:forward:erase-precomp} shows the results of the depth benchmark with \emph{precompilation} enabled.
 This is a feature of Lean that compiles tactics ahead of time instead of interpreting them.
-Both implementations benefit from this, but incremental forward reasoning does so disproportionately, perhaps because it uses more custom code that, unlike Lean's built-in routines, is usually interpreted.
+Both implementations benefit from this, but incremental forward reasoning does so disproportionately, perhaps because it uses more custom code that, unlike Lean's built-in routines, is normally interpreted.
 However, precompilation also substantially increases Aesop's build time, so it is disabled by default.
 
 \para{Mathlib Benchmark.}
@@ -667,7 +659,7 @@ In each configuration, the constants that appear in Mathlib's proof of the respe
 In the \emph{Aesop configuration}, Aesop, using naive or incremental forward reasoning, is run on each theorem.
 An invocation is successful if Aesop proves the theorem.
 Constants from the theorem's Mathlib proof are added as unsafe forward rules, so they receive a relatively low priority and their application can be backtracked.
-This configuration yields better results in practice than marking the rules as safe---even though forward rules are conceptually always safe---since it prevents Aesop from applying forward rules in an infinite loop.
+This configuration yields better results in practice than marking the rules as safe -- even though forward rules are conceptually always safe -- since it prevents Aesop from applying forward rules in an infinite loop.
 
 In the \emph{saturate configuration}, the \texttt{saturate} tactic with naive or incremental forward reasoning is run on each theorem.
 An invocation is successful if \texttt{saturate} generates a hypothesis that matches the theorem statement.
