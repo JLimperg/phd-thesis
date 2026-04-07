@@ -312,8 +312,7 @@ The vast majority of proofs should still work for, say, $n = 3$.
 Unfortunately the restriction is difficult to implement since Lean does not provide a reliable way to associate metadata with a hypothesis.
 
 
-\subsubsection{tactic}
-
+\para{Tactic.}
 The last and most fundamental rule builder, \tac{tactic}, allows users to register any tactic as a rule.
 The tactic can generate arbitrary subgoals (justified by a proof term that is later checked by Lean's kernel).
 We only require that tactic rules either change the goal or fail, so they cannot be no-ops.
@@ -821,7 +820,7 @@ With this setup, Aesop proves 109 (63\%) of the list lemmas outright.
 If we manually perform induction where necessary (which Aesop by design does not do), Aesop proves 163 (94\%) of the lemmas.
 Specifically, for lemmas that require induction, we either add one or more calls to the induction tactic (after possibly unfolding some definitions and introducing hypotheses) or we write the lemma as a match statement, use a recursive call to prove the induction hypotheses and let Aesop do the rest.
 The latter was, at the time the case study was created, the most ergonomic way to perform functional induction in Lean.
-(Now, there is a dedicated \lean|fun_induction| tactic.)
+(Now, there is a dedicated \tac{fun\_induction} tactic.)
 
 Of the 10 lemmas Aesop cannot prove, 4 involve non-trivial instantiations of existential quantifiers, e.g.
 \[

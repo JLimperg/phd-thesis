@@ -8,7 +8,6 @@
 \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, fit, shapes}
-\usepackage{minted}
 \usepackage[colorlinks,allcolors=cslightblue]{hyperref}
 \usepackage{newunicodechar}
 \usepackage{csquotes}
@@ -57,13 +56,6 @@
 
 \urlstyle{same}
 
-% Listings
-
-\setminted[lean4]{extrakeywords={aesop cases add aesop? intro simp simp_all only split apply on_goal next rename_i safe unsafe norm constructors forward destruct norm_num done add_aesop_rules rfl subst ext}}
-\newmintinline[lean]{lean4}{bgcolor={},ignorelexererrors=true}
-\newminted[leancode]{lean4}{bgcolor={},ignorelexererrors=true,autogobble}
-\usemintedstyle{xcode}
-
 % Headers
 
 \ohead{\headmark}
@@ -100,7 +92,11 @@
 \newcommand{\Lam}[2]{\ensuremath{λ\, #1.\; #2}}
 \newcommand{\Ty}[1]{\ensuremath{{\operatorname{#1}}}}
 \newcommand{\Fn}[1]{\ensuremath{{\operatorname{#1}}}}
-\newcommand{\Kw}[1]{\ensuremath{{\operatorname{\mathbf{#1}}}}}
+\newcommand{\Colorop}[2]{\ensuremath{{\operatorname{\mathcolor{#1}{#2}}}}}
+\newcommand{\Kw}[1]{\Colorop{csbrown}{#1}}
+\newcommand{\Stx}[1]{\Colorop{cslightblue}{#1}}
+\newcommand{\Attr}[1]{\Colorop{csbrown}{#1}}
+\newcommand{\Str}[1]{\Colorop{csred}{\enquote*{#1}}}
 \newcommand{\Var}[1]{\ensuremath{{\operatorname{\mathit{#1}}}}}
 \newcommand{\Proc}[1]{\text{\textsc{#1}}}
 \newcommand{\mv}[1]{\mathit{?#1}}

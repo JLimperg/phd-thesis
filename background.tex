@@ -9,71 +9,50 @@ However, Lean's approach to metaprogramming is more sparsely documented (TODO re
 \section{Lean's Extensible Compilation Pipeline}
 
 At a high level, Lean's typechecking and compilation pipeline is similar to that of other interactive theorem provers.
-First, the \emph{parser} translates the input text into a concrete syntax tree, represented by the \lean|Syntax| type.
-The \emph{elaborator} then translates \lean|Syntax| into the abstract syntax tree of Lean's core type theory (TODO ref), represented by the \lean|Expr| type (and by various types of top-level declarations).
+First, the \emph{parser} translates the input text into a concrete syntax tree, represented by the \Ty{Syntax} type.
+The \emph{elaborator} then translates \Ty{Syntax} into the abstract syntax tree of Lean's core type theory (TODO ref), represented by the \Ty{Expr} type (and by various types of top-level declarations).
 Most of the compilation process happens here, including implicit argument inference, typeclass synthesis, termination checking and tactic execution.
-Finally, each \lean|Expr| is checked by Lean's \emph{kernel}, a simple, trusted type checker for the core type theory.
+Finally, each \Ty{Expr} is checked by Lean's \emph{kernel}, a simple, trusted type checker for the core type theory.
 Those who do not wish to trust even the kernel (which is vulnerable to, e.g., memory corruption since the compilation of a Lean program can involves executing unsafe code) can export the produced expressions and use one of several external kernel implementations (TODO refs).
 Lean programs can also be compiled to native code, using a \emph{compiler} that branches off in the elaborator.
 
 Lean is made remarkably extensible via a number of interlocking mechanisms.
 First, Lean is implemented in Lean (bootstrapped via a previous version), and the API of the entire Lean system is exposed as a library.
-As a result, Lean code has direct access to all internal data structures (\lean|Syntax|, \lean|Expr|, etc.) and to the functions that Lean itself uses to manipulate them.
+As a result, Lean code has direct access to all internal data structures (\Ty{Syntax}, \Ty{Expr}, etc.) and to the functions that Lean itself uses to manipulate them.
 For example, Lean includes many functions that construct or deconstruct expressions of a particular shape, and we can use these in our own metaprograms.
 
 Second, users can register new parsers for certain \emph{syntax categories}.
-A syntax category, such as \lean|command|, \lean|term| or \lean|tactic|, is essentially just a list of parsers.
-To parse a top-level command in the input text, Lean then tries every registered parser from the \lean|command| syntax category, which may in turn refer to other syntax categories.
-To ease the definition of parsers, Lean provides the \lean|syntax| command that uses a domain-specific language resembling BNF grammars.
-For example, the parser for a simplified version of Lean's \lean|abbrev| command could be defined as
-\begin{leancode}
-  syntax (name := "abbrevP")
-    "abbrev " ident " : " term " := " term : command
-\end{leancode}
-The \lean|syntax| command desugars to a parsing function \lean|abbrevP| that first matches the token \lean|abbrev|, then an identifier, then a colon token, and so on.
-This function is registered in the \lean|command| syntax category, so it is tried whenever a command needs to be parsed.
-The type and body of the \lean|abbrev| are \lean|term|s, so when the \lean|abbrevP| parser is executed, it uses whichever parsers are registered in the \lean|term| category at the time.
+A syntax category, such as \Stx{command}, \Stx{term} or \Stx{tactic}, is essentially just a list of parsers.
+To parse a top-level command in the input text, Lean then tries every registered parser from the \Stx{command} syntax category, which may in turn refer to other syntax categories.
+To ease the definition of parsers, Lean provides the \Kw{syntax} command that uses a domain-specific language resembling BNF grammars.
+For example, the parser for a simplified version of Lean's \Kw{abbrev} command could be defined as
+\[
+  \Kw{syntax}~(\Fn{name} ≔ \Fn{abbrevP})~\Str{abbrev}~\Stx{ident}~\Str{:}~\Stx{term}~\Str{:=}~\Stx{term} : \Stx{command}
+\]
+The \Kw{syntax} command desugars to a parsing function \Fn{abbrevP} that first matches the token \Str{abbrev}, then an identifier, then a colon token, and so on.
+This function is registered in the \Stx{command} syntax category, so it is tried whenever a command needs to be parsed.
+The type and body of the \Kw{abbrev} are terms, so when the \Fn{abbrevP} parser function is executed, it uses whichever parsers are registered in the \Stx{term} syntax category at the time.
 
 Parsers are registered in \emph{environment extensions}, a general extensibility mechanism.
 These are mutable reference cells that are created when the module defining an environment extension is first imported.
-The environment extension for parsers stores lists of parsers for each syntax category, and the \lean|syntax| command modifies the environment extension reference cell to add the \lean|abbrevP| function.
-As a result, our custom \lean|abbrev| command can be parsed directly after the \lean|syntax| command.
-Additionally, environment extension modifications are serialised in the \lean|olean| files produced for each Lean module and are loaded when the module is imported.
-Hence, whenever the module containing the \lean|syntax| declaration is imported, the \lean|abbrevP| function is added to the parser environment extension.
+The environment extension for parsers stores lists of parsers for each syntax category, and the \Kw{syntax} command modifies the environment extension reference cell to add the \Fn{abbrevP} function.
+As a result, the parser is ready to parse our custom \Kw{abbrev} command directly after Lean has executed our \Kw{syntax} command.
+Additionally, environment extension modifications are stored in the object files produced for each Lean module and are loaded when the module is imported.
+Hence, whenever the module containing our \Kw{syntax} command is imported, the \Fn{abbrevP} function is added to the parser environment extension.
 
-Since Lean's parser is extensible, the structure that it parses into -- the \lean|Syntax| concrete syntax tree -- must also be extensible.
+Since Lean's parser is extensible, the structure that it parses into -- the \Ty{Syntax} concrete syntax tree -- must also be extensible.
 In fact, it is best understood as a parse tree that effectively records which parsers were applied and which tokens or identifiers they consumed.
-For instance, Fig.~\ref{fig:background:parse-tree} (TODO fig) shows the \lean|Syntax| tree generated by parsing the text \lean|abbrev n : Nat := 0 + 1| with the \lean|abbrevP| function.
-The top-level node carries the name of the parser that was applied, here \lean|abbrevP|.
-Its children record either tokens and identifiers that were consumed (\lean|abbrev|, \lean|n|, etc.) or recursive parser applications, here the \lean|TODO| term parser function that parses an application.
+For instance, Fig.~\ref{fig:background:parse-tree} (TODO fig) shows the \Ty{Syntax} tree generated by parsing the text \verb|abbrev n : Nat := 0 + 1| with the \Fn{abbrevP} function.
+The top-level node carries the name of the parser that was applied, here \Fn{abbrevP}.
+Its children record either tokens and identifiers that were consumed (\verb|abbrev|, \verb|n|, etc.) or recursive parser applications, here the \Fn{TODO} term parser function that parses an application.
 
-Extensibility of the \lean|Syntax| tree, in turn, implies extensibility of the elaborator.
+Extensibility of the \Ty{Syntax} tree, in turn, implies extensibility of the elaborator.
 Lean again uses the environment extension mechanism to implement this.
-It expects us to define, for each registered parser function, a corresponding elaboration function, and to register it in an environment extension for elaboration functions.
-For our \lean|abbrev| command:
-\begin{leancode}
-  @[commandElab abbrevP]
-  def elabAbbrev : Syntax → CommandElabM Unit
-    | `(command| abbrev $name : $type := $body) => do
-      ...
-    | _ => throwUnsupportedSyntax
-\end{leancode}
-The function receives a \lean|Syntax| tree as input.
-The \lean|commandElab| attribute registers the function in the relevant environment extension, instructing the elaborator to execute it whenever the syntax tree produced by the parser starts with an \lean|abbrevP| node.
-Hence, we can assume that the input is of this form.
-We then match the syntax tree, extracting the syntactic components of the \lean|abbrev| command.
-The form of matching used here is syntactic sugar that expands to a complicated nested destructuring of the \lean|Syntax| tree.
+It expects us to define, for each registered parser function, a corresponding elaboration function (or \emph{elaborator}), and to register it in an environment extension for elaboration functions.
+An elaborator receives a \Ty{Syntax} tree produced by a given parser function as input and produces (abstract syntax trees of) values in Lean's core type theory.
+Command elaborators produce core declarations, e.g.\ inductive types or definitions; term elaborators produce expressions.
 
-The elaboration function operates in the \lean|CommandElabM| monad, which allows access to various parts of Lean's internal state.
-It is part of a family of monads used in different parts of the elaborator.
-In particular, this monad allows us to add top-level declarations to Lean's environment.
-These are primitive commands, containing core type theory expressions, that are ultimately checked by the kernel and serialised to the \lean|olean| files.
-To construct declarations and the expressions therein, we can use all functions from the Lean APIs, including functions that elaborate terms, using any elaboration functions currently registered.
-
-If we had defined a custom term syntax, the elaboration function would have type \lean|Syntax → TermElabM Expr|, where the \lean|TermElabM| monad encapsulates the term elaborator's state.
-Term elaboration is by far the biggest part of the elaborator, so elaboration can be understood largely as translation from \lean|Syntax| to \lean|Expr|.
-
-The inverse of elaboration, \emph{delaboration}, converts expressions into \lean|Syntax| trees that can then be pretty-printed to obtain Lean code.
+The inverse of elaboration, \emph{delaboration}, converts expressions into \Ty{Syntax} trees that can then be pretty-printed to obtain Lean code.
 The delaboration stage is not perfect -- it occasionally produces code that is not idiomatically formatted or even fails to compile.
 This can cause rare issues in applications relying on delaboration, such as the tactic script optimiser in Chapter~\ref{chap:script}.
 
@@ -116,7 +95,7 @@ In Lean, as in standard type theory, two expressions $t$ and $u$ are \emph{defin
 For instance, $(\Lam{x}{x})~y$ is definitionally equal to $y$.
 
 Lean stratifies definitional equality along several \emph{transparency} levels that indicate which definitions can be unfolded when checking definitional equality.
-At \emph{default} transparency, most definitions can be unfolded, but we often use the more restrictive \emph{reducible} transparency at which only definitions marked \lean|@[reducible]| or \lean|abbrev| are unfolded.
+At \emph{default} transparency, most definitions can be unfolded, but we often use the more restrictive \emph{reducible} transparency at which only definitions marked \Attr{@[reducible]} or \Kw{abbrev} are unfolded.
 This speeds up definitional equality checking since much fewer possible computation steps must be considered.
 However, it also means that users have to unfold more definitions manually.
 
@@ -130,19 +109,19 @@ Aesop uses this unification procedure throughout, so whenever we discuss unifica
 \label{sec:background:tactics}
 
 Tactics are a stateful domain-specific language for constructing expressions (usually proofs, i.e.\ expressions inhabiting a propositional type).
-We enter \enquote*{tactic mode} with the \lean|by| keyword; anything following it is parsed as a term of the tactic language.
-The syntax of each tactic is declared by registering a custom parser function as above (in the \lean|tactic| syntax category).
+We enter \enquote*{tactic mode} with the \Kw{by} keyword; anything following it is parsed as a term of the tactic language.
+The syntax of each tactic is declared by registering a custom parser function as above (in the \Stx{tactic} syntax category).
 
-The elaboration function of a tactic has type \lean|Syntax → TacticM Unit|, so tactics are elaborated in the \lean|TacticM| monad and change the state of the proof via side effects.
-The defining feature of \lean|TacticM| is that it grants access to the current \emph{tactic state}, a list of goals/metavariables.
-Initially, this list contains an initial goal whose target is the inferred type of the \lean|by| block.
-The local context of this goal consists of the variables in scope at the \lean|by|.
+The elaboration function of a tactic has type \Ty{Syntax → TacticM~Unit}, so tactics are elaborated in the \Ty{TacticM} monad and change the state of the proof via side effects.
+The defining feature of \Ty{TacticM} is that it grants access to the current \emph{tactic state}, a list of goals/metavariables.
+Initially, this list contains an initial goal whose target is the inferred type of the \Kw{by} block.
+The local context of this goal consists of the variables in scope at the \Kw{by}.
 Tactics then usually replace the first goal in the current tactic state with zero or more subgoals.
 (They can also operate on multiple or zero goals.)
 Goals that are removed from the tactic state are expected to be assigned a proof expression usually containing the subgoal metavariables.
-This scheme ensures that once the tactic state is empty, we can replace each metavariable with its assignment and obtain a metavariable-free expression that can replace the \lean|by| block.
+This scheme ensures that once the tactic state is empty, we can replace each metavariable with its assignment and obtain a metavariable-free expression that can replace the \Kw{by} block.
 Hence, tactics function as a domain-specific language for constructing expressions.
 
-I sometimes use a simplified model of tactics, pretending that the \lean|TacticM| monad's state contains only a metavariable context and tactic state.
+I sometimes use a simplified model of tactics, pretending that the \Ty{TacticM} monad's state contains only a metavariable context and tactic state.
 (In reality, it also contains various pieces of state related, for example, to term elaboration.)
 A tactic can then be seen as a function from an input state $(Φ, G)$ to an output state $(Ψ, H)$, where $Φ$, $Ψ$ are metavariable contexts and $G$, $H$ are tactic states, i.e.\ lists of metavariables.
