@@ -92,7 +92,7 @@ The optimiser is a multi-stage pipeline somewhat similar to the optimisation pip
 It operates in three stages that address various deficiencies of the original script.
 After some preliminaries I discuss each optimiser stage in turn.
 
-\paragraph{Local dynamic optimisation (Sec.~\ref{sec:script:local-optimisation})}
+\para{Local dynamic optimisation (Sec.~\ref{sec:script:local-optimisation}).}
 While there is usually a direct correspondence between Aesop rules and Lean tactics, some Aesop rules use non-standard tactic implementations for efficiency.
 For example, Aesop's \tac{unfold} rule uses the \tac{aesop\_unfold} tactic, which has almost -- but not quite -- the same semantics as Lean's \tac{unfold}.
 
@@ -103,7 +103,7 @@ using the procedure from Sec.~\ref{sec:script:equality} that determines whether 
 The same approach is used when the optimiser replaces \tac{simp\_all} invocations with \tac{simp\_all~only} in the example from Fig.~\ref{fig:big-example}.
 When an optimisation re-executes parts of the script, as this one does, I call it \emph{dynamic}; otherwise \emph{static}.
 
-\paragraph{Structuring (Sec.~\ref{sec:script:structuring})}
+\para{Structuring (Sec.~\ref{sec:script:structuring}).}
 Human-written proofs overwhelmingly have a depth-first structure: each tactic is applied to the first goal in the current list of goals.
 This style is supported by various structuring mechanisms in Lean's tactic language, such as the \tac{next} combinator in Fig.~\ref{fig:big-example-optimised}.
 I call a proof \emph{structured} if it is depth-first and uses Lean's structuring mechanisms appropriately.%
@@ -137,7 +137,7 @@ The second solution is based on the observation that while metavariables make ta
 For example, if two tactics assign the same metavariable in the same way, it does not matter which one is run first.
 We can therefore try to reorder the script's tactics dynamically, re-executing them to check that the reordering did not change their behaviour.
 
-\paragraph{Global static optimisation (Sec.~\ref{sec:script:global-optimisation})}
+\para{Global static optimisation (Sec.~\ref{sec:script:global-optimisation}).}
 
 Finally, we run two optimisation passes on the produced script.
 These perform purely syntactic optimisations.
@@ -331,7 +331,6 @@ This is repeated until no goals remain.
 
 However, as discussed in the introduction, Aesop generally does not give us the steps in depth-first order.
 The solution is conceptually straightforward: reorder the rules such that they always operate on the first goal.
-
 Unfortunately, reordering is not always sound when goals in the tactic state contain shared metavariables.
 For example, consider a tactic state with goals $g₁ : \mv{n} < 42$ and $g₂ : \mv{n} = 0$.
 Applying the \tac{rfl} tactic to $g₂$ solves this goal and unifies $\mv{n}$ with $0$, resulting in the assignment $\mv{n} ≔ 0$.
@@ -705,7 +704,7 @@ As the final step of the script optimisation pipeline, we perform some global st
 These are optimisation passes that do not re-execute any tactic steps (hence \enquote{static}) and that operate on the entire concrete syntax tree obtained after structuring (hence \enquote{global}).
 Currently, Aesop includes two passes.
 
-\paragraph{Focused rename\_i}
+\para{Focused rename\_i.}
 The first pass applies the following rewrite rule from left to right wherever the left-hand side occurs in the script.
 \[
   \arraycolsep=0pt
@@ -726,7 +725,7 @@ The tactic therefore generates a $\tac{rename\_i}$ script step and if the goal l
 The static optimisation pass then cleans up the script, replacing bullet and $\tac{rename\_i}$ with $\tac{next}$.
 This is a considerable improvement since the \tac{split} rule discussed in Sec.~\ref{sec:script:generation} produces many focusable \tac{rename\_i} calls.
 
-\paragraph{Initial rename\_i}
+\para{Initial rename\_i.}
 The second pass targets the $\tac{rename\_i}$ tactic that Aesop runs at the start of each proof search to establish the invariant that there are no inaccessible hypotheses in any goal (see Sec.~\ref{sec:script:generation}).
 It does so by explicitly naming any inaccessible hypotheses that occur in the initial goal.
 
@@ -802,7 +801,7 @@ These affect script generation even in the static configuration because simplifi
 In the dynamic configuration, the simplifier is then re-run at least once more during dynamic reordering.
 This observation suggests that local dynamic optimisations and dynamic reordering should perhaps be disabled for expensive steps.
 
-\paragraph{Effectiveness of dynamic reordering}
+\para{Effectiveness of dynamic reordering.}
 To evaluate the effectiveness of dynamic reordering, we build Mathlib as above, but now track the number of \emph{perfectly structured} scripts produced by static and dynamic reordering.
 A script is perfectly structured if every goal is focusable, i.e.\ every node in the structured script tree is a $\mathrm{fas}$ node.
 
