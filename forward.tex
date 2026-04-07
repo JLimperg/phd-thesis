@@ -1,13 +1,13 @@
-\newcommand{\vars}{\ensuremath{\mathrm{svars}}}
-\newcommand{\sub}{\ensuremath{\mathrm{sub}}}
-\newcommand{\lvl}{\ensuremath{\mathrm{lvl}}}
+\newcommand{\vars}{\ensuremath{\Fn{svars}}}
+\newcommand{\sub}{\ensuremath{\Fn{sub}}}
+\newcommand{\lvl}{\ensuremath{\Fn{lvl}}}
 \newcommand{\Rules}{\ensuremath{\mathcal{R}}}
 \newcommand{\Hyps}{\ensuremath{\mathcal{H}}}
 \newcommand{\States}{\ensuremath{\mathcal{S}}}
 \newcommand{\CMatches}{\ensuremath{\mathcal{C}}}
-\newcommand{\addHyp}{\ensuremath{\mathrm{addHyp}}}
-\newcommand{\delHyp}{\ensuremath{\mathrm{delHyp}}}
-\newcommand{\addMatch}{\ensuremath{\mathrm{addMatch}}}
+\newcommand{\addHyp}{\ensuremath{\Fn{addHyp}}}
+\newcommand{\delHyp}{\ensuremath{\Fn{delHyp}}}
+\newcommand{\addMatch}{\ensuremath{\Fn{addMatch}}}
 
 \chapter{Incremental Forward Reasoning}%
 \label{chap:forward}
@@ -189,23 +189,23 @@ Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- 
   \Input{A hypothesis $h : T$}
   \Output{All complete matches of $r$ in context $Γ,\, h : T$ that contain $h$}
   \BlankLine
-  \Procedure{$\mathrm{addHyp}(h : T)$}{
-    $\mathit{completeMs} \gets ∅$ \\
+  \Procedure{$\Fn{addHyp}(h : T)$}{
+    $\Var{completeMs} \gets ∅$ \\
     \For{all slots $i$ of $r$ such that $h$ matches $i$}{
       \eIf{$i = 1$}{
-        $\mathit{completeMs} \gets \mathit{completeMs} ∪ \mathrm{addMatch}([h])$
+        $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}([h])$
       }{
         \KwLet $σ ≔ \sub_{i}(h)$ \\
         \For{$x$ \KwIn $\vars(i)$}{
           Insert $h$ into the set $H_{x}(i, σ(x))$
         }
-        \KwLet $\mathit{ms} ≔ \bigcap_{x \in \vars(i)} M_{x}(i-1, σ(x))$ \\
-        \For{$m$ \KwIn $\mathit{ms}$}{
-          $\mathit{completeMs} \gets \mathit{completeMs} ∪ \mathrm{addMatch}(m \mathbin{++} [h])$
+        \KwLet $\Var{ms} ≔ \bigcap_{x \in \vars(i)} M_{x}(i-1, σ(x))$ \\
+        \For{$m$ \KwIn $\Var{ms}$}{
+          $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}(m \mathbin{++} [h])$
         }
       }
     }
-    \Return{$\mathit{completeMs}$}
+    \Return{$\Var{completeMs}$}
   }
   \BlankLine % without these, the caption is not offset properly
   \BlankLine
@@ -224,7 +224,7 @@ While adding matches, we may discover new complete matches, which are collected 
   \Input{A partial match $m$ of $r$ at level $i$ with substitution $σ$}
   \Output{A set of complete matches of $r$}
   \BlankLine
-  \Procedure{$\mathrm{addMatch}(m)$}{
+  \Procedure{$\Fn{addMatch}(m)$}{
     \eIf{$m$ is complete}{
       \Return{$\{m\}$}
     }{
@@ -232,12 +232,12 @@ While adding matches, we may discover new complete matches, which are collected 
       \For{$x$ \KwIn $\vars(i + 1)$}{
         Insert $m$ into the set $M_{x}(i, σ(x))$
       }
-      \KwLet $\mathit{hs} ≔ \bigcap_{x \in \vars(i + 1)} H_{x}(i + 1, σ(x))$ \\
-      $\mathit{completeMs} \gets ∅$ \\
-      \For{$h$ \KwIn $\mathit{hs}$}{
-        $\mathit{completeMs} \gets \mathit{completeMs} ∪ \mathrm{addMatch}(m \mathbin{++} [h])$
+      \KwLet $\Var{hs} ≔ \bigcap_{x \in \vars(i + 1)} H_{x}(i + 1, σ(x))$ \\
+      $\Var{completeMs} \gets ∅$ \\
+      \For{$h$ \KwIn $\Var{hs}$}{
+        $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}(m \mathbin{++} [h])$
       }
-      \Return{$\mathit{completeMs}$}
+      \Return{$\Var{completeMs}$}
     }
   }
   \BlankLine % without these, the caption is not offset properly

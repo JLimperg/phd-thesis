@@ -1,5 +1,5 @@
-\newcommand{\pre}{\mathrm{pre}}
-\newcommand{\post}{\mathrm{post}}
+\newcommand{\pre}{\Fn{pre}}
+\newcommand{\post}{\Fn{post}}
 \newcommand{\step}[5]{\ensuremath{(#1,\allowbreak #2,\allowbreak #3,\allowbreak #4,\allowbreak #5)}}
 \newcommand{\aeq}{\mathrel{\hat{≡}}}
 
@@ -541,25 +541,25 @@ Second, checking that each step produced the desired result -- up to names and m
 Once the script is ordered, it needs to be transformed into a \emph{structured script}.\footnote{\texttt{Aesop/Script/SScript.lean} and \texttt{Aesop/\allowbreak Script/\allowbreak UScriptToSScript.lean}}
 This is a tree with three different kinds of nodes:
 \begin{itemize}
-  \item The $\mathrm{empty}$ node with no data and no children.
-  \item Nodes of the form $\mathrm{on}(p, s, t)$, where $p$ is a natural number, $s$ is a step and $t$ is a child structured script.
-  \item Nodes of the form $\mathrm{fas}(p, h, t)$, where $p$ is again a natural number and $h$ and $t$ are children.
+  \item The $\Fn{empty}$ node with no data and no children.
+  \item Nodes of the form $\Fn{on}(p, s, t)$, where $p$ is a natural number, $s$ is a step and $t$ is a child structured script.
+  \item Nodes of the form $\Fn{fas}(p, h, t)$, where $p$ is again a natural number and $h$ and $t$ are children.
 \end{itemize}
 
 The empty node denotes the empty structured script.
-A node of the form $\mathrm{on}(p, s, t)$ denotes the application of the step $s$ to the goal at the (zero-based) position $p$, followed by the application of the tactics in the script $t$ (the \enquote{tail}).
-When a structured script is converted into Lean syntax, the node $\mathrm{on}(p, s, t)$ is displayed as $\tac{on\_goal}~p ⇒ \Var{tac}; \bar{t}$, where $\Var{tac}$ is the tactic of step $s$ and $\bar{t}$ is the sequence of tactics that results from rendering $t$.%
+A node of the form $\Fn{on}(p, s, t)$ denotes the application of the step $s$ to the goal at the (zero-based) position $p$, followed by the application of the tactics in the script $t$ (the \enquote{tail}).
+When a structured script is converted into Lean syntax, the node $\Fn{on}(p, s, t)$ is displayed as $\tac{on\_goal}~p ⇒ \Var{tac}; \bar{t}$, where $\Var{tac}$ is the tactic of step $s$ and $\bar{t}$ is the sequence of tactics that results from rendering $t$.%
 \footnote{In fact, $\tac{on\_goal}$ uses one-based positions, so $p$ must be incremented by one.}
-Lean's $\mathrm{on\_goal}$ tactic combinator runs the tactic $\Var{tac}$ in a tactic state containing only the goal at the given position, with all other goals temporarily invisible.
+Lean's \tac{on\_goal} tactic combinator runs the tactic $\Var{tac}$ in a tactic state containing only the goal at the given position, with all other goals temporarily invisible.
 The semicolon sequences tactics.
 As a special case, if the position is zero, the node is displayed as simply $\Var{tac}; t$ since tactics by default target the first goal.
 After reordering, this case is the most common one.
 
-A node of the form $\mathrm{fas}(p, h, t)$ (\enquote{focus and solve}) is displayed as $\tac{on\_goal}~p ⇒ \{ h \}; \bar{t}$.
+A node of the form $\Fn{fas}(p, h, t)$ (\enquote{focus and solve}) is displayed as $\tac{on\_goal}~p ⇒ \{ h \}; \bar{t}$.
 The braces signal to Lean that the script $h$ (which may comprise multiple tactics) is expected to fully solve the goal at position $p$.
 If it does not, Lean raises an error.
 This is the essence of structuring a script: once we start on a goal, we want to finish it without considering any of its siblings.
-As a special case (again, the most common one after reordering), a node $\mathrm{fas}(0, h, t)$ is displayed as
+As a special case (again, the most common one after reordering), a node $\Fn{fas}(0, h, t)$ is displayed as
 \[
   \begin{array}{l}
     \tacbullet h \\
@@ -609,7 +609,7 @@ As in Sec.~\ref{sec:script:static-reordering}, we do not need to consider the ta
     \eIf{$s$ is not focusable or $s$ has no siblings}{
       $\Var{ts} \gets \Proc{apply-step}(\Var{ts}, s)$ \\
       $(\Var{ts}, t) \gets \Proc{sscript}(\Var{steps}, \Var{ts}, i+1, j)$ \\
-      \Return{$(\Var{ts}, \mathrm{on}(p, s, t))$}
+      \Return{$(\Var{ts}, \Fn{on}(p, s, t))$}
     }{
       \KwLet $k$ be the maximal child index of $s$ \\
       \KwLet $g$ be the pre-goal of $s$ \\
@@ -618,7 +618,7 @@ As in Sec.~\ref{sec:script:static-reordering}, we do not need to consider the ta
       $h \gets \Fn{on}(0, s, \Var{ns})$ \\
       Remove $g$ from $ts$ \\
       $(t, ts) \gets \Proc{sscript}(\Var{steps}, \Var{ts}, k+1, j)$ \\
-      \Return{$(\Var{ts}, \mathrm{fas}(p, h, t))$}
+      \Return{$(\Var{ts}, \Fn{fas}(p, h, t))$}
     }
   }
   \BlankLine
@@ -629,20 +629,20 @@ As in Sec.~\ref{sec:script:static-reordering}, we do not need to consider the ta
 
 The algorithm's base case is $i > j$, in which case we are done and return the empty script.
 For $i ≤ j$, we consider the step at position $i$ in the sequence $\Var{steps}$.
-If this step is not focusable or has no siblings, we render it in an unstructured manner, converting it into an $\mathrm{on}$ node.
+If this step is not focusable or has no siblings, we render it in an unstructured manner, converting it into an $\Fn{on}$ node.
 The node's tail script is generated by a recursive call, starting at position $i + 1$ in the tactic state that results from applying the step $s$ to the initial tactic state $\Var{ts}$.
 We reuse the function \Proc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
 
-If the current step $s$ is focusable and has siblings, we render it in a structured manner, as a $\mathrm{fas}$ node.
+If the current step $s$ is focusable and has siblings, we render it in a structured manner, as a $\Fn{fas}$ node.
 To that end, we first generate the $h$ script.
 This starts in the tactic state containing only $g$, the pre-goal of $s$.
-It then applies $s$, generating an $\mathrm{on}$ node for it.
+It then applies $s$, generating an $\Fn{on}$ node for it.
 The tail of this node is generated via a recursive call for the subsequence starting at $i + 1$ and ending at $k$, the maximal child index of $s$.
 Hence, the $h$ script contains $s$ and all descendants of $s$ in the step tree.
 
 Since $s$ is focusable, we know that the $h$ script solves $g$.
 To generate the tail script $t$, we therefore remove $g$ from the initial tactic state $ts$, then perform a recursive call for the remaining subsequence from $k + 1$ to $j$.
-Finally, we return a $\mathrm{fas}$ node with children $h$ and $t$.
+Finally, we return a $\Fn{fas}$ node with children $h$ and $t$.
 
 In fact, this treatment of the tactic state is slightly simplified.
 When generating the $h$ script, we restrict the tactic state to the single goal $g$.
@@ -651,7 +651,7 @@ This happens when a goal appears as a metavariable in one of the goals that are 
 The tactic state must therefore track such \enquote{invisible} goals as well and after generating $h$, we must remove any solved goals from the tactic state $ts$.%
 \footnote{\texttt{Aesop/Script/TacticState.lean}}
 
-Perhaps surprisingly, not all steps for focusable goals should be rendered as $\mathrm{fas}$ nodes.
+Perhaps surprisingly, not all steps for focusable goals should be rendered as $\Fn{fas}$ nodes.
 If there is only a single goal, it is idiomatic to apply the next tactic directly, without using a bullet to focus on the goal.
 For example, when proving a biimplication $P ↔ Q$, the proof typically has the form
 \[
@@ -693,7 +693,7 @@ However, the crucial difference between the two forms is that the structured for
 Structured tactics are generally viewed as more idiomatic, so we should use them when possible.
 To that end, we view structured tactics as continuations: given $n$ tactic scripts for the $n$ subgoals produced by a structured tactic, we obtain a compound tactic.
 The rendering procedure for structured scripts then needs only a small adjustment:
-when rendering a node $\mathrm{on}(p, s, t)$ for which the step $s$ has a structured tactic with $n$ subgoals, we determine whether the tail script $t$ is a sequence of at least $n$ $\mathrm{fas}$ nodes.
+when rendering a node $\Fn{on}(p, s, t)$ for which the step $s$ has a structured tactic with $n$ subgoals, we determine whether the tail script $t$ is a sequence of at least $n$ $\Fn{fas}$ nodes.
 If so, the scripts obtained from these nodes are passed to the structured tactic continuation to build a single structured tactic.
 If not, we use the unstructured version of the tactic of $s$ as usual.
 
@@ -803,7 +803,7 @@ This observation suggests that local dynamic optimisations and dynamic reorderin
 
 \para{Effectiveness of dynamic reordering.}
 To evaluate the effectiveness of dynamic reordering, we build Mathlib as above, but now track the number of \emph{perfectly structured} scripts produced by static and dynamic reordering.
-A script is perfectly structured if every goal is focusable, i.e.\ every node in the structured script tree is a $\mathrm{fas}$ node.
+A script is perfectly structured if every goal is focusable, i.e.\ every node in the structured script tree is a $\Fn{fas}$ node.
 
 Static reordering achieves this for 32 out of 74 scripts with metavariables while (optimised) dynamic reordering manages 35.
 Hence, on this dataset, dynamic reordering is more effective than static reordering, but only slightly.
