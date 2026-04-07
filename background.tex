@@ -1,19 +1,20 @@
 \chapter{Background}%
 \label{chap:background}
 
-Aesop is implemented in the metaprogramming framework of Lean 4 (TODO refs).
-There are many good introductions to Lean (TODO refs) and its foundation, dependent type theory (TODO refs), so I will not retread old ground.
-Lean's particular flavour of dependent type theory is described by Carneiro (TODO ref), with an update for Lean 4 by Ullrich (TODO ref).
-However, Lean's approach to metaprogramming is more sparsely documented (TODO refs), so I briefly sketch the fundamental concepts.
+Aesop is implemented in the metaprogramming framework of Lean~4~\cite{Lean4}.
+There are several good introductions to Lean and its foundation, dependent type theory~\cite{TPIL4,MathInLean,hottbook}, so I refrain from retreading old ground.
+Lean's particular flavour of dependent type theory is described by Carneiro~\cite{Carneiro19}, with an update for Lean~4 by Ullrich~\cite{Ullrich23}.
+However, Lean's approach to metaprogramming is more sparsely documented~\cite{MetaBook}, so I briefly sketch the fundamental concepts.
 
 \section{Lean's Extensible Compilation Pipeline}
 
 At a high level, Lean's typechecking and compilation pipeline is similar to that of other interactive theorem provers.
 First, the \emph{parser} translates the input text into a concrete syntax tree, represented by the \Ty{Syntax} type.
-The \emph{elaborator} then translates \Ty{Syntax} into the abstract syntax tree of Lean's core type theory (TODO ref), represented by the \Ty{Expr} type (and by various types of top-level declarations).
+The \emph{elaborator} then translates \Ty{Syntax} into the abstract syntax tree of Lean's core type theory, represented by the \Ty{Expr} type (and by various types of top-level declarations).
 Most of the compilation process happens here, including implicit argument inference, typeclass synthesis, termination checking and tactic execution.
 Finally, each \Ty{Expr} is checked by Lean's \emph{kernel}, a simple, trusted type checker for the core type theory.
-Those who do not wish to trust even the kernel (which is vulnerable to, e.g., memory corruption since the compilation of a Lean program can involves executing unsafe code) can export the produced expressions and use one of several external kernel implementations (TODO refs).
+Those who do not wish to trust even the kernel (which is vulnerable to, e.g., memory corruption since the compilation of a Lean program can involves executing unsafe code) can export the produced expressions and use one of several external kernel implementations.%
+\footnote{\url{https://github.com/digama0/lean4lean}, \url{https://github.com/leanprover/lean4checker}}
 Lean programs can also be compiled to native code, using a \emph{compiler} that branches off in the elaborator.
 
 Lean is made remarkably extensible via a number of interlocking mechanisms.
@@ -58,12 +59,13 @@ This can cause rare issues in applications relying on delaboration, such as the 
 
 \section{Expressions and Metavariables}
 
-Expressions are abstract syntax trees of Lean's fairly standard core dependent type theory (TODO ref).
+Expressions are abstract syntax trees of Lean's fairly standard core dependent type theory.
 They are the proof objects that are ultimately checked by Lean's kernel.
 In this thesis, I largely abstract from the details of how Aesop constructs particular expressions (even though this is a substantial part of Aesop's implementation), so there is no need to exhaustively discuss the different expression forms.
-Detailed introductions can be found in the Lean source code (TODO link) and in the digital book \emph{Metaprogramming in Lean 4} (TODO ref).
+Detailed introductions can be found in the Lean source code%
+\footnote{\url{https://github.com/leanprover/lean4/blob/master/src/Lean/Expr.lean}} and in the digital book \emph{Metaprogramming in Lean 4}~\cite{MetaBook}.
 
-However, one particular type of expression will repeatedly concern us: metavariables\footnote{In other systems, metavariables are variously called schematic variables, existential variables or just variables.}, which we can view as holes or placeholders in an expression.
+However, one particular type of expression will repeatedly concern us: metavariables, which we can view as holes or placeholders in an expression.
 Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context} $Δ$.
 We write $Δ ⊢ \mv{x} : T$, or $\mv{x} : T$ if $Δ$ can be inferred from the context.
 The local context $Δ$ is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
@@ -101,7 +103,7 @@ However, it also means that users have to unfold more definitions manually.
 
 When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level as well.
 In fact, the same Lean function is used for unification and for definitional equality checking.
-Lean's unification is complete for a decidable first-order fragment (TODO ref) and supports some higher-order features, but it is necessarily incomplete for general higher-order unification problems (TODO ref).
+Lean's unification is complete for a decidable first-order fragment~\cite{Miller91} and supports some higher-order features, but it is necessarily incomplete for general higher-order unification problems~\cite{SecondOrderUnificationUndecidable}.
 Aesop uses this unification procedure throughout, so whenever we discuss unification, we mean Lean's implementation rather than the mathematical notion on which it is based.
 
 
