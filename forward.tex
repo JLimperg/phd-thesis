@@ -5,9 +5,9 @@
 \newcommand{\Hyps}{\ensuremath{\mathcal{H}}}
 \newcommand{\States}{\ensuremath{\mathcal{S}}}
 \newcommand{\CMatches}{\ensuremath{\mathcal{C}}}
-\newcommand{\addHyp}{\ensuremath{\Fn{addHyp}}}
-\newcommand{\delHyp}{\ensuremath{\Fn{delHyp}}}
-\newcommand{\addMatch}{\ensuremath{\Fn{addMatch}}}
+\newcommand{\addHyp}{\Proc{add-hyp}}
+\newcommand{\delHyp}{\Proc{del-hyp}}
+\newcommand{\addMatch}{\Proc{add-match}}
 
 \chapter{Incremental Forward Reasoning}%
 \label{chap:forward}
@@ -189,11 +189,11 @@ Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- 
   \Input{A hypothesis $h : T$}
   \Output{All complete matches of $r$ in context $Γ,\, h : T$ that contain $h$}
   \BlankLine
-  \Procedure{$\Fn{addHyp}(h : T)$}{
+  \Procedure{$\addHyp(h : T)$}{
     $\Var{completeMs} \gets ∅$ \\
     \For{all slots $i$ of $r$ such that $h$ matches $i$}{
       \eIf{$i = 1$}{
-        $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}([h])$
+        $\Var{completeMs} \gets \Var{completeMs} ∪ \addMatch([h])$
       }{
         \KwLet $σ ≔ \sub_{i}(h)$ \\
         \For{$x$ \KwIn $\vars(i)$}{
@@ -201,7 +201,7 @@ Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- 
         }
         \KwLet $\Var{ms} ≔ \bigcap_{x \in \vars(i)} M_{x}(i-1, σ(x))$ \\
         \For{$m$ \KwIn $\Var{ms}$}{
-          $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}(m \mathbin{++} [h])$
+          $\Var{completeMs} \gets \Var{completeMs} ∪ \addMatch(m \mathbin{++} [h])$
         }
       }
     }
@@ -224,7 +224,7 @@ While adding matches, we may discover new complete matches, which are collected 
   \Input{A partial match $m$ of $r$ at level $i$ with substitution $σ$}
   \Output{A set of complete matches of $r$}
   \BlankLine
-  \Procedure{$\Fn{addMatch}(m)$}{
+  \Procedure{$\addMatch(m)$}{
     \eIf{$m$ is complete}{
       \Return{$\{m\}$}
     }{
@@ -235,7 +235,7 @@ While adding matches, we may discover new complete matches, which are collected 
       \KwLet $\Var{hs} ≔ \bigcap_{x \in \vars(i + 1)} H_{x}(i + 1, σ(x))$ \\
       $\Var{completeMs} \gets ∅$ \\
       \For{$h$ \KwIn $\Var{hs}$}{
-        $\Var{completeMs} \gets \Var{completeMs} ∪ \Fn{addMatch}(m \mathbin{++} [h])$
+        $\Var{completeMs} \gets \Var{completeMs} ∪ \addMatch(m \mathbin{++} [h])$
       }
       \Return{$\Var{completeMs}$}
     }
