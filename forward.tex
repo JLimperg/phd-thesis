@@ -529,7 +529,7 @@ The results shown below were obtained on an m8g.metal-48xlarge AWS instance equi
 
 \para{Synthetic Benchmarks.}
 For each benchmark, we set up certain forward rules and a goal with hand-picked hypotheses.
-We then run the \texttt{saturate} tactic, which uses either naive or incremental forward reasoning to exhaustively apply the forward rules.
+We then run the \tac{saturate} tactic, which uses either naive or incremental forward reasoning to exhaustively apply the forward rules.
 Performing only forward reasoning is the best-case scenario for the incremental algorithm since previous results can be fully reused.
 When forward reasoning is combined with other rules, we would expect smaller gains, depending on how much reuse the non-forward rules allow.
 
@@ -660,9 +660,9 @@ An invocation is successful if Aesop proves the theorem.
 Constants from the theorem's Mathlib proof are added as unsafe forward rules, so they receive a relatively low priority and their application can be backtracked.
 This configuration yields better results in practice than marking the rules as safe -- even though forward rules are conceptually always safe -- since it prevents Aesop from applying forward rules in an infinite loop.
 
-In the \emph{saturate configuration}, the \texttt{saturate} tactic with naive or incremental forward reasoning is run on each theorem.
-An invocation is successful if \texttt{saturate} generates a hypothesis that matches the theorem statement.
-The maximum depth of \texttt{saturate} is set to 10 to prevent infinite loops.
+In the \emph{saturate configuration}, the \tac{saturate} tactic with naive or incremental forward reasoning is run on each theorem.
+An invocation is successful if \tac{saturate} generates a hypothesis that matches the theorem statement.
+The maximum depth of \tac{saturate} is set to 10 to prevent infinite loops.
 
 In either configuration, constants are not added as forward rules if they are private or typeclass instances, or if their types contain only logical symbols.
 In the Aesop configuration, we also exclude equations used by the simplifier, which Aesop already uses during its search.
@@ -673,7 +673,7 @@ Each tactic is run three times, and we exclude samples where the minimal and max
 Furthermore, when comparing performance, we only consider theorems where both the naive and the incremental tactic variant succeed.
 This reduces the likelihood that differences are caused by minor, unintentional changes in behaviour.
 If the latter restriction is removed, incremental forward reasoning produces an even larger average speedup over naive forward reasoning than that reported below.
-After these exclusions, the evaluation comprises 53524 Aesop samples and 16452 \texttt{saturate} samples.
+After these exclusions, the evaluation comprises 53524 Aesop samples and 16452 \tac{saturate} samples.
 
 Aesop is not expected to perform well on this benchmark since it is designed for carefully curated rulesets in which constants are appropriately registered as backward, forward or other types of rules.
 Nevertheless, the results may be indicative of Aesop's performance on real use cases involving forward rules.
@@ -692,7 +692,7 @@ Nevertheless, the results may be indicative of Aesop's performance on real use c
   Saturate incr.   & 16995  & 34.35  & 0.64   & 2.22   & 3.24   & 6.15   & 14.38  & 43.36  & 523.06 \\
   Saturate speedup &        & 2.08x  & 1.42x  & 1.19x  & 1.24x  & 1.25x  & 1.52x  & 1.76x  & 3.01x \\
   \end{tabular}
-  \caption{Number of problems solved, average elapsed time (in ms) and elapsed time percentiles for the Aesop and \texttt{saturate} configuration with naive and incremental forward reasoning.
+  \caption{Number of problems solved, average elapsed time (in ms) and elapsed time percentiles for the Aesop and \tac{saturate} configuration with naive and incremental forward reasoning.
   Each speedup is the ratio of naive and incremental time at the respective location of the distribution.}%
   \label{tab:forward:mathlib}
 \end{table}
@@ -726,8 +726,8 @@ Nevertheless, the results may be indicative of Aesop's performance on real use c
 \end{figure}
 
 \subpara{Results.}
-As shown in Table~\ref{tab:forward:mathlib}, incremental forward reasoning improves the average performance of both Aesop and \texttt{saturate}.
-For \texttt{saturate}, we obtain a substantial mean speedup of 2.08x, with incremental forward reasoning outperforming the naive approach at each location of the time distribution.
+As shown in Table~\ref{tab:forward:mathlib}, incremental forward reasoning improves the average performance of both Aesop and \tac{saturate}.
+For \tac{saturate}, we obtain a substantial mean speedup of 2.08x, with incremental forward reasoning outperforming the naive approach at each location of the time distribution.
 For Aesop, the mean speedup is a more modest 1.24x, and we see slight slowdowns at the lower percentiles, meaning Aesop calls that were already fast become a bit slower.
 However, we also obtain substantial speedups on problems where Aesop was previously slow, compensating for the slowdowns.
 Fig.~\ref{fig:forward:math-time} shows a more detailed comparison of running times.
