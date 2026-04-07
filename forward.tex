@@ -425,7 +425,7 @@ As discussed in Chapter~\ref{chap:background}, unification in Lean, and generall
 When we match (i.e., unify) rule premises with hypotheses, we therefore use reducible transparency.
 As a result, users may have to perform some unfoldings manually or add corresponding Aesop rules.
 
-\para{Variable Index Implementation}
+\para{Variable Index Implementation.}
 The hypothesis index $H$ and the match index $M$ of a rule state have the same domain and are combined into one map.
 This map, whose domain is a set of triples $(x, i, t)$, is represented by three nested maps.
 The first two of these, whose keys are variable names $x$ and slot indices $i$, are persistent hash maps.
@@ -461,7 +461,7 @@ Therefore, hypotheses are matched against slots and inserted into the variable i
 Second, we observe that the variable indices are only queried for hypotheses at a slot $i > 1$ when a match is added at slot $i - 1$.
 Hence, we delay the insertion of hypotheses at $i$ until there is at least one match in slot $i - 1$.
 
-\para{Phased Insertion}
+\para{Phased Insertion.}
 We delay insertions yet further by taking advantage of Aesop's partitioning of rules into several phases.
 When Aesop tries to solve a goal, it first normalises it, using only rules tagged with the normalisation phase.
 Then it tries to apply rules from the safe phase, and only when all of them fail does it consider rules from the unsafe phase.
@@ -528,7 +528,6 @@ The results shown below were obtained on an m8g.metal-48xlarge AWS instance equi
   \end{figure}
 
 \para{Synthetic Benchmarks.}
-
 For each benchmark, we set up certain forward rules and a goal with hand-picked hypotheses.
 We then run the \texttt{saturate} tactic, which uses either naive or incremental forward reasoning to exhaustively apply the forward rules.
 Performing only forward reasoning is the best-case scenario for the incremental algorithm since previous results can be fully reused.
@@ -745,8 +744,8 @@ Like the synthetic benchmarks, this indicates that we would see larger gains fro
 Among white-box proof automation tactics, to my knowledge only ACL2's \enquote{waterfall}~\cite{ACL2,ACL2Book} and PVS's various proof search strategies~\cite{PVS,PVS-tutorial} have special support for forward reasoning.
 Both use approaches similar to Aesop's naive algorithm; in particular, the context of each goal is saturated independently.
 ACL2 additionally allows forward rules to be annotated with \emph{trigger terms}, which cause the rules to be run if the trigger terms are matched anywhere in a goal.
-Aesop implements a similar mechanism, \emph{rule patterns}, not described here due to space constraints.
-The auto2 tactic~\cite{auto2} employs an SMT-like search procedure based on forward reasoning and e-matching~\cite{simplify}.
+Aesop implements a similar mechanism, \emph{rule patterns}, not described here.
+Isabelle's auto2 tactic~\cite{auto2} employs an SMT-like search procedure based on forward reasoning and e-matching~\cite{simplify}.
 As such, it does not require incrementality, but it could perhaps benefit from our indexing schemes.
 
 \para{SATCHMO.}
