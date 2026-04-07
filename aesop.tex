@@ -905,40 +905,6 @@ These constructors also apply to every goal, so it is important that Aesop is no
 \section{Related Work}%
 \label{sec:aesop:related-work}
 
-The closest relative of Aesop is Isabelle's auto~\cite{Isabelle,IsabelleAuto}.
-Like Aesop, it performs a tree-based search with integrated simplification, and it distinguishes between safe and unsafe rules.
-Aesop adds a best-first strategy (auto is depth-first) and normalisation as a separate phase.
-It also adds a number of rule builders apart from auto's intro, elim and destruct rules, though some of these can be emulated with auxiliary Isabelle tools.
-
-More fundamentally, auto is used as a semi-black-box tool in practice.
-It is essentially undocumented, so it is difficult to understand the details of its search procedure, e.g.\ how exactly the simplifier is invoked, how it integrates blast~\cite{blast} (a tableau prover) and how metavariables interact with safe rules.
-Indeed, conversations with experienced Isabelle users indicate that they are unaware of these details and that as a result, their interactions with auto are partly based on trial and error, adding and removing rules until auto is able to prove a goal.
-% TODO adjust
-
-Other semi-black-box proof tools include PVS's grind~\cite{PVS-tutorial} and the \enquote{waterfalls} of ACL2~\cite{ACL2} and its descendants.
-While these tools are based on simple search algorithms and are extensively documented, they use, at least in their default configurations, a large number of proof methods (e.g.\ several forms of simplification; decision procedures for certain fragments of the logic; several methods for quantifier instantiation) in a fixpoint loop surrounded by pre- and post-processing steps.
-As a result, it again becomes somewhat difficult for users to predict and adjust their behaviour.
-
-Aesop, by contrast, attempts to remain firmly white-box by limiting itself to a few simple concepts (essentially: normalisation, safe and unsafe rules) with no opaque heuristics and no pre- or post-processing.
-This should make it possible to design predictable special-purpose rule sets for specific domains.
-With larger rule sets, Aesop may also become somewhat unpredictable, but at least its transparency should make it easier to debug unexpected failures or performance issues.
-Of course, the downside of Aesop's simplicity is that it is considerably less powerful than, say, grind; for example, it does not currently have any support for arithmetic beyond that provided by Lean's simplifier.
-
-Even farther towards the white-box end of the scale lie Rocq's auto and eauto.
-These tactics perform backtracking depth-first search (up to some configurable depth limit) with arbitrary rules, so they are essentially Aesop without safe or normalisation rules and with a different search strategy.
-Matita's auto~\cite{Matita} augments eauto with a superposition calculus for equational reasoning and provides a GUI which allows users to inspect the search tree.
-
-A rare white-box tool not based on tree search is Isabelle's auto2~\cite{auto2}, which uses a saturation algorithm instead.
-This means that rules can be applied without backtracking, but the proof procedure is also farther removed from interactive proof and therefore perhaps less easy to customise.
-
-There are also black-box tools based on tree search, notably Rocq's sauto~\cite{sauto} and the Agsy tool~\cite{Agsy} for Agda~\cite{Agda}.
-These tools use fairly strong default rules, some of which could also be interesting for Aesop.
-But since they are push-button tools, their rules are also quite opaque.
-
-For Lean~3, Mathlib~\cite{Mathlib} already contains some search tactics which are currently being ported to Lean~4: continuity, measurability, tidy, tautology and finish.
-These tactics perform essentially depth-first search with various rule sets, so Aesop should supersede them.
-However, finish uses e-matching and so makes better use of unoriented equations.
-
 Our handling of metavariables is most closely related to that of \Theorema~\cite{Konev05}, which, like Aesop, uses an AND/OR search tree.
 Variations of the \Theorema{} algorithm are also used for tableaux with metavariables (\enquote{free variable tableaux})~\cite{Giese01}.
 However, these algorithms are specific to first-order logic and do not obviously generalise to a type-theoretic setting.

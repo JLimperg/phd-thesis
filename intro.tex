@@ -252,36 +252,41 @@ These do not refer to the input and expected output goals of tactics, so are con
 \section{Related Work}
 
 Aesop-style provers lie at the intersection of interactive and automated theorem proving, two scientific fields that are almost as old as computing itself.
-In the interest of brevity, the following survey of related work is restricted to contemporary systems usable from ITPs.
+In the interest of brevity, the following survey of related work is limited to contemporary systems usable from ITPs.
 More detailed discussions of work related to Aesop's specific features appear in each of the following chapters.
 
 \subsection{Other Heuristic Provers}
 
 Aesop is most similar to Rocq's and Isabelle's \emph{auto} tactics, which also perform tree-based search with user-specified rules.
 Like Isabelle's auto, Aesop integrates Lean's simplifier, a widely used tactic that performs conditional rewriting with user-specified equations.
-Aesop's distinguishing features are those highlighted above: best-first instead of depth-first search; a novel, more scalable treatment of forward rules; and tactic script generation.
+Aesop's distinguishing features are those highlighted above: best-first instead of depth-first search with correct and complete metavariable handling; a novel, more scalable treatment of forward rules; and tactic script generation.
+Matita's auto~\cite{Matita} augments Rocq's auto with a superposition calculus for equational reasoning and provides a GUI that allows users to inspect the search tree; these extensions could be fruitful for Aesop as well.
+
 Other heuristic, customisable provers include ACL2's \emph{waterfall}, PVS's \emph{grind} and, more distantly related, Mizar's \emph{by}. (TODO HOL??)
-The latter serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness at the cost of substantial complexity.
+The latter serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness.
+In particular, their support for arithmetic and equational reasoning is often much better than that of Aesop, which in these domains relies almost entirely on the simplifier.
+However, the extensions also add substantial complexity that makes the provers semi-black-box systems in practice.
 A notable heuristic prover based not on tree search but saturation is Isabelle's \emph{auto2} (TODO ref).
 
 \subsection{Automated Theorem Provers and Hammers}
 
 A disadvantage of Aesop and similar tools is that they require extensive, non-trivial customisation by end-users.
 By contrast, \emph{automated theorem provers} (ATPs), including SAT solvers (TODO refs), SMT solvers (TODO refs) and superposition-based theorem provers (TODO refs), provide \enquote{push-button} automation that seeks to find proofs without any help from users.
-For certain families of statements, these tools are extremely effective, generating complex proofs in seconds, though it remains to be seen how well they perform in mathematical domains that are farther removed from typical computer science applications.
+For certain families of statements, these tools are extremely effective, generating complex proofs in seconds.
+However, they tend to perform less well on more mathematically sophisticated lemmas.
 
 One way to use an ATP from within an ITP is to implement a \emph{native} ATP in the language of the ITP, providing automated theorem proving as a regular tactic.
 Examples of this approach are Isabelle's \emph{Metis} (TODO ref), Rocq's \emph{sauto} (TODO ref), Agda's \emph{Agsy} (TODO ref) and Lean's \emph{Duper} (TODO ref), \emph{Canonical} (TODO ref) and \emph{grind} (TODO ref).
 However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established ATPs such as Z3 (TODO ref), CVC5 (TODO ref), Vampire (TODO ref) or Zipperposition (TODO ref).
 Moreover, native ATPs must support their ITPs' logical foundations, rather than a standard logic such as first-order logic (FOL) or higher-order logic (HOL).
 This is a particular concern for type-theoretic ITPs, where the foundation is considerably more complex than FOL or HOL.
-As a result, native ATPs must adapt established calculi to the type-theoretic setting (Duper, Lean's grind) or rely on simple calculi based on type inhabitation (Agsy, Canonical) which are typically able to find only very short proofs.
+As a result, native ATPs must adapt established calculi to the type-theoretic setting (Duper, Lean's grind) or rely on simple calculi based on type inhabitation (Agsy, Canonical) that are typically able to find only very short proofs.
 
 The main alternative to native ATPs are external ATPs integrated via \emph{hammers} such as Isabelle's \emph{Sledgehammer} (TODO ref), Rocq's \emph{CoqHammer} (TODO ref) and Lean's \emph{LeanHammer} (TODO refs).
 They prove theorems in four steps.
 First, the hammer translates a problem from the logic of the ITP to the (usually weaker) logic of the ATP.
 This translation is non-trivial and usually incomplete, but sophisticated heuristics allow for successful translation in many cases.
-Second, the hammer heuristically selects a small set of theorems, here called \emph{premises}, that are likely to be useful for the proof, and translates them as well.
+Second, the hammer heuristically selects a small set of theorems, or \emph{premises}, that are likely to be useful for the proof, and translates them as well.
 Third, the hammer asks the ATP to find a proof of the translated problem, given the translated premises.
 Fourth, assuming a proof was found, the hammer uses this proof to derive a proof in the ITP.
 This so-called \emph{reconstruction} is challenging because ATPs typically do not provide detailed proofs but only the theorems used in their derivations.
@@ -289,7 +294,7 @@ Proof reconstruction is then done by passing the theorems to a native ATP, which
 Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's sauto is expressly designed for this purpose and Aesop is used by lean-auto as one reconstruction backend among others.
 More recently, some ATPs have gained the ability to report detailed proofs (TODO refs), which can directly be translated back into the ITP's logic.
 
-Yet another style of ATP integration is exemplified by the Dafny (TODO ref), \Fstar{} (TODO ref) and Verus (TODO ref) tools, which are deeply integrated with an SMT solver and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
+Yet another style of ATP integration is exemplified by the Dafny (TODO ref), \Fstar{} (TODO ref), Verus (TODO ref) and Why3 (TODO ref) tools, which are deeply integrated with an SMT solver and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
 The tight integration of ITP and ATP leads to a better user experience and a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
 This yields a large and complex trusted code base compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases small.
 
@@ -312,6 +317,11 @@ Meanwhile, lean-auto, backed by the Duper, Z3, CVC5 and Zipperposition ATPs, pro
 
 (TODO LeanHammer eval)
 
+Lean's recent grind tactic occupies an interesting point in the design space between heuristic provers and classical ATPs.
+Like Aesop, it relies on a manually curated set of lemmas tagged with various attributes, giving users the opportunity (and responsibility) to select a suitable tradeoff between power and speed.
+However, instead of Aesop's tree-based search, grind uses SMT techniques such as e-matching, heuristic quantifier instantiation and theories for arithmetic, orders, etc.
+These techniques make it highly effective at equational and arithmetic reasoning, two weaknesses of Aesop.
+
 \subsection{Neural Theorem Provers}
 
 Recent advances in generative artificial intelligence have led to much interest in \emph{neural theorem provers} (NTPs): tools that search for formal proofs, often in Lean, by employing large language models (LLMs).
@@ -322,29 +332,30 @@ As usual for LLM-based applications, the proof generation is preceded by a \emph
 The generated proof is checked by an ITP, mitigating the inherent inaccuracy of LLMs.
 
 NTPs in the second category, \emph{tactic-by-tactic NTPs}, perform an AND-OR tree search similar to Aesop's, but instead of applying a fixed set of rules, an LLM generates tactics (or short sequences of tactics) that might make progress on a goal (TODO refs LeanDojo, ABEL, DSPv2, HTPS, ...).
-Each tactic application is checked by Lean; if it succeeds, the generated subgoals are added to the search tree; if it fails, either the attempt is aborted or the LLM is given a chance to repair the tactic.
+Each tactic application is checked by Lean.
+If it succeeds, the generated subgoals are added to the search tree; if it fails, either the attempt is aborted or the LLM is given a chance to repair the tactic.
 Tactic-by-tactic NTPs typically perform large-scale searches and so require more sophisticated prioritisation than Aesop.
 Variants of Monte-Carlo Tree Search (TODO ref) are a popular choice.
 
-The third, perhaps most promising category of NTPs contains hybrid systems that prompt an LLM to decompose a mathematical problem into several lemmas, then use a lower-level NTP or ATP to dispatch the sketched goals.
+The third, perhaps most promising category of NTPs contains hybrid systems that prompt an LLM to decompose a mathematical problem into several lemmas, then use lower-level NTPs or ATPs to dispatch the sketched goals.
 If the low-level provers fail, the LLM is prompted again to recursively decompose the lemmas into even simpler lemmas (TODO refs DSP, DSP+, Hilbert, Aristotle, ...).
 Several systems using this methodology have achieved gold and silver medals at the 2024 and 2025 (TODO?) International Mathematical Olympiad, solving problems far beyond the capabilities of ATPs.
 (TODO Math Inc)
 
-A downside of LLM-based approaches is that they are much more compute-intensive than ATPs.
-Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 10 to over 1000.
-Even one attempt is typically much more expensive than an ATP invocation since LLMs of sufficient size require costly hardware, and systems based on tactic-level search or decomposition tend to involve even more LLM queries.
+A downside of LLM-based approaches is that they are much more costly, in both time and money, than ATPs.
+Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 2 to over 1000.
+Even one attempt is typically much more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware, and systems based on tactic-level search or decomposition tend to involve even more LLM queries.
 For instance, the Aristotle system (TODO ref), in its IMO gold-level performance, ran Lean on 500,000 CPUs for TODO days to verify proofs generated by LLMs running on an undisclosed number of GPUs (TODO verify).
 It therefore seems likely that future automated proving systems will incorporate both high-level LLM guidance and efficient ATPs.
-It also remains to be seen whether LLMs are similarly successful in software verification, where proofs tend to rely less on mathematical intuition and more on exhaustive case analysis.
+The ATPs become, in effect, an optimisation that allows an NTP to shift some of the proving effort from expensive GPUs to cheap CPUs.
 
 \section{Adoption}
 
 For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is adoption, so I am happy to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
 Recent versions of Mathlib call Aesop around 7000 times (TODO ref), often through wrapper tactics that call Aesop with a specialised rule set.
 The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
-For some such use cases, many uses of Aesop have been replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
-Anecdotally, the script generation functionality is used a fair amount for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since it leaves no trace in the final proof, there is no way to quantify this use.
+For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
+Anecdotally, the script generation functionality is used regularly for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since script generation leaves no trace in the final proof, there is no way to quantify this use.
 
 Even so, many Mathlib theories have not been thoroughly annotated to build effective Aesop rule sets, limiting the effectiveness of Aesop even on goals where it could easily perform well.
 Forward rules, in particular, are hardly used at all in Mathlib.
@@ -361,11 +372,15 @@ In the field of neural theorem proving, Aesop is used as a backend for some tact
 The Pantograph library (TODO ref), which aims to provide a foundation for tactic-by-tactic NTPs, handles metavariables in a manner inspired by Aesop.
 And of course, various LLM-based systems use Aesop as a comparatively cheap tactic to try to dispatch easy goals.
 
-TODO Harry Goldstein
+An interesting, unusual Aesop use case is explored in unpublished work by Harry Goldstein et al.%
+\footnote{https://github.com/hgoldstein95/palamedes-lean}
+Aesop is used as the backend of a synthesis engine for correct-by-construction generators in the context of property-based testing.
+Using a custom set of purely constructive rules, Aesop searches for proofs of the existence of generators with particular correctness properties.
+If such a proof is found, an executable generator can be immediately extracted.
 
 \section{Acknowledgements}
 
-This thesis comprises three papers that are largely reproduced without substantive changes, though I have adjusted the introductions and centralised some of the background information in Chapter~\ref{chap:background}.
+This thesis is based on three papers that are reproduced without substantive changes, though I have adjusted the introductions, centralised some of the background material and related work and made various small updates.
 Chapter~\ref{chap:aesop} is based on \emph{Aesop: White-Box Best-First Proof Search for Lean}~\cite{Aesop}, which is joint work with Asta Halkjær From.
 I have added Sec.~\ref{sec:aesop:mvars-summary}, which gives a more precise description of our handling of metavariables.
 Chapter~\ref{chap:forward} is based on \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Aesop-forward}, which is joint work with Xavier Généreux.
