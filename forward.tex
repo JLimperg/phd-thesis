@@ -86,7 +86,7 @@ A match for rule $r$ is \textit{complete} if $i ∈ \dom(m)$ for every slot $i$ 
 
 A partial match $m$ for rule $r$ corresponds to a partial application of the rule to the terms given in $\sub(m)$.
 The application is type-correct by requirements~\ref{cond:match:matches} and~\ref{cond:match:compat}.
-If $m$ is complete, then $\sub(m)$ contains a term for every slot and every variable---hence for every premise---of $r$, and we have a full application.
+If $m$ is complete, then $\sub(m)$ contains a term for every slot and every variable -- hence for every premise -- of $r$, and we have a full application.
 
 Note that matches represent only those partial applications where arguments are added without gaps.
 Hence, for a rule $r : A → B → C$, the applications $r~a~\_ : B \to C$ and $r~a~b : C$ for some $a : A$ and $b : B$ correspond to matches, but not $r~\_~b : A \to C$.

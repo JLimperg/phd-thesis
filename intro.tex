@@ -15,7 +15,7 @@ The same cannot be said for regular, non-computerised mathematics (TODO refs) or
 
 Such extreme reliability has made ITPs a mainstay of certain scientific areas, particularly programming languages research, and they have also found some success in industrial applications where correctness is paramount (TODO refs).
 Moreover, a promising line of research has recently started to combine ITPs with machine learning, aiming to mitigate the unreliability of large language models by checking their outputs with ITPs (TODO refs).
-Parts of the mathematics community---which has, by and large, been sceptical of computer-based proofs, despite some early successes (TODO refs)---have also recently become interested.
+Parts of the mathematics community -- which has, by and large, been sceptical of computer-based proofs, despite some early successes (TODO refs) -- have also recently become interested.
 The Mathlib project (TODO ref) is perhaps the first large, coherent library of mathematics formalised in an interactive theorem prover and primarily developed by mathematicians, not computer scientists.
 It uses the Lean~4 ITP to develop a typical undergraduate mathematics curriculum and more advanced concepts, to provide a foundation for both formal developments of research mathematics (TODO refs) and future AI-based mathematics tools.
 
@@ -40,7 +40,7 @@ A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referrin
 \label{sec:intro:aesop}
 
 In this thesis, I introduce \emph{Aesop} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
-As the name suggests, Aesop's purpose is to automate the mathematically trivial goals that arise in many proofs---it is not expected to prove interesting theorems on its own.
+As the name suggests, Aesop's purpose is to automate the mathematically trivial goals that arise in many proofs -- it is not expected to prove interesting theorems on its own.
 
 When searching for a proof, Aesop systematically applies \emph{rules} that reduce a \emph{goal} to zero or more subgoals.
 Each goal consists of a statement to be proved (the \emph{target}) and a list of \emph{hypotheses} that are assumed to be true (the \emph{local context}).
