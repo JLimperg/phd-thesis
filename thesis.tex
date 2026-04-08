@@ -11,6 +11,16 @@
 \usepackage[colorlinks,allcolors=cslightblue]{hyperref}
 \usepackage{newunicodechar}
 \usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=numeric-comp,
+  sorting=nyt,
+  doi=true,
+  url=true,
+  isbn=false,
+  eprint=false,
+]{biblatex}
+\addbibresource{lit.bib}
 \usepackage{pgfplots}
 \usepackage[noend,algochapter]{algorithm2e}
 \usepackage{siunitx}
@@ -226,6 +236,5 @@
   \include{conclusion}
 
   \backmatter
-  \bibliographystyle{plain}
-  \bibliography{lit}
+  \printbibliography
 \end{document}
