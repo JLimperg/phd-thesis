@@ -35,7 +35,7 @@ In this chapter, I discuss the foundations of Aesop: tree-based search over user
     To address this issue, I introduce a novel, complete strategy for metavariables that is independent of the search strategy.
 \end{itemize}
 
-\section{Best-First Proof Search}%
+\section{Best-First Tree Search}%
 \label{sec:aesop:abstract-framework}
 
 At its core, Aesop performs a tree-based, best-first proof search.
@@ -222,7 +222,7 @@ This is convenient because, for example, a rule that applies the constructors of
 Such multi-rules are effectively non-branching, so we should not ban them outright.
 
 
-\section{Best-First Proof Search in Lean}%
+\section{Best-First Tree Search in Lean}%
 \label{sec:aesop:concrete-framework}
 
 We now instantiate the best-first search framework to obtain a practical proof method for Lean.
@@ -431,7 +431,7 @@ For example, as mentioned in Sec.~\ref{sec:aesop:safe}, splitting a goal with ta
 However, I believe it would be worse to make these rules unsafe, both for performance and because the printing of safe goals, which is an important debugging aid, becomes less useful if the safe rules are too conservative.
 
 
-\section{Best-First Proof Search with Metavariables}%
+\section{Best-First Tree Search with Metavariables}%
 \label{sec:aesop:mvars}
 
 We now extend the search algorithm to support goals containing metavariables.
