@@ -138,29 +138,19 @@ Best-first search, however, admits no such fixed goal order.
 We may work on the goals $0 < \mv{n}$ and $\mv{n} < 2$ in any order, and we may even interleave the two proof attempts.
 Hence, metavariable assignments must be handled explicitly.
 
-The simplest way to do this is to give up on goal independence in the presence of metavariables.
-Once a set of sibling goals contains a metavariable, the goals are treated as one unit.
-Applying a rule to one of the goals yields a derived set of goals in which all other goals are copied (possibly with updated metavariable assignments).
-This approach is used in HyperTree Proof Search (HTPS)~\cite{Lample22}, an LLM-based theorem proving methodology.
-% TODO move discussion of HTPS to related work in the relevant chapter
-
-Aesop opts for a different, novel approach.
+Aesop introduces a novel solution for this problem.
 When a rule application assigns a metavariable, sibling goals dependent on that metavariable (and certain non-sibling goals on the same search tree branch) are copied and treated as additional children of the rule application.
 Intuitively, we view goals with updated metavariable assignments as goals that need to be solved \emph{because} the assignment has been made, and that would, in general, not need to be solved if a different assignment had been made.
 Hence, consider an attempt to solve our running example with $0 < 3$ applied to the first goal, $0 < \mv{n}$.
 This assigns $\mv{n} ≔ 3$, so the coupled sibling goal $\mv{n} < 2$ is copied, with $\mv{n}$ replaced by its assignment.
 This means that the rule, which closes its goal and so would ordinarily have no subgoals, receives the subgoal $\mv{3} < 2$.
-Since that subgoal is unprovable, the attempt will not succeed, but the original goal $0 < \mv{n}$ is still present in the search tree, so Aesop can start a new attempt where this goal is solved by $0 < 1$.
+Since that subgoal is unprovable, the attempt will not succeed, but the original goal $0 < \mv{n}$ is still present in the search tree, and Aesop can start a new attempt where this goal is solved by $0 < 1$.
 That rule application receives the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
+I conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
 
-I conjecture that both Aesop's and HTPS's approaches are complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
-However, Aesop's approach may have an efficiency advantage since copies are only made when metavariables are assigned, whereas the HTPS approach effectively copies all potentially related goals on each rule application.
-(TODO example?)
-Aesop has been used as a backend for HTPS-style systems such as ABEL~\cite{ABEL} and LeanDojo~\cite{LeanDojo}.
-
-As an additional optimisation that could also be applied to HTPS, we partition sets of related goals into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
+As an additional optimisation, we partition sets of related goals into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
 For example, the goals $0 < \mv{n}$, $\mv{n} < 2$ and $\mv{m} < 3$ are partitioned into two clusters $\{0 < \mv{n}, \mv{n} < 2\}$ and $\{\mv{m} < 3\}$, reflecting the fact that the third goal is independent of the first two.
-This increases search parallelism and, in Aesop's scheme, avoids unnecessary copying.
+This increases search parallelism and avoids unnecessary copying.
 
 \section{Efficient Forward Rules}
 
@@ -191,17 +181,17 @@ If the rule had additional premises, $r~a~b~\Var{h₁}~\Var{h₂}$ would instead
 
 Making this scheme practical requires careful performance engineering.
 As with much type-theoretic proof automation, a major concern is matching and indexing expressions up to definitional equality, which is expensive.
+% TODO ADAPT
 We opt to bring expressions into a normal form, skipping over parts of expressions that are proofs, which are definitionally irrelevant in Lean.
 Computing this normal form is itself somewhat expensive, but the computation is cached, and once the normal form is computed, our scheme requires no further definitional equality checks.
 Additionally, we take care to perform expensive computations as lazily as possible, among other optimisations.
 
 To evaluate our scheme, we test it on synthetic and non-synthetic benchmarks.
-The synthetic benchmarks show that our scheme substantially outperforms the naive approach in a variety of scenarios involving heavy use of forward rules.
+The synthetic benchmarks show that our scheme substantially outperforms the naive approach in scenarios involving heavy use of forward rules.
 For a more natural evaluation, we adapt the benchmark used by lean-auto~\cite{lean-auto} to run different Aesop configurations on Mathlib theorems.
-In this scenario, there is little difference between the naive and optimised approach, perhaps because Aesop -- not being designed to be a push-button theorem prover -- solves few non-trivial goals that would require a substantial number of forward rule applications.
-Hence, the better scaling of the incremental approach does not come into play (TODO confirm).
-In the absence of natural case studies involving substantial forward reasoning -- explained, perhaps, by the fact that forward rules used to be so inefficient -- the impact of our incremental approach remains somewhat unclear.
-% TODO update for eval results
+In this benchmark, the new, incremental forward reasoning implementation provides a 1.24x mean speedup over the naive one for Aesop, and a 2.08x mean speedup for the \tac{saturate} tactic that only performs forward reasoning.
+The modest mean Aesop speedup may be caused by the fact that most theorems Aesop can solve involve only few applications of forward rules, so the caching provided by the incremental implementation does not have a large effect.
+We see larger speedups for invocations with deeper search trees.
 
 \section{Script Generation and Optimisation}
 
@@ -257,7 +247,7 @@ Like Isabelle's auto, Aesop integrates Lean's simplifier, a widely used tactic t
 Aesop's distinguishing features are those highlighted above: best-first instead of depth-first search with correct and complete metavariable handling; a novel, more scalable treatment of forward rules; and tactic script generation.
 Matita's auto~\cite{Matita} augments Rocq's auto with a superposition calculus for equational reasoning and provides a GUI that allows users to inspect the search tree; these extensions could be fruitful for Aesop as well.
 
-Other heuristic, customisable provers include ACL2's \emph{waterfall}, PVS's \emph{grind} and, more distantly related, Mizar's \emph{by}. (TODO HOL??)
+Other heuristic, customisable provers include ACL2's \emph{waterfall}, PVS's \emph{grind} and, more distantly related, Mizar's \emph{by}.
 The latter serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness.
 In particular, their support for arithmetic and equational reasoning is often much better than that of Aesop, which in these domains relies almost entirely on the simplifier.
 However, the extensions also add substantial complexity that makes the provers semi-black-box systems in practice.
@@ -286,8 +276,8 @@ Third, the hammer asks the ATP to find a proof of the translated problem, given 
 Fourth, assuming a proof was found, the hammer uses this proof to derive a proof in the ITP.
 This so-called \emph{reconstruction} is challenging because ATPs typically do not provide detailed proofs but only the theorems used in their derivations.
 Proof reconstruction is then done by passing the theorems to a native ATP, which often succeeds because it enjoys the benefit of very precise premise selection.
-Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's sauto is expressly designed for this purpose and Aesop is used by lean-auto as one reconstruction backend among others.
-More recently, some ATPs have gained the ability to report detailed proofs (TODO refs: Alethe? TSTP?), which can directly be translated back into the ITP's logic.
+Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's sauto is expressly designed for this purpose, and Aesop is used by LeanHammer as one reconstruction backend among others.
+More recently, some ATPs have gained the ability to report detailed proofs~\cite{Alethe,CVC5ProofVerification,CVC5RewriteVerification}, which can directly be translated back into the ITP's logic.
 
 Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with an SMT solver and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
 The tight integration of ITP and ATP leads to a better user experience and a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
@@ -310,8 +300,6 @@ In Aesop's case, this means that the theorems are provided as unsafe backward ru
 With this setup, Aesop, despite not being designed for this use case, proves 47,060 theorems (32\%) in, on average, \SI{93.5}{ms}.
 Meanwhile, lean-auto, backed by the Duper, Z3, CVC5 and Zipperposition ATPs, proves 61,906 theorems (42\%), but it also takes an average of \SI{756.8}{ms}.
 
-% TODO LeanHammer eval
-
 Lean's new grind tactic (unrelated to PVS's grind) occupies an interesting point in the design space between heuristic provers and classical ATPs.
 Like Aesop, it relies on a manually curated set of lemmas tagged with various attributes, giving users the opportunity (and responsibility) to select a suitable tradeoff between power and speed.
 However, instead of Aesop's tree-based search, grind uses SMT techniques such as e-matching, heuristic quantifier instantiation and theories for arithmetic, orders, etc.
@@ -327,7 +315,8 @@ Despite their relative youth, NTPs have already demonstrated capabilities far su
 For instance, several systems have achieved gold and silver medals at the 2024 and 2025 International Mathematical Olympiads.
 However, a downside of LLM-based approaches is that they are much more costly, in both time and money, than ATPs.
 Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 2 to over 1000.
-Even one one-shot attempt is typically much more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware, and systems based on tactic-level search or decomposition tend to involve many more LLM queries.
+Even a single one-shot attempt is typically more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware.
+Systems based on tactic-level search or decomposition tend to involve large numbers of LLM queries.
 For instance, the Aristotle system~\cite{Aristotle}, in its IMO gold medal performance, ran Lean on up to 500,000 CPUs for multiple days to verify proofs generated by LLMs running on an undisclosed number of GPUs.
 It therefore seems likely that future automated proving systems will incorporate both high-level LLM guidance and efficient ATPs.
 The ATPs become, in effect, an optimisation that allows an NTP to shift some of the proving effort from expensive GPUs to cheap CPUs.
@@ -338,25 +327,24 @@ For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is ad
 Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that call Aesop with a specialised rule set.
 The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
 For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
-Anecdotally, the script generation functionality is used regularly for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since script generation leaves no trace in the final proof, there is no way to quantify this use.
+Anecdotally, the script generation functionality is used regularly for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since script generation leaves no trace in the final proof, we cannot quantify this.
 
-Even so, many Mathlib theories have not been thoroughly annotated to build effective Aesop rule sets, limiting the effectiveness of Aesop even on goals where it could easily perform well.
-Forward rules, in particular, are hardly used at all in Mathlib.
+Even so, many Mathlib theories have not yet been thoroughly annotated to build effective Aesop rule sets, limiting the effectiveness of Aesop even on goals where it could perform well.
+Forward rules, in particular, are rarely used in Mathlib.
 A tool that suggests good Aesop annotations, perhaps using an LLM to determine whether a lemma should be used forward or backward and what its priority should be, could thus provide substantial value to the Lean community.
 
-Outside Mathlib, Aesop is used in various formalisation projects (TODO refs).
-It is also used in the nascent-in-Lean software verification domain, for example by the Loom multi-modal verifier (TODO ref) to dispatch verification conditions.
+Outside of Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{https://github.com/teorth/pfr}.
+Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
 Geoffrey Irving's \tac{interval} tactic%
 \footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 Aeneas~\cite{Aeneas} uses a custom implementation of forward rules, inspired by Aesop's, in its proof automation.
 
-Aesop is also used in larger, push-button provers.
-As discussed in Sec.~\ref{TODO}, LeanHammer uses Aesop as one of its proof reconstruction backends.
-In the field of neural theorem proving, Aesop is used as a backend for some tactic-by-tactic NTPs, either directly (TODO ref) or via an API for its search tree implementation (TODO ref).
-The Pantograph library~\cite{Pantograph}, which aims to provide a foundation for tactic-by-tactic NTPs, handles metavariables in a manner inspired by Aesop.
-And of course, various LLM-based systems use Aesop as a comparatively cheap tactic to try to dispatch easy goals.
+As mentioned, Aesop is also used in larger, push-button provers.
+LeanHammer~\cite{LeanHammer} uses Aesop as one of its proof reconstruction backends.
+Some tactic-by-tactic NTPs use Aesop as a backend providing an AND-OR tree with prioritisation support~\cite{LeanDojo,ABEL}.
+And of course, many LLM-based systems use Aesop as a comparatively cheap tactic to dispatch easy goals.
 
-An interesting, unusual Aesop use case is explored in unpublished work by Harry Goldstein et al.%
+An interesting, unusual use of Aesop is explored in unpublished work by Harry Goldstein et al.%
 \footnote{https://github.com/hgoldstein95/palamedes-lean}
 Aesop is used as the backend of a synthesis engine for correct-by-construction generators in the context of property-based testing.
 Using a custom set of purely constructive rules, Aesop searches for proofs of the existence of generators with particular correctness properties.

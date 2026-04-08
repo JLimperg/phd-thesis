@@ -909,6 +909,17 @@ Variations of the \Theorema{} algorithm are also used for tableaux with metavari
 However, these algorithms are specific to first-order logic and do not obviously generalise to a type-theoretic setting.
 In particular, they require that rules behave uniformly for different metavariable assignments.
 
+HyperTree Proof Search (HTPS)~\cite{Lample22}, a neural theorem prover based on search over an Aesop-like AND-OR tree of Lean tactics, handles metavariables by, effectively, giving up on goal independence in their presence.
+Once a set of sibling goals contains a metavariable, the goals are treated as one unit.
+Applying a rule to one of the goals yields a derived set of goals in which all other goals are copied (possibly with updated metavariable assignments).
+
+I conjecture that HTPS, too, is complete, so the two techniques are semantically equivalent.
+However, Aesop's approach may have an efficiency advantage since copies are only made when metavariables are assigned, whereas the HTPS approach effectively copies all potentially related goals on each rule application.
+Aesop's partitioning of goals into metavariable clusters could be applied to HTPS as well.
+
+Aesop has been used as a backend for later HTPS-style systems such as ABEL~\cite{ABEL} and LeanDojo~\cite{LeanDojo}.
+The Pantograph library~\cite{Pantograph}, which aims to provide a foundation for tactic-by-tactic NTPs, handles metavariables in a manner inspired by Aesop.
+
 
 \section{Conclusion}%
 \label{sec:aesop:conclusion}
