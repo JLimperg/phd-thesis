@@ -48,8 +48,8 @@ For now, I assume that goals do not contain metavariables, which simplifies the 
 
 We assume a set of \emph{goals} given by the underlying logic.
 These could, for example, be first-order sequents or higher-order formulas.
-In Lean, they are metavariables $Δ ⊢ \mv{x} : T$.
-When the goal's name does not matter, we write $Δ ⊢ T$, or $⊢ T$ if $Δ$ is empty.
+In Lean, they are metavariables $Γ ⊢ \mv{x} : T$.
+When the goal's name does not matter, we write $Γ ⊢ T$, or $⊢ T$ if $Γ$ is empty.
 
 We further assume a finite set of \emph{rules}, which are partial functions that map a goal to a finite set of goals.
 When a goal is in the domain of a rule, the rule is \emph{applicable} to the goal.

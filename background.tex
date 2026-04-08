@@ -93,9 +93,9 @@ Detailed introductions can be found in the Lean source code%
 \footnote{\url{https://github.com/leanprover/lean4/blob/master/src/Lean/Expr.lean}} and in the digital book \emph{Metaprogramming in Lean 4}~\cite{MetaBook}.
 
 However, one particular type of expression will repeatedly concern us: metavariables, which we can view as holes or placeholders in an expression.
-Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context} $Δ$.
-We write $Δ ⊢ \mv{x} : T$, or $\mv{x} : T$ if $Δ$ can be inferred from the context.
-The local context $Δ$ is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
+Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context} $Γ$.
+We write $Γ ⊢ \mv{x} : T$, or $\mv{x} : T$ if $Γ$ can be inferred from the context.
+The local context $Γ$ is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
 Each fvar is identified by a globally unique internal name and has a type and a user-facing name.
 We write $y : U$ for an fvar of type $U$, or $\vec{y} : \vec{U}$ for a list of fvars $y₁ : U₁, y₂ : U₂, \dots$.
 
