@@ -117,7 +117,7 @@ In particular, the contexts of subgoals produced by whatever rule is eventually 
 With the weaknesses of the naive approach in mind, I introduce an incremental, stateful solution to the problem of finding complete matches.
 The main idea is to store, for each goal $Γ ⊢ A$, the partial matches implied by the hypotheses in $Γ$, and to reuse these partial matches for subgoals $Δ ⊢ B$.
 This rests on the assumption that $Δ$ is likely similar to $Γ$ in practice, and that it is therefore cheaper to update the partial matches for $Γ$ than to compute those of $Δ$ from scratch.
-Then main concept introduced in this chapter is a data structure, the \emph{forward state}, that allows us to perform these updates efficiently.
+The main concept introduced in this chapter is a data structure, the \emph{forward state}, that allows us to perform these updates efficiently.
 
 \para{Forward States.}
 We associate with each goal in Aesop's search tree a forward state that reflects the goal's context.

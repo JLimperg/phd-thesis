@@ -178,13 +178,7 @@ Additionally, we store the partial rule applications in a custom data structure 
 This allows us to quickly look up partial applications compatible with the substitution $x ↦ a,\, y ↦ b$ that results from matching $\Var{h₂}$ against the rule's second premise, $y < x$.
 The lookup returns $r~a~b~\Var{h₁}$, which we therefore extend to $r~a~b~\Var{h₁}~\Var{h₂}$ and report as a complete forward rule application.
 If the rule had additional premises, $r~a~b~\Var{h₁}~\Var{h₂}$ would instead be indexed in the forward state, to be completed by future hypotheses.
-
-Making this scheme practical requires careful performance engineering.
-As with much type-theoretic proof automation, a major concern is matching and indexing expressions up to definitional equality, which is expensive.
-% TODO ADAPT
-We opt to bring expressions into a normal form, skipping over parts of expressions that are proofs, which are definitionally irrelevant in Lean.
-Computing this normal form is itself somewhat expensive, but the computation is cached, and once the normal form is computed, our scheme requires no further definitional equality checks.
-Additionally, we take care to perform expensive computations as lazily as possible, among other optimisations.
+Additionally, we perform expensive computations as lazily as possible, among other optimisations.
 
 To evaluate our scheme, we test it on synthetic and non-synthetic benchmarks.
 The synthetic benchmarks show that our scheme substantially outperforms the naive approach in scenarios involving heavy use of forward rules.
