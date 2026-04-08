@@ -13,8 +13,7 @@ First, the \emph{parser} translates the input text into a concrete syntax tree, 
 The \emph{elaborator} then translates \Ty{Syntax} into the abstract syntax tree of Lean's core type theory, represented by the \Ty{Expr} type (and by various types of top-level declarations).
 Most of the compilation process happens here, including implicit argument inference, typeclass synthesis, termination checking and tactic execution.
 Finally, each \Ty{Expr} is checked by Lean's \emph{kernel}, a simple, trusted type checker for the core type theory.
-Those who do not wish to trust even the kernel (which is vulnerable to, e.g., memory corruption since the compilation of a Lean program can involves executing unsafe code) can export the produced expressions and use one of several external kernel implementations.%
-\footnote{\url{https://github.com/digama0/lean4lean}, \url{https://github.com/leanprover/lean4checker}}
+Those who do not wish to trust even the kernel (which is vulnerable to, e.g., memory corruption since the compilation of a Lean program can involves executing unsafe code) can export the produced expressions and use one of several external kernel implementations, e.g.\ Lean4Lean~\cite{Lean4Lean} and Nanoda\footnote{\url{https://github.com/ammkrn/nanoda_lib}}.
 Lean programs can also be compiled to native code, using a \emph{compiler} that branches off in the elaborator.
 
 Lean is made remarkably extensible via a number of interlocking mechanisms.

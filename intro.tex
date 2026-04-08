@@ -16,7 +16,7 @@ The mathematics community has historically, by and large, been sceptical of comp
 This large mathematics library for Lean~4 is perhaps the first coherent library of mathematics formalised in an interactive theorem prover and primarily developed by mathematicians rather than computer scientists.
 It aims to develop a typical undergraduate mathematics curriculum as well as more advanced concepts, to provide a foundation for both formal developments of research mathematics~\cite{LiquidTensor,PFR} and future AI-based mathematics tools.
 
-ITPs are often also called \emph{proof assistants}, hinting at a vision that goes beyond reliability.
+ITPs are also called \emph{proof assistants}, hinting at a vision that goes beyond reliability.
 Compared to pen-and-paper mathematics, proof assistants can provide more immediate feedback to their users, indicating when and why an attempted proof step is wrong.
 They can also help users track the context and structure of their proofs, e.g.\ which cases need to be considered when a case distinction is made or which hypotheses are available at a given point in the proof.
 
@@ -302,7 +302,7 @@ These techniques make it highly effective at equational and arithmetic reasoning
 \subsection{Neural Theorem Provers}
 
 Recent advances in generative artificial intelligence have led to much interest in \emph{neural theorem provers} (NTPs): tools that search for formal proofs, in Lean or other ITPs, by employing large language models (LLMs).
-Various architectures for such NTPs have been proposed, including one-shot NTPs, where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process\footnote{E.g.\ OpenGauss (\url{https://www.math.inc/opengauss}) or Leanstral (\url{https://mistral.ai/news/leanstral}).}.
+Various architectures for such NTPs have been proposed, including one-shot NTPs, where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process such as OpenGauss\footnote{\url{https://www.math.inc/opengauss}} and Leanstral\footnote{\url{https://mistral.ai/news/leanstral}}.
 The NTP field is evolving rapidly and many systems are hybrids that combine features of different architectures.
 
 Despite their relative youth, NTPs have already demonstrated capabilities far surpassing those of ATPs.
@@ -329,8 +329,7 @@ A tool that suggests good Aesop annotations, perhaps using an LLM to determine w
 
 Outside of Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{https://github.com/teorth/pfr}.
 Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
-Geoffrey Irving's \tac{interval} tactic%
-\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
+Geoffrey Irving's \tac{interval} tactic\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 Aeneas~\cite{Aeneas} uses a custom implementation of forward rules, inspired by Aesop's, in its proof automation.
 
 As mentioned, Aesop is also used in larger, push-button provers.
