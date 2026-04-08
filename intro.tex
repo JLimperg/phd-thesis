@@ -36,7 +36,7 @@ A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referrin
 \section{Aesop}%
 \label{sec:intro:aesop}
 
-In this thesis, I introduce \emph{Aesop} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
+In this thesis, we introduce \emph{Aesop} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
 As the name suggests, Aesop's purpose is to automate the mathematically trivial goals that arise in many proofs -- it is not expected to prove interesting theorems on its own.
 
 When searching for a proof, Aesop systematically applies \emph{rules} that reduce a \emph{goal} to zero or more subgoals.
@@ -146,7 +146,7 @@ This assigns $\mv{n} ≔ 3$, so the coupled sibling goal $\mv{n} < 2$ is copied,
 This means that the rule, which closes its goal and so would ordinarily have no subgoals, receives the subgoal $\mv{3} < 2$.
 Since that subgoal is unprovable, the attempt will not succeed, but the original goal $0 < \mv{n}$ is still present in the search tree, and Aesop can start a new attempt where this goal is solved by $0 < 1$.
 That rule application receives the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
-I conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
+We conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
 
 As an additional optimisation, we partition sets of related goals into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
 For example, the goals $0 < \mv{n}$, $\mv{n} < 2$ and $\mv{m} < 3$ are partitioned into two clusters $\{0 < \mv{n}, \mv{n} < 2\}$ and $\{\mv{m} < 3\}$, reflecting the fact that the third goal is independent of the first two.
@@ -209,7 +209,7 @@ Relatedly, they do not make use of Lean's many facilities for structuring proofs
 And they often use unidiomatic or inefficient tactics.
 This jeopardises both use cases since users have to tediously adjust the scripts by hand.
 
-I therefore added a script optimiser to Aesop that addresses these challenges (among others).
+We therefore added a script optimiser to Aesop that addresses these challenges (among others).
 The optimiser bears some similarity to an optimising compiler or autoformatter.
 It operates in three stages.
 
@@ -220,7 +220,7 @@ This check is possible because tactics are effectively pure functions of their i
 
 Second, we structure the script, reordering the tactics into depth-first order and making use of Lean's structuring facilities, e.g.\ the \tac{case}, \tac{next} and $\tacbullet$ tactic combinators.
 Reordering is not always possible when goals contain metavariables, since tactics may behave differently depending on whether a metavariable has already been solved in the proof of another goal.
-I propose two techniques to address this issue: a static method that misses some opportunities for reordering, and a dynamic method that reorders as much as possible.
+We propose two techniques to address this issue: a static method that misses some opportunities for reordering, and a dynamic method that reorders as much as possible.
 The second method is dynamic in the sense that it tries every possible reordering, checking that the reordered tactics have the same behaviour as the original ones.
 This makes it more precise, but also much slower.
 However, an evaluation on Aesop calls in Mathlib shows that the dynamic method is generally still performant enough for interactive use.
@@ -317,7 +317,7 @@ The ATPs become, in effect, an optimisation that allows an NTP to shift some of 
 
 \section{Adoption}
 
-For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is adoption, so I am happy to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
+For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is adoption, so it is my pleasure to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
 Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that call Aesop with a specialised rule set.
 The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
 For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
@@ -350,10 +350,9 @@ Chapter~\ref{chap:aesop} is based on \emph{Aesop: White-Box Best-First Proof Sea
 I have added Sec.~\ref{sec:aesop:mvars-summary}, which gives a more precise description of our handling of metavariables.
 Chapter~\ref{chap:forward} is based on \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Aesop-forward}, which is joint work with Xavier Généreux.
 Chapter~\ref{chap:script} is based on \emph{Tactic Script Optimisation for Aesop}~\cite{Aesop-script}.
-For consistency, I use the first person singular throughout, even though From and Généreux contributed equally to the respective papers.
+For consistency, I use the first person plural throughout, but any mistakes in this thesis are, of course, solely my own.
 
 I have used AI tools for some editing tasks, but not to produce longer text passages.
-% TODO "we" => "I" for forward chapter
 
 % TODO
 % Jasmin

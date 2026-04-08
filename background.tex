@@ -2,9 +2,9 @@
 \label{chap:background}
 
 Aesop is implemented in the metaprogramming framework of Lean~4~\cite{Lean4}.
-There are several good introductions to Lean and its foundation, dependent type theory~\cite{TPIL4,MathInLean,hottbook}, so I refrain from retreading old ground.
+There are several good introductions to Lean and its foundation, dependent type theory~\cite{TPIL4,MathInLean,hottbook}.
 Lean's particular flavour of dependent type theory is described by Carneiro~\cite{Carneiro19}, with an update for Lean~4 by Ullrich~\cite{Ullrich23}.
-However, Lean's approach to metaprogramming is more sparsely documented~\cite{MetaBook}, so I briefly sketch the fundamental concepts.
+However, Lean's approach to metaprogramming is more sparsely documented~\cite{MetaBook}, so we briefly sketch the fundamental concepts.
 
 \section{Lean's Extensible Compilation Pipeline}
 
@@ -88,7 +88,7 @@ This can cause rare issues in applications relying on delaboration, such as the 
 
 Expressions are abstract syntax trees of Lean's fairly standard core dependent type theory.
 They are the proof objects that are ultimately checked by Lean's kernel.
-In this thesis, I largely abstract from the details of how Aesop constructs particular expressions (even though this is a substantial part of Aesop's implementation), so there is no need to exhaustively discuss the different expression forms.
+In this thesis, we largely abstract from the details of how Aesop constructs particular expressions (even though this is a substantial part of Aesop's implementation), so there is no need to exhaustively discuss the different expression forms.
 Detailed introductions can be found in the Lean source code%
 \footnote{\url{https://github.com/leanprover/lean4/blob/master/src/Lean/Expr.lean}} and in the digital book \emph{Metaprogramming in Lean 4}~\cite{MetaBook}.
 
@@ -113,7 +113,7 @@ Metavariables are registered in a \emph{metavariable context} that maps each met
 Hence, a metavariable is only valid in a metavariable context that contains its internal name.
 We usually work in a global metavariable context that is part of the state of the various elaborator monads.
 
-Metavariables can also be seen as \emph{goals}, and I use the two terms interchangeably.
+Metavariables can also be seen as \emph{goals}, and we use the two terms interchangeably.
 This view is particularly natural for metavariables whose types are propositions.
 The fvars are then \emph{hypotheses} and the type of the metavariable, also called its \emph{target}, is a statement to be proved.
 
@@ -151,6 +151,6 @@ Goals that are removed from the tactic state are expected to be assigned a proof
 This scheme ensures that once the tactic state is empty, we can replace each metavariable with its assignment and obtain a metavariable-free expression that can replace the \Kw{by} block.
 Hence, tactics function as a domain-specific language for constructing expressions.
 
-I sometimes use a simplified model of tactics, pretending that the \Ty{TacticM} monad's state contains only a metavariable context and tactic state.
+We sometimes use a simplified model of tactics, pretending that the \Ty{TacticM} monad's state contains only a metavariable context and tactic state.
 (In reality, it also contains various pieces of state related, for example, to term elaboration.)
 A tactic can then be seen as a function from an input state $(Φ, G)$ to an output state $(Ψ, H)$, where $Φ$, $Ψ$ are metavariable contexts and $G$, $H$ are tactic states, i.e.\ lists of metavariables.

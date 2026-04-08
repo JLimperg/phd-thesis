@@ -12,7 +12,7 @@
 \chapter{Incremental Forward Reasoning}%
 \label{chap:forward}
 
-In the previous chapter, I briefly discussed \emph{forward rules}, which attempt to derive additional facts from the hypotheses of a given goal.
+In the previous chapter, we briefly discussed \emph{forward rules}, which attempt to derive additional facts from the hypotheses of a given goal.
 Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
 The added hypothesis $h₃ : a < c$ may then be used by subsequent rules.
 
@@ -22,7 +22,7 @@ This method is simple but involves much repeated work because, in practice, cont
 For example, the $∧$-introduction rule, when run on $Γ ⊢ A ∧ B$, produces subgoals $Γ ⊢ A$ and $Γ ⊢ B$, so the naive algorithm runs the same forward rules on the same context $Γ$ three times.
 More generally, any backward rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
 
-In this chapter, I present an alternative way to apply forward rules that addresses this issue.
+In this chapter, we present an alternative way to apply forward rules that addresses this issue.
 The central idea is to remember, for each goal $Γ ⊢ A$, which forward rules can be partially applied to which sets of hypotheses.
 When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ ⊢ Aₙ$, the new contexts $Δᵢ$ are likely similar to $Γ$.
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
@@ -47,15 +47,15 @@ Benchmarks and evaluation data are available in the artifact for the paper on wh
 
 \section{Preliminaries}
 
-I first introduce some terminology for matches and for forward rules (which are identified with their underlying lemmas).
-I use dependent type theory as a foundation, but the technique generalises to other logics.
+We first introduce some terminology for matches and for forward rules (which are identified with their underlying lemmas).
+As before, we use dependent type theory as a foundation, but the technique generalises to other logics.
 
 Given a lemma $\All{(x₁ : A₁) \dots (xₙ : Aₙ)}{B}$, the $xᵢ$ are \emph{premises} and $B$ is the lemma's \emph{conclusion}.
 The type $Aᵢ$ of the $i$th premise may depend on (i.e., refer to) any premise $xⱼ$ with $j < i$.
 Implication $A → B$ is an abbreviation for $\All{x : A}{B}$ where $B$ does not depend on $x$.
 Propositions are (certain) types, and we do not distinguish between the two concepts.
 
-Using somewhat non-standard terminology, I call premises on which a later premise depends \emph{variables}.
+Using somewhat non-standard terminology, we call premises on which a later premise depends \emph{variables}.
 These are usually terms of non-propositional types, e.g.\ natural numbers or lists.
 The non-variable premises, whose types are typically propositions, are called \emph{slots}.
 For example, the lemma $\All{(x~y~z : ℕ)}{x < y → y < z → x < z}$ has variables $x, y, z$ and slots of types $x < y$ and $y < z$.
@@ -95,7 +95,7 @@ This prevents us from constructing $r~a~b$ in two different but ultimately redun
 \section{Naive Forward Reasoning}%
 \label{sec:forward:naive}
 
-Before this work, Aesop used the algorithm briefly presented in Chapter~\ref{chap:aesop}, which I call \emph{naive forward reasoning}.
+Before this work, Aesop used the algorithm briefly presented in Chapter~\ref{chap:aesop}, which we call \emph{naive forward reasoning}.
 This approach treats forward rules like any other Aesop rule.
 Hence, when Aesop selects a forward rule $r$ with $n$ slots of types $A₁, \dots, Aₙ$ as the highest-priority rule currently applicable to a goal $Γ ⊢ T$, we look for all complete matches for $r$ in $Γ$, using an approach reminiscent of backtracking subsumption algorithms.
 
@@ -114,7 +114,7 @@ In particular, the contexts of subgoals produced by whatever rule is eventually 
 \section{Incremental Forward Reasoning}%
 \label{sec:forward:incremental}
 
-With the weaknesses of the naive approach in mind, I introduce an incremental, stateful solution to the problem of finding complete matches.
+With the weaknesses of the naive approach in mind, we introduce an incremental, stateful solution to the problem of finding complete matches.
 The main idea is to store, for each goal $Γ ⊢ A$, the partial matches implied by the hypotheses in $Γ$, and to reuse these partial matches for subgoals $Δ ⊢ B$.
 This rests on the assumption that $Δ$ is likely similar to $Γ$ in practice, and that it is therefore cheaper to update the partial matches for $Γ$ than to compute those of $Δ$ from scratch.
 The main concept introduced in this chapter is a data structure, the \emph{forward state}, that allows us to perform these updates efficiently.
@@ -145,7 +145,7 @@ Partial matches are specific to each rule, so the forward state naturally decomp
 Given a goal $Γ ⊢ A$ and a rule $r$, the rule state for $r$ contains exactly the partial matches of $r$ in context $Γ$.
 A rule state supports $\addHyp$ and $\delHyp$ methods analogous to those on forward states.
 Adding a hypothesis to a forward state then amounts to adding it to each rule state (which may yield new complete matches for the rule); deleting a hypothesis amounts to deleting it from each rule state.
-I initially focus on how to add hypotheses, since this question motivates much of the design of the rule state data structure.
+We initially focus on how to add hypotheses, since this question motivates much of the design of the rule state data structure.
 
 When a hypothesis is added to a rule state, two things can happen.
 First, the hypothesis may allow us to extend partial matches already present in the state.
@@ -480,9 +480,9 @@ Then, once we need to determine which rules of a given phase apply to the goal, 
 \label{sec:forward:evaluation}
 
 There are unfortunately no standard benchmarks for Aesop-like tactics, and forward rules are currently little used by Aesop's main client, the Mathlib library~\cite{Mathlib}.
-I therefore use two complementary evaluation schemes.
-First, I compare new new technique against the previous, naive Aesop implementation on synthetic benchmarks that highlight its advantages and disadvantages.
-Second, I compare the two implementations on the benchmark used by lean-auto~\cite{lean-auto}, which runs Aesop on all human-written Mathlib theorems with simulated perfect premise selection.
+We therefore use two complementary evaluation schemes.
+First, we compare the new technique against the previous, naive Aesop implementation on synthetic benchmarks that highlight its advantages and disadvantages.
+Second, we compare the two implementations on the benchmark used by lean-auto~\cite{lean-auto}, which runs Aesop on all human-written Mathlib theorems with simulated perfect premise selection.
 The results shown below were obtained on an m8g.metal-48xlarge AWS instance equipped with 192 Graviton4 processors and \SI{768}{GB} of RAM.
 
 \begin{figure}%{.5\textwidth}
@@ -761,7 +761,7 @@ Nevertheless, our technique bears some resemblance to the RETE algorithm~\cite{R
 
 \section{Conclusion}
 
-I have presented a technique that integrates forward reasoning into a tree-based proof search procedure supporting arbitrary proof rules.
+We have developed a technique that integrates forward reasoning into a tree-based proof search procedure supporting arbitrary proof rules.
 We avoid redundant reasoning steps by caching partial forward rule applications in a data structure, the \emph{forward state}, that enables efficient updates.
 The technique is independent of the search strategy and logic used.
 An evaluation shows that the technique outperforms Aesop's previous implementation on both a synthetic and a natural benchmark.

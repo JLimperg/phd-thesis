@@ -13,7 +13,7 @@
 \chapter{Aesop}%
 \label{chap:aesop}
 
-In this chapter, I discuss the foundations of Aesop: tree-based search over user-defined rules similar to that of Rocq's and Isabelle's auto~\cite{IsabelleAuto}, with several additional features:
+In this chapter, we discuss the foundations of Aesop: tree-based search over user-defined rules similar to that of Rocq's and Isabelle's auto~\cite{IsabelleAuto}, with several additional features:
 \begin{itemize}
   \item
     Aesop uses a best-first search strategy, prioritising more promising rules (and their subgoals) over less promising ones.
@@ -32,15 +32,15 @@ In this chapter, I discuss the foundations of Aesop: tree-based search over user
     With best-first search, it is not obvious how to handle metavariables that appear in multiple goals.
     In search procedures based on backtracking, such as depth-first search, if a metavariable assignment turns out to be wrong, we can simply backtrack it and try a different one (assuming that the theorem prover's data structures efficiently support this).
     By contrast, a best-first algorithm must be able to consider multiple assignments in parallel.
-    To address this issue, I introduce a novel, complete strategy for metavariables that is independent of the search strategy.
+    To address this issue, we introduce a novel, complete strategy for metavariables that is independent of the search strategy.
 \end{itemize}
 
 \section{Best-First Tree Search}%
 \label{sec:aesop:abstract-framework}
 
 At its core, Aesop performs a tree-based, best-first proof search.
-This approach is independent of the underlying logic, so it could also be used as a proof method for, say, first-order or higher-order logic, though I use the notation of dependent type theory for examples.
-For now, I assume that goals do not contain metavariables, which simplifies the algorithm considerably.
+This approach is independent of the underlying logic, so it could also be used as a proof method for, say, first-order or higher-order logic, though we use the notation of dependent type theory for examples.
+For now, we assume that goals do not contain metavariables, which simplifies the algorithm considerably.
 
 
 \subsection{Goals and Rules}%
@@ -292,7 +292,7 @@ Aesop then uses it only as a last resort.
 This method is simple and effective, but it is problematic if Aesop does not find a proof: once there are no other rules left to apply, the cases rule is, as before, applied ad infinitum.
 This sort of cases rule is therefore only suitable as an ad hoc rule.
 
-To support global cases rules as well, I provide a variant of the cases builder that avoids looping in some common cases.
+To support global cases rules as well, we provide a variant of the cases builder that avoids looping in some common cases.
 Consider the inductive predicate $\Ty{All}~P~\Var{xs}$, which encodes the proposition that all elements of the list \Var{xs} satisfy the predicate \Var{P}:
 \[
   \begin{array}{ll}
@@ -307,7 +307,7 @@ To take advantage of this property, Aesop allows users to annotate a cases rule 
 In the example, we would use the pattern $\Ty{All}~\_~(\_ ∷ \_)$ to ensure that an \Ty{All} hypothesis is only split if it refers to a non-empty list.
 Multiple patterns can also be given; the rule is then applied if at least one of the patterns matches a hypothesis.
 
-I also considered a third solution to the infinite regress issue: we could stipulate that once a cases rule has been applied to a hypothesis, it cannot be applied again to the descendants of that hypothesis; or, more generally, that it can only be applied to the first $n$ descendants.
+We also considered a third solution to the infinite regress issue: we could stipulate that once a cases rule has been applied to a hypothesis, it cannot be applied again to the descendants of that hypothesis; or, more generally, that it can only be applied to the first $n$ descendants.
 The vast majority of proofs should still work for, say, $n = 3$.
 Unfortunately the restriction is difficult to implement since Lean does not provide a reliable way to associate metadata with a hypothesis.
 
@@ -428,7 +428,7 @@ A similar rule applies to hypotheses containing such expressions, with even lowe
 
 Designating so many default rules as safe can lead to unintuitive results.
 For example, as mentioned in Sec.~\ref{sec:aesop:safe}, splitting a goal with target $P ∧ Q$ into goals with targets $P$ and $Q$ is unsafe if the rule set contains an unsafe rule which proves $P ∧ Q$, but not rules which prove $P$ and $Q$.
-However, I believe it would be worse to make these rules unsafe, both for performance and because the printing of safe goals, which is an important debugging aid, becomes less useful if the safe rules are too conservative.
+However, we believe it would be worse to make these rules unsafe, both for performance and because the printing of safe goals, which is an important debugging aid, becomes less useful if the safe rules are too conservative.
 
 
 \section{Best-First Tree Search with Metavariables}%
@@ -458,7 +458,7 @@ The search procedure should consider all these possibilities.
 If we were to use a search strategy based on backtracking, such as depth-first search, this would be straightforward: we would merely have to ensure that when a rule application is backtracked, any metavariable assignments it has performed are erased.
 But for best- or breadth-first search, all assignments must be considered in parallel.
 So for the above example, the search tree must reflect the fact that we may prove any of the sets of goals $\{x ≤ x, x ≤ z\}$, $\{x ≤ a, a ≤ z\}$ and $\{x ≤ b, b ≤ z\}$.
-In the remainder of this section, I present an extension of the search algorithm that achieves this.
+In the remainder of this section, we present an extension of the search algorithm that achieves this.
 
 
 \subsection{Overview}%
@@ -632,7 +632,7 @@ Otherwise -- if all safe rules either fail or assign metavariables -- we apply t
 When Aesop selects a postponed rapp to be applied as an unsafe rule, it does not re-execute the rule but just adds its stored result to the search tree.
 
 In principle, one could imagine a safe rule that only assigns metavariables safely and thus does not need to become unsafe.
-But in practice, I have yet to encounter such a rule.
+But in practice, we have yet to encounter such a rule.
 
 
 \subsection{Interaction with Normalisation Rules}%
@@ -646,7 +646,7 @@ Hence, we forbid metavariable creation or assignment in normalisation rules.
 This restriction is, for the most part, unobtrusive in practice, with one unfortunate exception.
 The current implementation of cases rules uses Lean's built-in \tac{cases} tactic.
 When a goal contains a metavariable, \tac{cases} may replace this metavariable with a new one, which to Aesop looks as if an existing metavariable had been assigned and a new one created.
-I have not found a reliable way to detect this situation, so cases normalisation rules (which could be used, for example, to split a hypothesis $h : A ∧ B$ into $h₁ : A$ and $h₂ : B$), are currently unsupported.
+We have not found a reliable way to detect this situation, so cases normalisation rules (which could be used, for example, to split a hypothesis $h : A ∧ B$ into $h₁ : A$ and $h₂ : B$), are currently unsupported.
 
 
 \subsection{Synthesis of Dropped Metavariables}%
@@ -690,7 +690,7 @@ If this were not the case, we could end up with a solution $a$ for the subgoal $
 \subsection{Summary}%
 \label{sec:aesop:mvars-summary}
 
-I provide pseudocode for the procedure that adds a new rapp to the search tree as Algorithm~\ref{alg:aesop:add-rapp}.\footnote{The corresponding real code is in \texttt{Aesop/\allowbreak Tree/\allowbreak AddRapp.lean}.}
+We provide pseudocode for the procedure that adds a new rapp to the search tree as Algorithm~\ref{alg:aesop:add-rapp}.\footnote{The corresponding real code is in \texttt{Aesop/\allowbreak Tree/\allowbreak AddRapp.lean}.}
 It shows the most involved parts of metavariable handling, including the copying procedure.
 
 \begin{algorithm}
@@ -779,7 +779,7 @@ As it stands, our algorithm does not take advantage of this optimisation opportu
 However, the optimisation is also valid only for certain rules.
 A rule that searches for contradictory hypotheses $n < 0$ (where $n$ is a natural number) is not independent of the instantiation of $\mv{x}$ and therefore cannot be shared between m-copies of the goal.
 
-I conjecture that the proposed algorithm is as complete as possible, in the following sense.
+We conjecture that the proposed algorithm is as complete as possible, in the following sense.
 Suppose we use a fair search strategy, i.e.\ one which guarantees that every rule will eventually be applied to every goal.
 Take a goal $G$ that can be proved by applying a sequence of rules from the rule set, creating and assigning arbitrary metavariables in the process.
 Then the algorithm will also find a proof of $G$.
@@ -790,7 +790,7 @@ Thus, by fairness, each rule in the proving sequence of rules is applied eventua
 \section{Case Studies}%
 \label{sec:aesop:case-studies}
 
-As evidence that Aesop provides a reasonable level of automation, I present two case studies: one in which Aesop proves a variety of basic theorems about lists and one in which Aesop is used to formalise a simple automated theorem prover for intuitionistic propositional logic.
+As evidence that Aesop provides a reasonable level of automation, we present two case studies: one in which Aesop proves a variety of basic theorems about lists and one in which Aesop is used to formalise a simple automated theorem prover for intuitionistic propositional logic.
 Both case studies are available in the supplement of the paper on which this chapter is based.\footnote{\url{https://doi.org/10.5281/zenodo.7424818}}
 
 Ideally, we would evaluate Aesop on a standardised benchmark such as the TPTP problem set~\cite{TPTP}.
@@ -841,11 +841,11 @@ This can be dangerous because such equations are not necessarily properly orient
 For example, a hypothesis of type $n = n + 0$ would, together with the global rule $n + 0 = n$, send the simplifier into a loop.
 In our case study, this happens two times; in both cases, Aesop succeeds once we disable the use of hypotheses during simplification.
 
-To get a broad idea of how fast Aesop is, I also ran a small benchmark involving this case study.
-For the benchmark, I prepared a version of the case study in which all lemmas are proved by hand.
+To get a broad idea of how fast Aesop is, we also ran a small benchmark involving this case study.
+For the benchmark, we prepared a version of the case study in which all lemmas are proved by hand.
 The proofs are written in the runtime-efficient style of Mathlib (most proofs are translated from Lean~3), meaning they involve no expensive tactics except the simplifier, which moreover is always given the exact set of lemmas it should simplify with.
 Thus, the hand-written version of the case study has close to optimal performance.
-I then compared the total time Lean takes to typecheck the hand-written version and the Aesop version of the case study, averaging over 10 runs each.
+We then compared the total time Lean takes to typecheck the hand-written version and the Aesop version of the case study, averaging over 10 runs each.
 On my machine, the hand-written version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045).
 This means delegating all proofs to Aesop resulted in a slowdown of 2.53x.
 When run on other machines, the benchmark yielded slowdowns of 2.59x and 2.60x.
@@ -913,7 +913,7 @@ HyperTree Proof Search (HTPS)~\cite{Lample22}, a neural theorem prover based on 
 Once a set of sibling goals contains a metavariable, the goals are treated as one unit.
 Applying a rule to one of the goals yields a derived set of goals in which all other goals are copied (possibly with updated metavariable assignments).
 
-I conjecture that HTPS, too, is complete, so the two techniques are semantically equivalent.
+We conjecture that HTPS, too, is complete, so the two techniques are semantically equivalent.
 However, Aesop's approach may have an efficiency advantage since copies are only made when metavariables are assigned, whereas the HTPS approach effectively copies all potentially related goals on each rule application.
 Aesop's partitioning of goals into metavariable clusters could be applied to HTPS as well.
 
@@ -924,9 +924,9 @@ The Pantograph library~\cite{Pantograph}, which aims to provide a foundation for
 \section{Conclusion}%
 \label{sec:aesop:conclusion}
 
-I have presented Aesop, a white-box proof search tactic for Lean.
-Starting with a straightforward tree search framework, I added features that increase the power of the search while keeping its semantics simple and transparent: best-first search with customisable prioritisation, which lets us effectively use rules that are only occasionally useful or that may loop; safe rules, which are useful both for performance and for debugging; normalisation, to establish invariants which other rules can rely on; and simplification, which enables equational reasoning.
+To build a white-box proof search tactic for Lean, we started with a straightforward tree search framework.
+We then added features that increase the power of the search while keeping its semantics simple and transparent: best-first search with customisable prioritisation, which lets us effectively use rules that are only occasionally useful or that may loop; safe rules, which are useful both for performance and for debugging; normalisation, to establish invariants which other rules can rely on; and simplification, which enables equational reasoning.
 Taken together, these features allow users to design effective and predictable rule sets for many domains.
 
-To support goals with metavariables, I developed a generic algorithm for tree-based search with metavariables.
-The algorithm is independent of the search strategy and of the underlying logic and is, I conjecture, as complete as the given rule set allows.
+To support goals with metavariables, we developed a generic algorithm for tree-based search with metavariables.
+The algorithm is independent of the search strategy and of the underlying logic and is, we conjecture, as complete as the given rule set allows.

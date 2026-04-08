@@ -8,7 +8,7 @@
 
 As we saw in Chapter~\ref{chap:aesop}, each of Aesop's rules corresponds fairly directly to a sequence of low-level tactic calls, e.g.\ \tac{apply} for backward rules and \tac{have} for forward rules.
 This correspondence makes it easy to output tactics that correspond to the rules used during the proof, and that therefore form a complete tactic proof.
-I call this a \emph{tactic script}.
+We call this a \emph{tactic script}.
 Generating a script can be helpful in three ways:
 \begin{itemize}
   \item If a search is successful, the search tactic can be replaced with the generated script, which typically has much better performance.
@@ -90,23 +90,23 @@ Since this transformation also speeds up \tac{simp\_all}, it is in fact applied 
 This chapter describes a \emph{script optimiser} that performs all these optimisations (and more) automatically, producing the optimised script from Fig.~\ref{fig:big-example-optimised} and saving Aesop's users from the tedium of optimising the naive script by hand.
 The optimiser is a multi-stage pipeline somewhat similar to the optimisation pipeline of a compiler, but it optimises aesthetics rather than efficiency.
 It operates in three stages that address various deficiencies of the original script.
-After some preliminaries I discuss each optimiser stage in turn.
+After some preliminaries, we discuss each optimiser stage in turn.
 
 \para{Local dynamic optimisation (Sec.~\ref{sec:script:local-optimisation}).}
 While there is usually a direct correspondence between Aesop rules and Lean tactics, some Aesop rules use non-standard tactic implementations for efficiency.
 For example, Aesop's \tac{unfold} rule uses the \tac{aesop\_unfold} tactic, which has almost -- but not quite -- the same semantics as Lean's \tac{unfold}.
 
 In practice, most \tac{aesop\_unfold} calls behave exactly like \tac{unfold}, so the optimiser should replace \tac{aesop\_unfold} with \tac{unfold} if possible.
-Unfortunately, it is tricky to determine whether any particular \tac{unfold} call has this property, so I propose a straightforward alternative:
+Unfortunately, it is tricky to determine whether any particular \tac{unfold} call has this property, so we propose a straightforward alternative:
 using the procedure from Sec.~\ref{sec:script:equality} that determines whether two tactics produce the same result, the optimiser checks whether a specific call to \tac{unfold} behaves like the original \tac{aesop\_unfold} call; if so, the less idiomatic tactic is replaced by its more idiomatic equivalent.
 
 The same approach is used when the optimiser replaces \tac{simp\_all} invocations with \tac{simp\_all~only} in the example from Fig.~\ref{fig:big-example}.
-When an optimisation re-executes parts of the script, as this one does, I call it \emph{dynamic}; otherwise \emph{static}.
+When an optimisation re-executes parts of the script, as this one does, we call it \emph{dynamic}; otherwise \emph{static}.
 
 \para{Structuring (Sec.~\ref{sec:script:structuring}).}
 Human-written proofs overwhelmingly have a depth-first structure: each tactic is applied to the first goal in the current list of goals.
 This style is supported by various structuring mechanisms in Lean's tactic language, such as the \tac{next} combinator in Fig.~\ref{fig:big-example-optimised}.
-I call a proof \emph{structured} if it is depth-first and uses Lean's structuring mechanisms appropriately.%
+We call a proof \emph{structured} if it is depth-first and uses Lean's structuring mechanisms appropriately.%
 \footnote{This terminology is only loosely related to structured proof languages such as Isar~\cite{Isar}.}
 
 Unfortunately, when we extract the tactics from an Aesop proof tree, they are generally not in depth-first order, for two reasons.
@@ -128,7 +128,7 @@ However, applying the two tactics in the opposite order would not work: the simp
 In short, metavariables make tactics non-commutative.
 (This is also the reason why we generally cannot retrieve rule applications from Aesop's proof tree in depth-first order; cf.\ Section~\ref{sec:aesop:mvars}.)
 
-I propose two solutions for this issue.
+We propose two solutions for this issue.
 The first reorders the tactics in the script statically, i.e.\ without re-executing them.
 This is fast and simple, but in those parts of the proof that involve metavariables, we must fall back on the original, unstructured order.
 We therefore obtain a partially structured proof.
@@ -145,7 +145,7 @@ For example, tactic expressions of the form $\tacbullet \tac{rename\_i}~x₁ \do
 
 \medskip
 
-Concluding the chapter, I evaluate the performance of script generation and the efficacy of dynamic structuring (Sec.~\ref{sec:script:evaluation}) and survey related work (Sec.~\ref{sec:script:related}).
+Concluding the chapter, we evaluate the performance of script generation and the efficacy of dynamic structuring (Sec.~\ref{sec:script:evaluation}) and survey related work (Sec.~\ref{sec:script:related}).
 The evaluation shows that script generation, both with static reordering and dynamic reordering, is fast enough in almost all cases.
 It also shows that dynamic reordering is more effective than static reordering, though the effect is small.
 
@@ -217,7 +217,7 @@ For example, if Aesop is configured to use \tac{reducible} transparency for \tac
 However, this would be highly unidiomatic.
 For \tac{apply} rules (and many others) we therefore generate the more idiomatic $\tac{apply}~e$, assuming that if Lean was able to apply $e$ at the more restrictive \tac{reducible} transparency, it will also be able to do so at the less restrictive default one (and that the step is therefore well-formed).
 This assumption can fail in edge cases, e.g.\ if $\tac{apply}~e$ is much slower than the \tac{reducible} variant, leading to a timeout.
-However, I have not, so far, observed such edge cases in practice.
+However, we have not, so far, observed such edge cases in practice.
 If they do become a problem, this optimisation could be turned into a local dynamic optimisation in the sense of Sec.~\ref{sec:script:local-optimisation}, which checks whether $\tac{apply}~e$ produces the desired result and otherwise falls back to $\tac{with\_reducible}~\tac{apply}~e$.
 
 \para{Specific tactics.}
@@ -338,7 +338,7 @@ Now $g₁$ has type $0 < 42$, which the \tac{decide} tactic solves.
 But if we were to try the tactics in the opposite order, \tac{decide} would not make any progress on $\mv{n} < 42$, so the tactic script would fail and \tac{rfl} would never be tried.
 The shared metavariable $\mv{n}$ blocks reordering of the two tactics.
 
-I propose two solutions to this issue.
+We propose two solutions to this issue.
 The first, \emph{static reordering}, simply avoids reordering tactics that are run on goals with shared metavariables.
 This is acceptable in practice since shared metavariables are fairly rare.
 Moreover, even when a shared metavariable appears in a proof, it usually only appears in a small part of the proof tree; everywhere else, we can still reorder.
@@ -437,7 +437,7 @@ Modelling these effects would add substantial complexity to \Proc{apply-step}, w
 \subsection{Dynamic Reordering}%
 \label{sec:script:dynamic-reordering}
 
-To overcome the inherent limitations of static reordering, I propose a dynamic variant.
+To overcome the inherent limitations of static reordering, we propose a dynamic variant.
 This variant is based on the observation that even if reordering in the presence of metavariables is not always possible, it is still possible often enough to be worth trying.
 The algorithm\footnote{\texttt{Aesop/Script/StructureDynamic.lean}}, shown as Algorithm~\ref{alg:dynamic-reordering}, therefore reorders optimistically.
 
@@ -791,7 +791,7 @@ Script generation includes the initial construction of the naive script and all 
 
 Table~\ref{table:evaluation} reports, for each configuration, the average results of three runs on an AMD Ryzen~7 3700X processor.
 The variance between runs is negligible; e.g.\ for the static configuration, the median Aesop call takes between $\SI{168.3}{ms}$ and $\SI{168.9}{ms}$ and the median script generation takes between $\SI{36.8}{ms}$ and $\SI{37.1}{ms}$.
-Unfortunately, only 74 of the scripts generated by Aesop in Mathlib involve metavariables, so to obtain a meaningful comparison of the different configurations, I report data for these 74 scripts separately.
+Unfortunately, only 74 of the scripts generated by Aesop in Mathlib involve metavariables, so to obtain a meaningful comparison of the different configurations, we report data for these 74 scripts separately.
 The experimental setup and all results are available in the supplement~\cite{ScriptSupplement}.
 
 The results show that the performance of script generation is acceptable for almost all scripts: in any configuration, the average script generation time is below $\SI{250}{ms}$; the median is below $\SI{100}{ms}$ and 95\% of scripts are generated in under $\SI{1}{s}$.
@@ -807,7 +807,7 @@ A script is perfectly structured if every goal is focusable, i.e.\ every node in
 
 Static reordering achieves this for 32 out of 74 scripts with metavariables while (optimised) dynamic reordering manages 35.
 Hence, on this dataset, dynamic reordering is more effective than static reordering, but only slightly.
-I suspect the reason for the small difference is that Aesop calls in Mathlib use metavariables sparingly (for performance reasons) and so static reordering is likely to \enquote{get lucky} and produce a perfectly structured script.
+The reason for the small difference may be that Aesop calls in Mathlib use metavariables sparingly (for performance reasons) and so static reordering is likely to \enquote{get lucky} and produce a perfectly structured script.
 
 \medskip
 
@@ -821,7 +821,7 @@ However, these checks are not entirely accurate; for example, Lean may evaluate 
 To my knowledge, this is the first attempt to generate idiomatic proof scripts for a white-box, tree-search-based tactic.
 As such, there is no closely related work.
 However, there have been many attempts, in various proof assistants, to optimise proofs and to transform automatically generated proofs into a more or less human-readable format.
-The challenges addressed by these projects are usually quite specific to the format of the input and output proofs, so I only mention some examples.
+The challenges addressed by these projects are usually quite specific to the format of the input and output proofs, so we only mention some examples.
 
 Huang~\cite{Huang1989,Huang1994,Huang1996} translates resolution proofs into natural deduction proofs (and later natural language proofs).
 In particular, he compresses multiple natural deduction steps into one \enquote{assertion-level} step that applies a theorem or definition.
@@ -845,11 +845,11 @@ This involves checking repeatedly whether the compressed proof still works, simi
 \section{Conclusion}%
 \label{sec:script:concl}
 
-I have described a three-stage optimisation pipeline that transforms the naive tactic scripts generated by Aesop into scripts that are close to idiomatic.
+We have developed a three-stage optimisation pipeline that transforms the naive tactic scripts generated by Aesop into scripts that are close to idiomatic.
 The first stage optimises individual tactics, replacing them with a more idiomatic variant if the variant produces the same result.
 The second, most involved stage brings the script's tactics into depth-first order (or as close to depth-first as possible) and structures the script.
 This is non-trivial if the proof involves metavariables, which make tactics non-commutative.
-I propose two ways to reorder the goals: a fast static algorithm and a slower but more precise dynamic one.
+We propose two ways to reorder the goals: a fast static algorithm and a slower but more precise dynamic one.
 The third stage performs some syntactic post-processing.
 
 The evaluation shows that script generation (with either reordering algorithm) is fast enough for a large majority of scripts in practice, though it can become slow if an Aesop call involves expensive rules.
