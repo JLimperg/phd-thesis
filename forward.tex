@@ -741,7 +741,7 @@ Like the synthetic benchmarks, this indicates that we would see larger gains fro
 \section{Related Work}
 
 \para{White-Box Tactics.}
-Among white-box proof automation tactics, to my knowledge only ACL2's \enquote{waterfall}~\cite{ACL2,ACL2Book} and PVS's various proof search strategies~\cite{PVS,PVS-tutorial} have special support for forward reasoning.
+Among white-box proof automation tactics, to my knowledge only ACL2's \enquote{waterfall}~\cite{ACL2Book} and PVS's various proof search strategies~\cite{PVS-tutorial} have special support for forward reasoning.
 Both use approaches similar to Aesop's naive algorithm; in particular, the context of each goal is saturated independently.
 ACL2 additionally allows forward rules to be annotated with \emph{trigger terms}, which cause the rules to be run if the trigger terms are matched anywhere in a goal.
 Aesop implements a similar mechanism, \emph{rule patterns}, not described here.

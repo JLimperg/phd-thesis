@@ -11,7 +11,7 @@ The same cannot be said for regular, non-computerised mathematics~\cite{Voevodsk
 Such extreme reliability has made ITPs a mainstay of certain scientific areas, particularly programming languages research, and they have also found some success in industrial applications where correctness is paramount~\cite{seL4,CompCert,AWSFormal}.
 Moreover, a promising line of research has recently started to combine ITPs with machine learning, aiming to mitigate the unreliability of large language models by checking their outputs with ITPs~\cite{Lample22,LeanDojo,GoedelProver,DeepSeekProver,Aristotle}.
 The mathematics community has historically, by and large, been sceptical of computer-based proofs, despite some early successes~\cite{FourColor,Kepler,OddOrder}, but there has recently been renewed interest in ITPs, and particularly in the Mathlib project~\cite{Mathlib}.
-This large mathematics library for Lean~4 is perhaps the first coherent library of mathematics formalised in an interactive theorem prover and primarily developed by mathematicians rather than computer scientists.
+This mathematics library for the Lean~4 ITP~\cite{Lean4} is perhaps the first large, coherent library of mathematics formalised in an interactive theorem prover and primarily developed by mathematicians rather than computer scientists.
 It aims to develop a typical undergraduate mathematics curriculum as well as more advanced concepts, to provide a foundation for both formal developments of research mathematics~\cite{LiquidTensor,PFR} and future AI-based mathematics tools.
 
 ITPs are also called \emph{proof assistants}, hinting at a vision that goes beyond reliability.
@@ -26,7 +26,7 @@ For example, if, for two natural numbers $n$ and $m$, the sum $m + n$ has been s
 Similarly, if two functions $f$ and $g$ are continuous, multiple proof steps are needed to show that $x ↦ f(2g(x) + 1)$ is also continuous.
 Demonstrating such trivialities takes time and effort, clutters the proof and saps the enthusiasm of aspiring ITP users.
 
-Almost all proof assistants address this issue with some form of \emph{proof automation}.
+Almost all proof assistants address this issue with some form of proof automation.
 This means the proof assistants offer programs, usually called \emph{tactics}, that partially or fully automate the construction of proofs.
 A simple tactic might derive $n + m > 0$ from $m + n > 0$, constructing a proof that uses commutativity of addition and a congruence rule.
 A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referring to a lemma about the composition of continuous functions, together with continuity of multiplication and addition.
@@ -85,12 +85,12 @@ As a result, multiple rules may apply to any given goal.
 Aesop then considers all possible rule applications as sibling rapp nodes, and the proof tree becomes a search tree.
 More specifically, it becomes an AND-OR-tree: sibling goals are implicitly conjoined (all need to be proved for the parent rapp to be proved) while sibling rapps are implicitly disjoint (only one needs to be proved for the parent goal to be proved).
 
-Essentially the same setup is used by various other proof search tactics, particularly Rocq's and Isabelle's auto tactics~\cite{Rocq,IsabelleAuto}.
+Essentially the same setup is used by various other proof search tactics, particularly Rocq's~\cite{Rocq} and Isabelle's~\cite{Isabelle} auto tactics~\cite{IsabelleAuto}.
 Aesop distinguishes itself by three features, summarised in the next three sections and detailed in Chapters~\ref{chap:aesop}--\ref{chap:script}.
 
 \section{Best-First Tree Search with Metavariables}
 
-When searching for proofs, we need to answer two basic questions: which rule do we apply first to a given goal, and which goal do we try to solve first?
+When searching for proofs, we need to answer two prioritisation questions: which rule do we apply first to a given goal, and which goal do we try to solve first?
 To address the first question, Aesop associates with each rule a \emph{success probability} between 0\% and 100\%.
 The success probability is given by the user when registering the rule.
 It should roughly approximate the probability that the rule, when successfully applied to an Aesop-provable goal, will lead to a successful proof of that goal.
@@ -138,7 +138,7 @@ Hence, metavariable assignments must be handled explicitly.
 
 Aesop introduces a novel solution for this problem.
 When a rule application assigns a metavariable, sibling goals dependent on that metavariable (and certain non-sibling goals on the same search tree branch) are copied and treated as additional children of the rule application.
-Intuitively, we view goals with updated metavariable assignments as goals that need to be solved \emph{because} the assignment has been made, and that would, in general, not need to be solved if a different assignment had been made.
+Intuitively, we view goals with updated metavariable assignments as goals that need to be solved \emph{because} the assignment has been made, and that would not need to be solved if a different assignment had been made.
 Hence, consider an attempt to solve our running example with $0 < 3$ applied to the first goal, $0 < \mv{n}$.
 This assigns $\mv{n} ≔ 3$, so the coupled sibling goal $\mv{n} < 2$ is copied, with $\mv{n}$ replaced by its assignment.
 This means that the rule, which closes its goal and so would ordinarily have no subgoals, receives the subgoal $\mv{3} < 2$.
@@ -228,38 +228,38 @@ These do not refer to the input and expected output goals of tactics, so are con
 
 \section{Related Work}
 
-Aesop-style provers lie at the intersection of interactive and automated theorem proving, two scientific fields that are almost as old as computing itself.
+Aesop-style provers lie at the intersection of interactive and automated theorem proving, two fields that are almost as old as computing itself.
 In the interest of brevity, the following survey of related work is limited to contemporary systems usable from ITPs.
 More detailed discussions of work related to Aesop's specific features appear in each of the following chapters.
 
 \subsection{Other Heuristic Provers}
 
-Aesop is most similar to Rocq's and Isabelle's \emph{auto} tactics, which also perform tree-based search with user-specified rules.
+Aesop is most similar to Rocq's and Isabelle's auto tactics, which also perform tree-based search with user-specified rules.
 Like Isabelle's auto, Aesop integrates Lean's simplifier, a widely used tactic that performs conditional rewriting with user-specified equations.
 Aesop's distinguishing features are those highlighted above: best-first instead of depth-first search with correct and complete metavariable handling; a novel, more scalable treatment of forward rules; and tactic script generation.
 Matita's auto~\cite{Matita} augments Rocq's auto with a superposition calculus for equational reasoning and provides a GUI that allows users to inspect the search tree; these extensions could be fruitful for Aesop as well.
 
-Other heuristic, customisable provers include ACL2's \emph{waterfall}, PVS's \emph{grind} and, more distantly related, Mizar's \emph{by}.
-The latter serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness.
+Other heuristic, customisable provers include ACL2's \enquote{waterfall}~\cite{ACL2}, PVS's grind~\cite{PVS} and, more distantly related, Mizar's verifier~\cite{MizarOverview2015}.
+They serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness.
 In particular, their support for arithmetic and equational reasoning is often much better than that of Aesop, which in these domains relies almost entirely on the simplifier.
 However, the extensions also add substantial complexity that makes the provers semi-black-box systems in practice.
-A notable heuristic prover based not on tree search but saturation is Isabelle's \emph{auto2}~\cite{auto2}.
+A notable heuristic prover based not on tree search but saturation is Isabelle's auto2~\cite{auto2}.
 
 \subsection{Automated Theorem Provers and Hammers}
 
 A disadvantage of Aesop and similar tools is that they require extensive, non-trivial customisation by end-users.
-By contrast, \emph{automated theorem provers} (ATPs), including SAT solvers~\cite{SATHandbook}, SMT solvers~\cite{Z3,CVC5} and superposition-based theorem provers~\cite{Vampire,Zipperposition}, provide \enquote{push-button} automation that seeks to find proofs without any help from users.
+By contrast, \emph{automated theorem provers} (ATPs), including SAT/SMT solvers~\cite{SATHandbook,Z3,CVC5} and superposition-based theorem provers~\cite{Vampire,Zipperposition}, provide \enquote{push-button} automation that seeks to find proofs without any help from users.
 For certain families of statements, these tools are extremely effective, generating complex proofs in seconds.
 However, they tend to perform less well on more mathematically sophisticated lemmas.
 
 One way to use an ATP from within an ITP is to implement a \emph{native} ATP in the language of the ITP, providing automated theorem proving as a regular tactic.
-Examples of this approach are Isabelle's \emph{Metis}~\cite{Metis}, Rocq's \emph{sauto}~\cite{sauto}, Agda's \emph{Agsy}~\cite{Agsy} and Lean's \emph{Duper}~\cite{Duper}, \emph{Canonical}~\cite{Canonical} and \emph{grind}\footnote{\url{https://lean-lang.org/doc/reference/latest/find/?domain=Verso.Genre.Manual.section&name=grind-tactic}}.
-However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established ATPs such as Z3~\cite{Z3}, CVC5~\cite{CVC5}, Vampire~\cite{Vampire} or Zipperposition~\cite{Zipperposition}.
+Examples of this approach are Agda's~\cite{Agda} Agsy~\cite{Agsy}, HOL4's~\cite{HOL4} Metis~\cite{MetisHOL4} (also available in HOL Light~\cite{HOLLight,MetisHOLLight} and Isabelle~\cite{MetisIsabelle}), Rocq's sauto~\cite{sauto}, and Lean's Canonical~\cite{Canonical}, Duper~\cite{Duper} and grind\footnote{\url{https://lean-lang.org/doc/reference/latest/find/?domain=Verso.Genre.Manual.section&name=grind-tactic}}.
+However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established ATPs such as CVC5~\cite{CVC5}, Vampire~\cite{Vampire}, Zipperposition~\cite{Zipperposition} or Z3~\cite{Z3}.
 Moreover, native ATPs must support their ITPs' logical foundations, rather than a standard logic such as first-order logic (FOL) or higher-order logic (HOL).
 This is a particular concern for type-theoretic ITPs, where the foundation is considerably more complex than FOL or HOL.
 As a result, native ATPs must adapt established calculi to the type-theoretic setting (Duper, Lean's grind) or rely on simple calculi based on type inhabitation (Agsy, Canonical) that are typically able to find only very short proofs.
 
-The main alternative to native ATPs are external ATPs integrated via \emph{hammers} such as Isabelle's \emph{Sledgehammer}~\cite{Sledgehammer}, Rocq's \emph{CoqHammer}~\cite{CoqHammer} and Lean's \emph{LeanHammer}~\cite{LeanHammer}.
+The main alternative to native ATPs are external ATPs integrated via \emph{hammers} such as Rocq's CoqHammer~\cite{CoqHammer}, HOL Light's and HOL 4's HOL(y)Hammer~\cite{HOLyHammer,HOLyHammerHOL4}, Lean's LeanHammer~\cite{LeanHammer} and Isabelle's Sledgehammer~\cite{Sledgehammer}.
 They prove theorems in four steps.
 First, the hammer translates a problem from the logic of the ITP to the (usually weaker) logic of the ATP.
 This translation is non-trivial and usually incomplete, but sophisticated heuristics allow for successful translation in many cases.
@@ -269,16 +269,16 @@ Fourth, assuming a proof was found, the hammer uses this proof to derive a proof
 This so-called \emph{reconstruction} is challenging because ATPs typically do not provide detailed proofs but only the theorems used in their derivations.
 Proof reconstruction is then done by passing the theorems to a native ATP, which often succeeds because it enjoys the benefit of very precise premise selection.
 Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's sauto is expressly designed for this purpose, and Aesop is used by LeanHammer as one reconstruction backend among others.
-More recently, some ATPs have gained the ability to report detailed proofs~\cite{Alethe,CVC5ProofVerification,CVC5RewriteVerification}, which can directly be translated back into the ITP's logic.
+More recently, some ATPs have gained the ability to report detailed proofs~\cite{Alethe,CVC5ProofVerification,CVC5RewriteVerification} that can be directly translated back into the ITP's logic.
 
-Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with an SMT solver and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
+Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with SMT solvers and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
 The tight integration of ITP and ATP leads to a better user experience and a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
 This yields a large and complex trusted code base compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases small.
 
 However an ATP is integrated, users pay for the convenience of push-button automation with some amount of brittleness: proofs that compile on one version of the ITP-ATP combination may break or become non-reproducible on the next version, due to updates to the ATP's calculus and heuristics or the hammer's translation algorithms.
 Since ATPs employ complex calculi with many heuristics and options, it is often hard to tell what should be done to fix such breakage.
-By contrast, proof search procedures like Aesop are much simpler, so it is easier (though not exactly trivial) to understand why a particular statement could or could not be proved.
-Their relative simplicity also makes it easier to obtain good and consistent performance, whereas updates to the heuristics of ATPs may influence their performance in complex ways.
+By contrast, proof search procedures like Aesop are much simpler, so it is easier -- though still nontrivial -- to understand why a particular statement could or could not be proved.
+Their relative simplicity also makes it easier to obtain consistently good performance, whereas updates to the heuristics of ATPs may influence their performance in complex ways.
 This is particularly important in the area of verified software, where proofs are sometimes so large that precise control over the proof search strategy becomes essential.
 
 The flip side of Aesop's simplicity is that, even when properly configured, it is considerably less powerful than ATPs.
@@ -300,22 +300,22 @@ These techniques make it highly effective at equational and arithmetic reasoning
 \subsection{Neural Theorem Provers}
 
 Recent advances in generative artificial intelligence have led to much interest in \emph{neural theorem provers} (NTPs): tools that search for formal proofs, in Lean or other ITPs, by employing large language models (LLMs).
-Various architectures for such NTPs have been proposed, including one-shot NTPs, where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process such as OpenGauss\footnote{\url{https://www.math.inc/opengauss}} and Leanstral\footnote{\url{https://mistral.ai/news/leanstral}}.
+Various architectures for such NTPs have been proposed, including one-shot NTPs, where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process (e.g.\ OpenGauss\footnote{\url{https://www.math.inc/opengauss}} and Leanstral\footnote{\url{https://mistral.ai/news/leanstral}}).
 The NTP field is evolving rapidly and many systems are hybrids that combine features of different architectures.
 
 Despite their relative youth, NTPs have already demonstrated capabilities far surpassing those of ATPs.
-For instance, several systems have achieved gold and silver medals at the 2024 and 2025 International Mathematical Olympiads.
+Notably, several systems have achieved gold and silver medals at the 2024 and 2025 International Mathematical Olympiads.
 However, a downside of LLM-based approaches is that they are much more costly, in both time and money, than ATPs.
 Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 2 to over 1000.
-Even a single one-shot attempt is typically more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware.
-Systems based on tactic-level search or decomposition tend to involve large numbers of LLM queries.
+Even a single such one-shot attempt is typically more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware.
+Meanwhile, Systems based on tactic-level search or decomposition tend to involve large numbers of LLM queries.
 For instance, the Aristotle system~\cite{Aristotle}, in its IMO gold medal performance, ran Lean on up to 500,000 CPUs for multiple days to verify proofs generated by LLMs running on an undisclosed number of GPUs.
 It therefore seems likely that future automated proving systems will incorporate both high-level LLM guidance and efficient ATPs.
 The ATPs become, in effect, an optimisation that allows an NTP to shift some of the proving effort from expensive GPUs to cheap CPUs.
 
 \section{Adoption}
 
-For a pragmatic, heuristic tool like Aesop, the ultimate metric of success is adoption, so it is my pleasure to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
+For a pragmatic, heuristic tool like Aesop, the ultimate success metric is adoption, so it is my pleasure to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
 Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that call Aesop with a specialised rule set.
 The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
 For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
