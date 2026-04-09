@@ -73,10 +73,11 @@
 % PGF
 
 \pgfplotsset{compat=1.18, width=8cm}
-\def\showpgfcircle{\tikz[baseline=-0.7ex]\node[mark size=0.7ex]
-{\pgfuseplotmark{o}};}
-\def\showpgfsquare{\tikz[baseline=-0.7ex]\node[mark size=0.7ex]
-{\pgfuseplotmark{square}};}
+\usetikzlibrary{plotmarks}
+\protected\def\showpgfcircle{\tikz[baseline=-0.5ex]\draw
+  plot[mark=o, mark size=0.56ex, only marks] coordinates {(0,0)};}
+\protected\def\showpgfsquare{\tikz[baseline=-0.5ex]\draw
+  plot[mark=square, mark size=0.56ex, only marks] coordinates {(0,0)};}
 
 % Algorithm2ε
 
