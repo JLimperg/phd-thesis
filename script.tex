@@ -840,7 +840,11 @@ Major issues include converting proofs by contradiction into direct proofs and e
 Some integrations also compress proofs by combining multiple proof steps performed by the ATP into one proof step of the proof assistant.
 This involves checking repeatedly whether the compressed proof still works, similar to my dynamic optimisations.
 
-% TODO Fabian's optimiser, ImProver
+Recently, there has been interest in LLM-based methods for simplifying (LLM-generated) formal proofs.
+ImProver~\cite{ImProver} and ProofOptimizer~\cite{ProofOptimizer} are custom LLM-based agents for shortening Lean proofs, but even off-the-shelf agents backed by recent foundation models appear, anecdotally, to perform well at this task.
+LLM-based methods tend to be much more general than our symbolic approach, performing a wider range of optimisations.
+However, they are much more costly (in time and money), and they may change a proof's structure quite radically.
+Future proof optimisation tools may employ hybrid strategies, with symbolic passes addressing obvious defects and neural techniques performing more advanced optimisations.
 
 \section{Conclusion}%
 \label{sec:script:concl}
@@ -857,11 +861,8 @@ Dynamic reordering is slightly better at structuring scripts than static reorder
 
 A natural continuation of this work would be to disentangle the optimiser from Aesop, making it available as a library for optimising arbitrary tactic scripts.
 This library could be used by any system that seeks to automatically produce human-readable tactic proofs, e.g.\ auto-formalisation tools based on large language models (LLMs).
-Perhaps an optimiser could even be applied to human-written scripts:
-Lean users might become more productive if they could write functional but ugly proofs and the optimiser would automatically improve them.
+Perhaps an optimiser could even be applied to human-written scripts: Lean users might become more productive if they could write functional but ugly proofs and the optimiser would automatically improve them.
 
-New use cases such as these would likely require additional optimisations.
-For example, LLMs tend to produce proofs containing irrelevant intermediate statements;
-script optimisation could conceivably be extended to remove these.
+New use cases such as these would require many additional optimisations.
+For example, LLMs tend to produce proofs containing irrelevant intermediate statements; script optimisation could be extended to remove these.
 Suggestions from the many linters available in Mathlib~\cite{vanDoorn2020} could also be automatically applied, turning them into optimisation passes.
-% TODO rewrite
