@@ -34,7 +34,7 @@ A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referrin
 \section{Aesop}%
 \label{sec:intro:aesop}
 
-In this thesis, we introduce \emph{Aesop} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
+In this thesis, we introduce \emph{Aesop}\footnote{\url{https://github.com/leanprover-community/aesop}} (Automatic Extensible Search for Obvious Proofs), a tactic for the Lean~4 proof assistant.
 As the name suggests, Aesop's purpose is to automate the mathematically trivial goals that arise in many proofs -- it is not expected to prove interesting theorems on its own.
 
 When searching for a proof, Aesop systematically applies \emph{rules} that reduce a \emph{goal} to zero or more subgoals.
@@ -349,8 +349,12 @@ I have added Sec.~\ref{sec:aesop:mvars-summary}, which gives a more precise desc
 Chapter~\ref{chap:forward} is based on \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Aesop-forward}, which is joint work with Xavier Généreux.
 Chapter~\ref{chap:script} is based on \emph{Tactic Script Optimisation for Aesop}~\cite{Aesop-script}.
 For consistency, I use the first person plural throughout, but any mistakes in this thesis are, of course, solely my own.
+I used AI tools for some editing tasks.
 
-I have used AI tools for some editing tasks, but not to produce longer text passages.
+\section{Data Availability}
+
+All functionality described in this thesis is implemented in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}}.
+The exact Aesop version corresponding to each chapter, as well as benchmark code and data, are available in the supplement for the paper that the respective chapter is based on~\cite{AesopSupplement,ForwardSupplement,ScriptSupplement}.
 
 % TODO
 % Jasmin
