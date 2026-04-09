@@ -479,27 +479,51 @@ Then $H[\mv{x} ≔ a]$ still needs to be copied even though it is not a sibling 
 Accordingly, we expand the notion of m-coupled goals.
 Let $G_{1}, \dots, G_{n}$ be the path from $G'$ (so $G₁ = G'$) towards the root of the tree such that $G_{n}$ is the first goal in which $\mv{x}$ appears.
 Each goal $I$ which depends on $\mv{x}$ and which is a sibling of a goal $G_{i}$ on the path is m-coupled to $G'$ and is therefore copied.
-
-\begin{figure}
-  \begin{tikzpicture}[outer sep=auto, level distance=10mm]
-    \node[rectangle,draw] {$R$}
-    child {node {$G[\mv{x}]$}
-    child {node[rectangle,draw] {$R_{1}$}
-    child {node {$G'[\mv{x}]$}
-    child {node[rectangle,draw] {$R'\colon \mv{x} ≔ a$}
-        child {node     {\dots}}
-        child {node (1) {$H[\mv{x} ≔ a]$}}}}}}
-    child {node (2) {$H[\mv{x}]$}};
-    \path[-Latex,dashed] (1) edge [bend right=40] node {} (2);
-  \end{tikzpicture}
-  \caption{Copying of m-coupled nodes}%
-  \label{fig:mvars-path}
-\end{figure}
-
 Fig.~\ref{fig:mvars-path} visualises this example, showing the incomplete search tree with root $R$.
-Here and in the next figure, rapp nodes are displayed as rectangles and are annotated with the metavariables they assign.
-Goal nodes are annotated with the metavariables they depend on, including the assignments of the metavariables.
-Dashed arrows point from each copied goal to the goal it was copied from.
+
+\begin{figure*}
+  \centering
+  \begin{subfigure}[b]{0.4\textwidth}
+    \begin{tikzpicture}[outer sep=auto, level distance=10mm]
+      \node[rectangle,draw] {$R$}
+      child {node {$G[\mv{x}]$}
+      child {node[rectangle,draw] {$R_{1}$}
+      child {node {$G'[\mv{x}]$}
+      child {node[rectangle,draw] {$R'\colon \mv{x} ≔ a$}
+          child {node     {\dots}}
+          child {node (1) {$H[\mv{x} ≔ a]$}}}}}}
+      child {node (2) {$H[\mv{x}]$}};
+      \path[-Latex,dashed] (1) edge [bend right=40] node {} (2);
+    \end{tikzpicture}
+    \caption{Copied m-coupled goal $H$.}%
+    \label{fig:mvars-path}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.4\textwidth}
+    \begin{tikzpicture}[outer sep=auto, level distance=10mm]
+      \node[rectangle, draw] {$\underline{R}$}
+      child {node (G1) {$G_{1}[\mv{x}]$}}
+      child {node (G2) {$G_{2}[\mv{x},\mv{y}]$}}
+      child {node (G3) {$\underline{G_{3}}[\mv{y}]$}
+          child {node[rectangle, draw] {$\underline{R_{1}} \colon \mv{y} ≔ a$}
+              child {node[rectangle,dotted,draw] (G2c) {$\underline{G_{2}}[\mv{x},\mv{y} ≔ a]$}
+                  child {node[rectangle, draw] {$\underline{R_{2}} \colon \mv{x} ≔ b$}
+                      child {node[rectangle, dotted, draw] (G1c) {$\underline{G_{1}}[\mv{x} ≔ b]$}
+                          child {node[rectangle, draw] {$\underline{R_{3}}$}}}}}}}
+      child {node[rectangle, dotted, draw, xshift=10mm] (G4) {$\underline{G_{4}}[\mv{z}]$}
+          child {node[rectangle, draw] {$\underline{R_{4}}\colon \mv{z} ≔ c$}}};
+      \draw[-Latex, dashed] (G1c) edge [bend left] node {} (G1);
+      \draw[-Latex, dashed] (G2c) edge [bend left] node {} (G2);
+      \node[dotted, draw, fit=(G1) (G2) (G3), inner sep=0mm] {};
+    \end{tikzpicture}
+    \caption{Indirectly proved goals $G_1$, $G_2$.}%
+    \label{fig:mvars-proved}
+  \end{subfigure}
+  \caption{Two examples of search trees with metavariables.
+    Rapp nodes are displayed as rectangles and are annotated with the metavariables they assign.
+    Goal nodes are annotated with the metavariables they depend on and the metavariables' assignments (if any).
+    Dashed arrows point from each copied goal to the goal it was copied from.
+    In Fig.~\subref{fig:mvars-proved}, proved nodes are underlined.}
+\end{figure*}
 
 Once we perform copying, we must also modify our notion of when a goal is proved.
 Consider a rule $R$ with three subgoals: $G_{1}[\mv{x}]$, $G_{2}[\mv{x}, \mv{y}]$ and $G_{3}[\mv{y}]$.
@@ -509,29 +533,7 @@ This proof, in turn, must assign $\mv{x}$, say to $\mv{x} ≔ b$, at which point
 In general, any goal that is m-coupled to $G_{3}$ must already be included in a proof of $G_{3}$.
 To prove $R$, it therefore suffices to prove $G_{3}$ (plus any other subgoals of $R$ that are not m-coupled to $G_{3}$).
 
-\begin{figure}
-  \begin{tikzpicture}[outer sep=auto, level distance=10mm]
-    \node[rectangle, draw] {$\underline{R}$}
-    child {node (G1) {$G_{1}[\mv{x}]$}}
-    child {node (G2) {$G_{2}[\mv{x},\mv{y}]$}}
-    child {node (G3) {$\underline{G_{3}}[\mv{y}]$}
-        child {node[rectangle, draw] {$\underline{R_{1}} \colon \mv{y} ≔ a$}
-            child {node[rectangle,dotted,draw] (G2c) {$\underline{G_{2}}[\mv{x},\mv{y} ≔ a]$}
-                child {node[rectangle, draw] {$\underline{R_{2}} \colon \mv{x} ≔ b$}
-                    child {node[rectangle, dotted, draw] (G1c) {$\underline{G_{1}}[\mv{x} ≔ b]$}
-                        child {node[rectangle, draw] {$\underline{R_{3}}$}}}}}}}
-    child {node[rectangle, dotted, draw, xshift=8mm] (G4) {$\underline{G_{4}}[\mv{z}]$}
-        child {node[rectangle, draw] {$\underline{R_{4}}\colon \mv{z} ≔ c$}}};
-    \draw[-Latex, dashed] (G1c) edge [bend left] node {} (G1);
-    \draw[-Latex, dashed] (G2c) edge [bend left] node {} (G2);
-    \node[dotted, draw, fit=(G1) (G2) (G3), inner sep=0mm] {};
-  \end{tikzpicture}
-  \caption{Proved nodes with copying}%
-  \label{fig:mvars-proved}
-\end{figure}
-
 Fig.~\ref{fig:mvars-proved} visualises this example.
-Proved nodes are underlined.
 We have added an additional subgoal of $R$, $G_{4}$, which is not m-coupled to $G_{3}$ and therefore needs to be proved separately.
 To keep the figure simple, each goal is proved by a single rule application with one subgoal, but in general, there could be an entire subtree between, say, $G_{3}$ and $R_{1}$.
 Moreover, the figure shows a proof attempt in which we happen to apply exactly those rules that lead to a proof.
