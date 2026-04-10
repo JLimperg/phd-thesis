@@ -87,7 +87,7 @@ Such \enquote{non-terminal} use of \tac{simp\_all} is considered bad style becau
 To avoid this issue, the optimised script uses the variant \tac{simp\_all~only}, which explicitly enumerates the equations used by \tac{simp\_all}.
 Since this transformation also speeds up \tac{simp\_all}, it is in fact applied to all invocations, not just the non-terminal one.
 
-This chapter describes a \emph{script optimiser} that performs all these optimisations (and more) automatically, producing the optimised script from Fig.~\ref{fig:big-example-optimised} and saving Aesop's users from the tedium of optimising the naive script by hand.
+This chapter describes a \emph{tactic script optimiser} that performs all these optimisations (and more) automatically, producing the optimised script from Fig.~\ref{fig:big-example-optimised} and saving Aesop's users from the tedium of optimising the naive script by hand.
 The optimiser is a multi-stage pipeline somewhat similar to the optimisation pipeline of a compiler, but it optimises aesthetics rather than efficiency.
 It operates in three stages that address various deficiencies of the original script.
 After some preliminaries, we discuss each optimiser stage in turn.
@@ -100,7 +100,7 @@ In practice, most \tac{aesop\_unfold} calls behave exactly like \tac{unfold}, so
 Unfortunately, it is tricky to determine whether any particular \tac{unfold} call has this property, so we propose a straightforward alternative:
 using the procedure from Sec.~\ref{sec:script:equality} that determines whether two tactics produce the same result, the optimiser checks whether a specific call to \tac{unfold} behaves like the original \tac{aesop\_unfold} call; if so, the less idiomatic tactic is replaced by its more idiomatic equivalent.
 
-The same approach is used when the optimiser replaces \tac{simp\_all} invocations with \tac{simp\_all~only} in the example from Fig.~\ref{fig:big-example}.
+The same approach is used when the optimiser replaces \tac{simp\_all} with \tac{simp\_all~only} in the example from Fig.~\ref{fig:big-example}.
 When an optimisation re-executes parts of the script, as this one does, we call it \emph{dynamic}; otherwise \emph{static}.
 
 \para{Structuring (Sec.~\ref{sec:script:structuring}).}
@@ -290,7 +290,7 @@ However, if $\mv{m₁}$ appears multiple times, then the corresponding expressio
 In other words, we optimistically assume that an expression $e₁$ with $e₁ \aeq e₂$ will be assigned to $\mv{m₁}$ by a later tactic, but we ensure that such an assignment is possible.
 Symmetrically, an unassigned metavariable $\mv{m₂}$ from the right-hand expression can be equal to an arbitrary left-hand expression $e₁$.
 
-The above description omits some special cases, e.g.\ local definitions and delayed-assigned metavariables.
+The above description neglects some special cases, such as local definitions and delayed-assigned metavariables.
 See the implementation\footnote{\texttt{Aesop/Util/EqualUpToIds.lean}} for the full details.
 
 \section{Local Dynamic Optimisation}%
@@ -363,18 +363,18 @@ This yields the desired result: a partial script with holes marked by \tac{sorry
 \subsection{Static Reordering}%
 \label{sec:script:static-reordering}
 
-The static reordering algorithm\footnote{\texttt{Aesop/Script/StructureStatic.lean}} is shown as Algorithm~\ref{alg:static-reordering}.
-Its main function, \Proc{reorder-static}, first sets up $\Var{tacticState}$.
-This variable contains the goals of the current tactic state, so we initialise it with the pre-goal of the first step.
+Static reordering\footnote{\texttt{Aesop/Script/StructureStatic.lean}} is implemented by Algorithm~\ref{alg:static-reordering}.
+Its main function, \Proc{reorder-static}, first initialises the $\Var{tacticState}$ variable.
+It contains the goals of the current tactic state, initially the first step's pre-goal.
 (For the purposes of static reordering, metavariable assignments and declarations are not essential, so $\Var{tacticState}$ does not track the current metavariable context.)
-The remainder of the algorithm iteratively selects steps and applies them to the tactic state, simulating the effect of the step's tactic, until there are no goals left.
+The remainder of the algorithm iteratively selects steps and applies them to the tactic state, simulating the effect of each step's tactic, until no goals remain.
 
 The function \Proc{next-step}, which picks the next step to apply to a given tactic state, implements the actual reordering.
 If the first goal in the tactic state does not contain metavariables, we can pick the step that applies to this goal, since it cannot have any ordering constraints with regards to other steps.
 This gives us precisely the depth-first order we seek.
 If the first goal in the tactic state does, however, contain metavariables, we perform no reordering, so we select the first step (according to the order in which the steps were generated) that applies to any goal in the tactic state.
 
-Once a step is chosen, the tactic state is updated to reflect its effect, using function \Proc{apply-step}.
+Once a step is chosen, the tactic state is updated to reflect its effect, using \Proc{apply-step}.
 This simulates the effect of executing a step on the visible goals.
 It first replaces the step's pre-goal with its post-goals.
 Additionally, we must take into account that a step can solve goals other than its pre-goal.
@@ -486,13 +486,13 @@ The algorithm\footnote{\texttt{Aesop/Script/StructureDynamic.lean}}, shown as Al
   \caption{Dynamic reordering}\label{alg:dynamic-reordering}
 \end{algorithm}
 
-At its core, dynamic reordering is a straightforward backtracking algorithm.
-Given a list of tactic steps, a metavariable context $Φ$ and a list of goals $G$, the function \Proc{reorder-dynamic} first tries to solve the goals in a structured manner.
-This means it executes the \Proc{go-structured} function, which applies the step for the first goal in $G$ and recurses into the resulting goal list.
-If this fails, \Proc{reorder-dynamic} calls the \Proc{go-unstructured} function, which applies the chronologically first step corresponding to any goal in $G$ and similarly recurses into the resulting goals.
+Dynamic reordering is essentially a straightforward backtracking algorithm.
+Given a list of tactic steps, a metavariable context $Φ$ and a list of goals $G$, \Proc{reorder-dynamic} first tries to solve the goals in a structured manner.
+It executes \Proc{go-structured}, which applies the step for the first goal in $G$ and recurses into the resulting goal list.
+If this fails, \Proc{reorder-dynamic} calls \Proc{go-unstructured}, which applies the chronologically first step corresponding to any goal in $G$ and similarly recurses into the resulting goals.
 The result of \Proc{reorder-dynamic} is a reordered sequence of steps and the metavariable context that results from applying the steps (in that order) to the pre-goals $G$ in context $Φ$.
 
-Applying the steps is somewhat more subtle than in the static variant of the algorithm, so the function \Proc{apply-step} is more complex.
+Applying the steps is somewhat more subtle than in the static variant of the algorithm, so \Proc{apply-step} is more complex.
 We first run the step's tactic $t$ on the current goal $g$ in the current metavariable context $Φ$.
 If the tactic fails, \Proc{apply-step} implicitly also fails.
 If the tactic succeeds, we check whether the produced goals $G'$ (in the produced context $Ψ$) are equal to the expected goals $G^{\post}$ of the step (in the step's post-context $Φ^{\post}$).
@@ -565,7 +565,7 @@ As a special case (again, the most common one after reordering), a node $\Fn{fas
 \]
 The bullet focuses the first goal and acts as a pair of braces around $h$.
 
-Transforming an ordered sequence of steps into a structured script is conceptually straightforward, but not entirely trivial.
+Transforming an ordered sequence of steps into a structured tactic script is conceptually straightforward, but not entirely trivial.
 As a start, it is convenient to view the sequence of steps as a \emph{step tree}.
 This is a tree with two types of nodes:
 \begin{itemize}
@@ -628,7 +628,7 @@ The algorithm's base case is $i > j$, in which case we are done and return the e
 For $i ≤ j$, we consider the step at position $i$ in the sequence $\Var{steps}$.
 If this step is not focusable or has no siblings, we render it in an unstructured manner, converting it into an $\Fn{on}$ node.
 The node's tail script is generated by a recursive call, starting at position $i + 1$ in the tactic state that results from applying the step $s$ to the initial tactic state $\Var{ts}$.
-We reuse the function \Proc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
+We reuse \Proc{apply-step} from Algorithm~\ref{alg:static-reordering} to update the tactic state.
 
 If the current step $s$ is focusable and has siblings, we render it in a structured manner, as a $\Fn{fas}$ node.
 To that end, we first generate the $h$ script.
@@ -698,7 +698,7 @@ If not, we use the unstructured version of the tactic of $s$ as usual.
 \label{sec:script:global-optimisation}
 
 As the final step of the script optimisation pipeline, we perform some global static optimisations.
-These are optimisation passes that do not re-execute any tactic steps (hence \enquote{static}) and that operate on the entire concrete syntax tree obtained after structuring (hence \enquote{global}).
+These optimisation passes do not re-execute any tactic steps (hence \enquote{static}) and operate on the entire concrete syntax tree obtained after structuring (hence \enquote{global}).
 Currently, Aesop includes two passes.
 
 \para{Focused rename\_i.}
@@ -829,15 +829,14 @@ However, the objective of this reordering is not to enable structuring but to pr
 Vyskocil, Stanovský and Urban~\cite{Vyskovil2010} also compress proofs via lemma extraction.
 A variety of tools used to improve Mizar proofs is described by Grabowski and Schwarzweller~\cite{Grabowski2009}.
 
-In the context of hammers -- systems which integrate external automated theorem provers (ATPs) with interactive proof assistants -- an important problem is the reconstruction of proofs found by the ATPs in the language of the proof assistants.
+In the context of hammers, an important problem is the reconstruction of proofs found by the ATPs in the language of the proof assistants.
 The most popular proof reconstruction method simply passes the lemmas used in the ATP proof to a second, less sophisticated ATP implemented within the proof assistant.
 However, there have also been attempts to directly transform the ATP proof into the proof assistant's language in HOL Light~\cite{PRocH}, Isabelle~\cite{Paulson2007,Blanchette2013a,Blanchette2013b,Blanchette2016} and Mizar~\cite{ATPMizar,MizarATP}.
 Here, the main challenge is to bridge the considerable gap between resolution proofs and the language of the respective proof assistant.
-Major issues include converting proofs by contradiction into direct proofs and encoding the skolemisation performed by ATPs.
 Some integrations also compress proofs by combining multiple proof steps performed by the ATP into one proof step of the proof assistant.
 This involves checking repeatedly whether the compressed proof still works, similar to my dynamic optimisations.
 
-Recently, there has been interest in LLM-based methods for simplifying (LLM-generated) formal proofs.
+Recently, there has been interest in LLM-based methods for simplifying formal proofs.
 ImProver~\cite{ImProver} and ProofOptimizer~\cite{ProofOptimizer} are custom LLM-based agents for shortening Lean proofs, but even off-the-shelf agents backed by recent foundation models appear, anecdotally, to perform well at this task.
 LLM-based methods tend to be much more general than our symbolic approach, performing a wider range of optimisations.
 However, they are much more costly (in time and money), and they may change a proof's structure quite radically.

@@ -757,7 +757,7 @@ For the dropped metavariables, we create additional subgoals ($\mathcal{G}_D$).
 However, we need to exclude metavariables that occur in the copied goals ($\mathcal{M}_C$); otherwise we would treat a metavariable as both a proper metavariable and a proper goal.
 Finally, we obtain the proper goals among all new subgoals and create metavariable clusters that are added as the children of a new rule application.
 
-The $\Proc{to-copy}$ function returns those goals which are m-coupled to an assigned or dropped metavariable.
+The $\Proc{to-copy}$ function returns the goals that are m-coupled via a given set of assigned or dropped metavariables.
 We walk up the tree from $G$ to the root, stopping once we have reached the last rapp $R_⊤$ that introduces one of the assigned or dropped metavariables.
 (Goals above $R_⊤$ cannot be m-coupled, hence are not of interest.)
 Along this path, we collect those siblings of goals on the path which depend on an assigned or dropped metavariable.

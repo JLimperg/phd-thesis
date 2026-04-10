@@ -146,7 +146,7 @@ Since that subgoal is unprovable, the attempt will not succeed, but the original
 That rule application receives the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
 We conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
 
-As an additional optimisation, we partition sets of related goals into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
+As an additional optimisation, we partition the subgoals of a rule into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
 For example, the goals $0 < \mv{n}$, $\mv{n} < 2$ and $\mv{m} < 3$ are partitioned into two clusters $\{0 < \mv{n}, \mv{n} < 2\}$ and $\{\mv{m} < 3\}$, reflecting the fact that the third goal is independent of the first two.
 This increases search parallelism and avoids unnecessary copying.
 
@@ -247,13 +247,13 @@ A notable heuristic prover based not on tree search but saturation is Isabelle's
 
 \subsection{Automated Theorem Provers and Hammers}
 
-A disadvantage of Aesop and similar tools is that they require extensive, non-trivial customisation by end-users.
-By contrast, \emph{automated theorem provers} (ATPs), including SAT/SMT solvers~\cite{SATHandbook,Z3,CVC5} and superposition-based theorem provers~\cite{Vampire,Zipperposition}, provide \enquote{push-button} automation that seeks to find proofs without any help from users.
+A disadvantage of Aesop and similar tools is that they require extensive, non-trivial customisation to be effective.
+By contrast, \emph{automated theorem provers} (ATPs), including SAT and SMT solvers~\cite{SATHandbook,Z3,CVC5} and superposition-based theorem provers~\cite{Vampire,Zipperposition}, provide \enquote{push-button} automation that seeks to find proofs without any help from users.
 For certain families of statements, these tools are extremely effective, generating complex proofs in seconds.
 However, they tend to perform less well on more mathematically sophisticated lemmas.
 
 One way to use an ATP from within an ITP is to implement a \emph{native} ATP in the language of the ITP, providing automated theorem proving as a regular tactic.
-Examples of this approach are Agda's~\cite{Agda} Agsy~\cite{Agsy}, HOL4's~\cite{HOL4} Metis~\cite{MetisHOL4} (also available in HOL Light~\cite{HOLLight,MetisHOLLight} and Isabelle~\cite{MetisIsabelle}), Rocq's sauto~\cite{sauto}, and Lean's Canonical~\cite{Canonical}, Duper~\cite{Duper} and grind\footnote{\url{https://lean-lang.org/doc/reference/latest/find/?domain=Verso.Genre.Manual.section&name=grind-tactic}}.
+Examples of this approach include Agda's~\cite{Agda} Agsy~\cite{Agsy}, HOL4's~\cite{HOL4} Metis~\cite{MetisHOL4} (also available in HOL Light~\cite{HOLLight,MetisHOLLight} and Isabelle~\cite{MetisIsabelle}), Rocq's sauto~\cite{sauto} and Lean's Canonical~\cite{Canonical}, Duper~\cite{Duper} and grind\footnote{\url{https://lean-lang.org/doc/reference/latest/find/?domain=Verso.Genre.Manual.section&name=grind-tactic}}.
 However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established ATPs such as CVC5~\cite{CVC5}, Vampire~\cite{Vampire}, Zipperposition~\cite{Zipperposition} or Z3~\cite{Z3}.
 Moreover, native ATPs must support their ITPs' logical foundations, rather than a standard logic such as first-order logic (FOL) or higher-order logic (HOL).
 This is a particular concern for type-theoretic ITPs, where the foundation is considerably more complex than FOL or HOL.

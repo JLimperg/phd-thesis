@@ -137,12 +137,12 @@ Aesop uses this unification procedure throughout, so whenever we discuss unifica
 \section{Tactics}%
 \label{sec:background:tactics}
 
-Tactics are a stateful domain-specific language for constructing expressions (usually proofs, i.e.\ expressions inhabiting a propositional type).
+Tactics are a domain-specific language for constructing expressions (usually proofs, i.e.\ expressions of propositional type).
 We enter \enquote*{tactic mode} with the \Kw{by} keyword; anything following it is parsed as a term of the tactic language.
 The syntax of each tactic is declared by registering a custom parser function as above (in the \Stx{tactic} syntax category).
 
 The elaboration function of a tactic has type \Ty{Syntax → TacticM~Unit}, so tactics are elaborated in the \Ty{TacticM} monad and change the state of the proof via side effects.
-The defining feature of \Ty{TacticM} is that it grants access to the current \emph{tactic state}, a list of goals/metavariables.
+The defining feature of \Ty{TacticM} is that it grants access to the current \emph{tactic state}, a list of goals.
 Initially, this list contains an initial goal whose target is the inferred type of the \Kw{by} block.
 The local context of this goal consists of the variables in scope at the \Kw{by}.
 Tactics then usually replace the first goal in the current tactic state with zero or more subgoals.
@@ -153,4 +153,4 @@ Hence, tactics function as a domain-specific language for constructing expressio
 
 We sometimes use a simplified model of tactics, pretending that the \Ty{TacticM} monad's state contains only a metavariable context and tactic state.
 (In reality, it also contains various pieces of state related, for example, to term elaboration.)
-A tactic can then be seen as a function from an input state $(Φ, G)$ to an output state $(Ψ, H)$, where $Φ$, $Ψ$ are metavariable contexts and $G$, $H$ are tactic states, i.e.\ lists of metavariables.
+A tactic is then a function from an input state $(Φ, G)$ to an output state $(Ψ, H)$, where $Φ$, $Ψ$ are metavariable contexts and $G$, $H$ are tactic states.
