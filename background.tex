@@ -74,10 +74,10 @@ Its children record either tokens and identifiers that were consumed directly (\
   \label{fig:background:parse-tree}
 \end{figure}
 
-Extensibility of the \Ty{Syntax} tree, in turn, implies extensibility of the elaborator.
+Extensibility of the \Ty{Syntax} tree, in turn, requires extensibility of the elaborator.
 Lean again uses the environment extension mechanism to implement this.
-It expects us to define, for each registered parser function, a corresponding elaboration function (or \emph{elaborator}), and to register it in an environment extension for elaboration functions.
-An elaborator receives a \Ty{Syntax} tree produced by a given parser function as input and produces (abstract syntax trees of) values in Lean's core type theory.
+It expects us to define, for each registered parser function, a corresponding elaboration function (or \emph{elaborator}), and to register it in an environment extension for elaborators.
+An elaborator receives a \Ty{Syntax} tree produced by a given parser function as input and produces (abstract syntax trees of) constructs of Lean's core type theory.
 Command elaborators produce core declarations, e.g.\ inductive types or definitions; term elaborators produce expressions.
 
 The inverse of elaboration, \emph{delaboration}, converts expressions into \Ty{Syntax} trees that can then be pretty-printed to obtain Lean code.
@@ -107,21 +107,22 @@ Types of later fvars may contain earlier fvars -- e.g.\ the type of $x$ contains
 
 Once we are ready to fill the hole represented by a metavariable $\mv{x} : T$, we \emph{assign} to the metavariable an expression $e$.
 This assignment, written $\mv{x} ≔ e$, is valid if $e$ contains only the fvars present in the metavariable's local context and $e$ has type $T$.
-Conceptually, this replaces the metavariable with its assignment everywhere it appears.
+Conceptually, the assignment operation substitutes $e$ for $\mv{x}$ anywhere $\mv{x}$ appears.
 
 Metavariables are registered in a \emph{metavariable context} that maps each metavariable's internal name to its local context, type and potentially assignment.
 Hence, a metavariable is only valid in a metavariable context that contains its internal name.
-We usually work in a global metavariable context that is part of the state of the various elaborator monads.
+Elaborators are monadic programmes, and the various elaborator monads contain a \enquote*{global} ambient metavariable context.
 
 Metavariables can also be seen as \emph{goals}, and we use the two terms interchangeably.
-This view is particularly natural for metavariables whose types are propositions.
+This view is most natural for metavariables whose types are propositions.
 The fvars are then \emph{hypotheses} and the type of the metavariable, also called its \emph{target}, is a statement to be proved.
+Aesop's search tree stores metavariables at goal nodes, and metavariable contexts at rapp nodes.
 
 \section{Definitional Equality, Reducibility and Unification}%
 \label{sec:background:unification}
 
-In Lean, as in standard type theory, two expressions $t$ and $u$ are \emph{definitionally equal} (also called \emph{judgementally equal}) if they are equal up to computation.
-For instance, $(\Lam{x}{x})~y$ is definitionally equal to $y$.
+In Lean, as in standard type theory, two expressions $t$ and $u$ are \emph{definitionally equal} (or \emph{judgementally equal}) if they are equal up to computation.
+For instance, the expression $(\Lam{x}{x})~y$ is definitionally equal to $y$.
 
 Lean stratifies definitional equality along several \emph{transparency} levels that indicate which definitions can be unfolded when checking definitional equality.
 At \emph{default} transparency, most definitions can be unfolded, but we often use the more restrictive \emph{reducible} transparency at which only definitions marked \Attr{@[reducible]} or \Kw{abbrev} are unfolded.
@@ -131,14 +132,14 @@ However, it also means that users have to unfold more definitions manually.
 When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level as well.
 In fact, the same Lean function is used for unification and for definitional equality checking.
 Lean's unification is complete for a decidable first-order fragment~\cite{Miller91} and supports some higher-order features, but it is necessarily incomplete for general higher-order unification problems~\cite{SecondOrderUnificationUndecidable}.
-Aesop uses this unification procedure throughout, so whenever we discuss unification, we mean Lean's implementation rather than the mathematical notion on which it is based.
+Aesop uses this unification procedure throughout, so whenever we discuss unification, we mean Lean's implementation rather than the undecidable mathematical notion which it approximates.
 
 
 \section{Tactics}%
 \label{sec:background:tactics}
 
 Tactics are a domain-specific language for constructing expressions (usually proofs, i.e.\ expressions of propositional type).
-We enter \enquote*{tactic mode} with the \Kw{by} keyword; anything following it is parsed as a term of the tactic language.
+We enter \enquote*{tactic mode} with the \Kw{by} keyword; anything following it is parsed as a tactic language program.
 The syntax of each tactic is declared by registering a custom parser function as above (in the \Stx{tactic} syntax category).
 
 The elaboration function of a tactic has type \Ty{Syntax → TacticM~Unit}, so tactics are elaborated in the \Ty{TacticM} monad and change the state of the proof via side effects.
