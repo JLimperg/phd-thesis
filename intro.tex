@@ -3,14 +3,14 @@
 
 \emph{Interactive theorem provers} (ITPs) are software systems for rigorous mathematical proof.
 They allow their users to express mathematical statements and proofs in a precise, unambiguous language, and check these proofs according to the rules of the respective prover's underlying logic.
-The logic is usually kept simple, admitting a small, almost certainly bug-free implementation of a proof checker, called a \emph{kernel}.
+The logic is usually kept simple, admitting a small implementation of a proof checker, called a \emph{kernel}.
 Hence, if an ITP accepts a proof, we can be very confident that the proof is, in fact, correct.
-Indeed, while bugs have been found in many kernels (usually small and quickly fixed), to my knowledge, no ITP-proved statement of wider interest has ever turned out to be false.
-The same cannot be said for regular, non-computerised mathematics~\cite{Voevodsky14,Hales08} or for many of the automated systems that aim to verify various properties of computer programs~\cite{CSmith}.
+Indeed, while bugs have been found in many kernels (usually small and quickly fixed), to my knowledge no ITP-proved statement of wider interest has ever turned out to be false.
+The same cannot be said for regular, non-computerised mathematics~\cite{Voevodsky14,Hales08} or for many of the automated systems that aim to verify various properties of computer programs~\cite{CSmith}. % TODO better refs
 
 Such extreme reliability has made ITPs a mainstay of certain scientific areas, particularly programming languages research, and they have also found some success in industrial applications where correctness is paramount~\cite{seL4,CompCert,AWSFormal}.
-Moreover, a promising line of research has recently started to combine ITPs with machine learning, aiming to mitigate the unreliability of large language models by checking their outputs with ITPs~\cite{Lample22,LeanDojo,GoedelProver,DeepSeekProver,Aristotle}.
-The mathematics community has historically, by and large, been sceptical of computer-based proofs, despite some early successes~\cite{FourColor,Kepler,OddOrder}, but there has recently been renewed interest in ITPs, and particularly in the Mathlib project~\cite{Mathlib}.
+A promising line of research has recently started to combine ITPs with machine learning, aiming to mitigate the unreliability of large language models by checking their outputs with ITPs~\cite{Lample22,LeanDojo,GoedelProver,DeepSeekProver,Aristotle}.
+The mathematics community has historically, by and large, been sceptical of computer-based proofs, despite some early successes~\cite{FourColor,Kepler,OddOrder}, but there has recently been renewed interest in ITPs and particularly in the Mathlib project~\cite{Mathlib}.
 This mathematics library for the Lean~4 ITP~\cite{Lean4} is perhaps the first large, coherent library of mathematics formalised in an interactive theorem prover and primarily developed by mathematicians rather than computer scientists.
 It aims to develop a typical undergraduate mathematics curriculum as well as more advanced concepts, to provide a foundation for both formal developments of research mathematics~\cite{LiquidTensor,PFR} and future AI-based mathematics tools.
 
@@ -40,7 +40,7 @@ As the name suggests, Aesop's purpose is to automate the mathematically trivial 
 When searching for a proof, Aesop systematically applies \emph{rules} that reduce a \emph{goal} to zero or more subgoals.
 Each goal consists of a statement to be proved (the \emph{target}) and a list of \emph{hypotheses} that are assumed to be true (the \emph{local context}).
 We write a goal with local context $Γ$ and target $T$ as $Γ ⊢ T$.
-In their most general form, rules are tactics themselves, but Aesop also provides \emph{rule builders} that create rules for specific lemmas.
+In their most general form, rules are arbitrary tactics, but Aesop also provides \emph{rule builders} that create rules for specific lemmas.
 Rules are added by users, who often curate \emph{rule sets} for certain tasks.
 
 For example, the lemma that continuity of $f$ and $g$ implies continuity of $x ↦ f(x) + g(x)$ (\textsc{Add}) can be turned into a rule that reduces any goal of the form \enquote{$x ↦ f(x) + g(x)$ is continuous} into two subgoals, \enquote{$f$ is continuous} and \enquote{$g$ is continuous}.
@@ -80,7 +80,7 @@ A rapp node represents a rule that was applied to prove its parent goal.
 The rule may require additional goals to be solved, which become children of the rapp node.
 The leaf rapp nodes have no children, so nothing remains to be proved, and the tree represents a complete proof of the initial conjecture.
 
-Usually, Aesop is provided not with exactly the rules needed for a proof, but rather with a superset designed to prove a large class of simple goals.
+Usually, Aesop is provided not with exactly the rules needed for a proof, but rather with a superset designed to prove a large class of goals.
 As a result, multiple rules may apply to any given goal.
 Aesop then considers all possible rule applications as sibling rapp nodes, and the proof tree becomes a search tree.
 More specifically, it becomes an AND-OR-tree: sibling goals are implicitly conjoined (all need to be proved for the parent rapp to be proved) while sibling rapps are implicitly disjoint (only one needs to be proved for the parent goal to be proved).
@@ -96,7 +96,7 @@ The success probability is given by the user when registering the rule.
 It should roughly approximate the probability that the rule, when successfully applied to an Aesop-provable goal, will lead to a successful proof of that goal.
 For example, $∧$-introduction, which reduces a goal $P ∧ Q$ to subgoals $P$ and $Q$, has success probability 100\%: if $P ∧ Q$ is Aesop-provable, then almost certainly $P$ and $Q$ are as well.
 Meanwhile, left $∨$-introduction, which reduces a goal $P ∨ Q$ to just $P$, has success probability 50\%, since $P$ and $Q$ are a priori equally likely to be Aesop-provable.
-In practice, the exact percentages generally do not affect the proof search very much, so we do not worry about whether the empirical success probability of left $∨$-introduction is, in fact, 50\% or 57\%.
+In practice, the exact percentages generally do not affect the proof search much, so we do not worry about whether the empirical success probability of left $∨$-introduction might be 57\% rather than 50\%.
 
 Using the success probabilities, Aesop implements a simple \emph{best-first} strategy, answering the question of which goal to solve first.
 Each goal is associated with a \emph{priority} (also a percentage), with the root goal having priority 100\%.
@@ -105,9 +105,8 @@ Hence, applying a 50\% rule to a 70\% goal results in subgoals with priority 35\
 Alternatively, rules can assign explicit priorities to the child goals, but this is rarely done.
 Depth-first and breadth-first search strategies are likewise supported but little used.
 
-Other Aesop-style tools generally support only depth-first search.
-This search strategy is particularly easy to implement: rule applications are simply backtracked once it becomes clear that they will not lead to a successful proof.
-No explicit representation of the search tree is needed; it is effectively encoded in the recursive calls of the search procedure.
+Other Aesop-style tools generally support only depth-first search, which is particularly easy to implement: rule applications are simply backtracked once it becomes clear that they will not lead to a successful proof.
+No explicit representation of the search tree is needed; it is encoded in the recursive calls of the search procedure.
 ITPs tend to make it easy to take and restore snapshots of the current proof state (and hence to backtrack) since this capability is also used to implement other features, e.g.\ interactive proof development environments.
 
 However, depth-first search scales poorly to larger proofs and rulesets.
@@ -115,12 +114,12 @@ If rules are not precisely prioritised, depth-first search may proceed down a lo
 Aesop's implementation of best-first search, which is often close to breadth-first in practice, avoids this issue.
 Best-first search also allows us to use certain classes of rules that, with a depth-first approach, are either unusable or require very specific configuration.
 For example, a transitivity rule such as $a < b → b < c → a < c$ is dangerous because it can be applied infinitely often to its own subgoals.
-In Aesop, we can mitigate this danger by giving the rule a very low success probability, so it is tried only as a last resort and the priority of its descendants decreases exponentially in the number of recursive applications.
+In Aesop, we can mitigate this danger by giving the rule a very low success probability, so it is tried only as a last resort and the priority of its descendants decreases exponentially with their depth.
 
 Since we support non-depth-first search in Aesop, we must represent the search tree explicitly.
 This substantially complicates the handling of \emph{metavariables}.
 A metavariable (also called \emph{existential variable}, \emph{schematic variable} and sometimes just \emph{free variable}) is a named hole in the proof state, to be filled by later proof steps.
-It typically arises from an existential quantifier.
+It often arises from an existential quantifier.
 For example, the goal $\Ex{n : ℕ}{0 < n ∧ n < 3}$ is decomposed by built-in Aesop rules into two goals $0 < \mv{n}$ and $\mv{n} < 2$, where $\mv{n}$ is a newly created metavariables.
 When a goal is solved, metavariables may be assigned as a side effect.
 In our example, applying the lemma $0 < 1$ to the first goal, $0 < \mv{n}$, solves the goal and assigns $\mv{n} ≔ 1$.
@@ -141,32 +140,31 @@ When a rule application assigns a metavariable, sibling goals dependent on that 
 Intuitively, we view goals with updated metavariable assignments as goals that need to be solved \emph{because} the assignment has been made, and that would not need to be solved if a different assignment had been made.
 Hence, consider an attempt to solve our running example with $0 < 3$ applied to the first goal, $0 < \mv{n}$.
 This assigns $\mv{n} ≔ 3$, so the coupled sibling goal $\mv{n} < 2$ is copied, with $\mv{n}$ replaced by its assignment.
-This means that the rule, which closes its goal and so would ordinarily have no subgoals, receives the subgoal $\mv{3} < 2$.
+This means that the rule, which closes its goal and so would ordinarily have no subgoals, produces the subgoal $3 < 2$.
 Since that subgoal is unprovable, the attempt will not succeed, but the original goal $0 < \mv{n}$ is still present in the search tree, and Aesop can start a new attempt where this goal is solved by $0 < 1$.
-That rule application receives the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
+That rule application produces the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
 We conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
 
-As an additional optimisation, we partition the subgoals of a rule into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
+As an optimisation, we partition the subgoals of a rule into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
 For example, the goals $0 < \mv{n}$, $\mv{n} < 2$ and $\mv{m} < 3$ are partitioned into two clusters $\{0 < \mv{n}, \mv{n} < 2\}$ and $\{\mv{m} < 3\}$, reflecting the fact that the third goal is independent of the first two.
 This increases search parallelism and avoids unnecessary copying.
 
 \section{Efficient Forward Rules}
 
-From its inception, Aesop has supported forward as well as backward rules.
-These are rules that derive facts from the hypotheses available in an Aesop goal and add them to the context for use by other rules.
+Since its inception, Aesop has supported \emph{forward rules}.
+These are rules that derive facts from the hypotheses available in an Aesop goal and add them to the local context for use by other rules.
 For example, given a function $f$, a lemma $\Var{h} : \All{x : ℝ}{0 < f~x}$ and a context containing $a, b : ℝ$, the forward rule for $\Var{h}$ adds hypotheses $\Var{h₁} : 0 < f~a$ and $\Var{h₂} : 0 < f~b$.
-These could be used, for example, by Lean's \emph{positivity} tactic to establish positivity of expressions containing $f~a$ and $f~b$.
+These could be used, for example, by Lean's \tac{positivity} tactic to establish positivity of expressions containing $f~a$ and $f~b$.
 
-Aesop initially used an implementation of forward rules, briefly described in Chapter~\ref{chap:aesop}, that is very naive.
-When considering a goal with hypotheses $\Var{h₁} : H₁, \dots, \Var{hₙ} : Hₙ$ during the search, Aesop checks for each forward rule $r : \All{(x₁ : X₁) \dots (xₘ : Xₘ)}{Y}$ whether there is a type-correct substitution $x₁ ↦ \Var{h_{i₁}}, \dots, xₘ ↦ \Var{h_{iₘ}}$, i.e.\ a type-correct assignment of hypotheses to premises of $r$.
+Aesop initially only provided a very naive implementation of forward rules.
+With that implementation, when considering a goal with hypotheses $\Var{h₁} : H₁, \dots, \Var{hₙ} : Hₙ$ during the search, Aesop checks for each forward rule $r : \All{(x₁ : X₁) \dots (xₘ : Xₘ)}{Y}$ whether there is a type-correct substitution $x₁ ↦ \Var{h_{i₁}}, \dots, xₘ ↦ \Var{h_{iₘ}}$, i.e.\ a type-correct assignment of hypotheses to premises of $r$.
 If so, the conclusion of $r$, $Y[\Var{h_{i₁}}, \dots, \Var{h_{iₘ}}]$, is added as a new hypothesis (unless it is already present).
-We index the final premise of $r$ and match the premises back-to-front on the assumption that later premises are more specific than earlier premises.
 
-A crucial weakness of this scheme is that it is stateless: the matching process is repeated for every goal and every forward rule (subject to indexing), even when the same rule was already tried on essentially the same goal.
-This is a common case: backward rules produce subgoals with exactly the same hypotheses as their parent goals; forward rules only add hypotheses; and even Aesop's \tac{simp} pass usually changes only select hypotheses.
+A crucial weakness of this scheme is that it is stateless: the matching process is repeated for every goal and every forward rule (subject to an indexing scheme), even when the same rule was already tried on essentially the same goal.
+This is a common case: many rules leave the local context entirely unchanged, forward rules themselves only add hypotheses, and even Aesop's \tac{simp} pass usually changes only select hypotheses.
 
 Recent versions of Aesop therefore use a novel incremental mechanism for forward rules.
-Each goal is associated with a \emph{forward state} that indexes \emph{partial applications} of forward rules to the goal's hypotheses.
+Each goal is associated with a \emph{forward state} that indexes partial applications of forward rules to the goal's hypotheses.
 For instance, given a forward rule $r : \All{x~y : ℕ}{x < y → y < x → ⊥}$ and a goal with hypotheses $a : ℕ,\, b : ℕ,\, \Var{h₁} : a < b$, the forward state stores the fact that $r~a~b~\Var{h₁}$ is a type-correct partial application of $r$.
 If a rule then creates a subgoal with additional hypothesis $\Var{h₂} : b < a$, the stored partial application is completed and the conclusion of $r$, $⊥$, is added as a new hypothesis.
 
@@ -176,11 +174,10 @@ Additionally, we store the partial rule applications in a custom data structure 
 This allows us to quickly look up partial applications compatible with the substitution $x ↦ a,\, y ↦ b$ that results from matching $\Var{h₂}$ against the rule's second premise, $y < x$.
 The lookup returns $r~a~b~\Var{h₁}$, which we therefore extend to $r~a~b~\Var{h₁}~\Var{h₂}$ and report as a complete forward rule application.
 If the rule had additional premises, $r~a~b~\Var{h₁}~\Var{h₂}$ would instead be indexed in the forward state, to be completed by future hypotheses.
-Additionally, we perform expensive computations as lazily as possible, among other optimisations.
 
 To evaluate our scheme, we test it on synthetic and non-synthetic benchmarks.
 The synthetic benchmarks show that our scheme substantially outperforms the naive approach in scenarios involving heavy use of forward rules.
-For a more natural evaluation, we adapt the benchmark used by lean-auto~\cite{lean-auto} to run different Aesop configurations on Mathlib theorems.
+For a more practical evaluation, we adapt the benchmark used by lean-auto~\cite{lean-auto} to run different Aesop configurations on Mathlib theorems.
 In this benchmark, the new, incremental forward reasoning implementation provides a 1.24x mean speedup over the naive one for Aesop, and a 2.08x mean speedup for the \tac{saturate} tactic that only performs forward reasoning.
 The modest mean Aesop speedup may be caused by the fact that most theorems Aesop can solve involve only few applications of forward rules, so the caching provided by the incremental implementation does not have a large effect.
 We see larger speedups for invocations with deeper search trees.
@@ -188,7 +185,7 @@ We see larger speedups for invocations with deeper search trees.
 \section{Script Generation and Optimisation}
 
 When Aesop finds a proof, or at least makes progress towards one, it applies a series of rules that translate fairly directly into lower-level Lean tactics.
-For example, an application of a backward rule $r$ corresponds to $\tac{apply}~r$; an application of a forward rule to $\tac{have}~\Var{h}~\tac{:=}~r~\dots$.
+For example, an application of a backward rule $r$ corresponds to $\tac{apply}~r$; an application of a forward rule corresponds to $\tac{have}~\Var{h}~\tac{:=}~r~\dots$.
 It is therefore easy (if not entirely trivial) to generate a \emph{tactic script} that can replace a given Aesop call.
 Doing so has advantages in two scenarios.
 
@@ -198,33 +195,32 @@ It is also stable with respect to changes to the Aesop rule set (though, convers
 
 Second, a script for an Aesop call that does not find a full proof may serve as the start of a manual proof.
 Hence, Aesop can be used as a goal preprocessor that performs some obvious steps and leaves the rest of the proof to the user.
-Doing so without a script is also possible, but creates major maintenance challenges since changes to the Aesop rule set are likely to break proofs in ways that are difficult to debug.
-Hence, script generation opens up an entirely new use case for what is otherwise considered strictly a closing tactic.
+Doing so without a script is also possible, but creates maintenance challenges since changes to the Aesop rule set are likely to break proofs in ways that are difficult to debug.
+Hence, script generation opens up an entirely new use case for Aesop, beyond the closing of straightforward goals that is its traditional remit.
 
-However, if we just naively render the used rules as a sequence of tactics, we end up with highly unidiomatic scripts.
-They operate on goals in whatever order Aesop visited the goals during the search, rather than the depth-first order that humans overwhelmingly use.
+However, if we naively render the used rules as a sequence of tactics, we end up with highly unidiomatic scripts.
+They operate on goals in whatever order Aesop used when visiting the goals during the search, rather than the depth-first order that humans overwhelmingly use.
 Relatedly, they do not make use of Lean's many facilities for structuring proofs into tree shapes.
 And they often use unidiomatic or inefficient tactics.
 This jeopardises both use cases since users have to tediously adjust the scripts by hand.
 
-We therefore added a script optimiser to Aesop that addresses these challenges (among others).
-The optimiser bears some similarity to an optimising compiler or autoformatter.
-It operates in three stages.
+We address these challenges (and more) by adding a script optimiser to Aesop.
+It bears some similarity to an optimising compiler or autoformatter and operates in three stages.
 
 First, individual tactics are rewritten into a more performant or more idiomatic form.
 For example, we try to use the stock \tac{unfold} tactic instead of Aesop's \tac{aesop\_unfold}, which has slightly different semantics for performance reasons.
-Since the semantics are different, we check whether the two tactics actually produce the same output, i.e., the same goals, which they usually do.
-This check is possible because tactics are effectively pure functions of their input goals, and unlike a typical optimising compiler, we know that our script only needs to work for one specific set of initial goals.
+Since the semantics are different, we check whether the two tactics actually produce the same goals, which they usually do.
+This check is possible because tactics are approximately pure functions of their input goals, and unlike a typical optimising compiler, we know that our script only needs to work for one specific set of initial goals.
 
 Second, we structure the script, reordering the tactics into depth-first order and making use of Lean's structuring facilities, e.g.\ the \tac{case}, \tac{next} and $\tacbullet$ tactic combinators.
 Reordering is not always possible when goals contain metavariables, since tactics may behave differently depending on whether a metavariable has already been solved in the proof of another goal.
-We propose two techniques to address this issue: a static method that misses some opportunities for reordering, and a dynamic method that reorders as much as possible.
+We propose two methods to address this issue: a static method that misses some opportunities for reordering, and a dynamic method that reorders as much as possible.
 The second method is dynamic in the sense that it tries every possible reordering, checking that the reordered tactics have the same behaviour as the original ones.
 This makes it more precise, but also much slower.
 However, an evaluation on Aesop calls in Mathlib shows that the dynamic method is generally still performant enough for interactive use.
 
 Third, we run two purely syntactic optimisation passes on the resulting script.
-These do not refer to the input and expected output goals of tactics, so are conceptually simple.
+These do not refer to the input and output goals of tactics, so are conceptually simple.
 
 \section{Related Work}
 
@@ -249,12 +245,12 @@ A notable heuristic prover based not on tree search but saturation is Isabelle's
 
 A disadvantage of Aesop and similar tools is that they require extensive, non-trivial customisation to be effective.
 By contrast, \emph{automated theorem provers} (ATPs), including SAT and SMT solvers~\cite{SATHandbook,Z3,CVC5} and superposition-based theorem provers~\cite{Vampire,Zipperposition}, provide \enquote{push-button} automation that seeks to find proofs without any help from users.
-For certain families of statements, these tools are extremely effective, generating complex proofs in seconds.
+For certain families of statements, these tools are highly effective, generating complex proofs in seconds.
 However, they tend to perform less well on more mathematically sophisticated lemmas.
 
 One way to use an ATP from within an ITP is to implement a \emph{native} ATP in the language of the ITP, providing automated theorem proving as a regular tactic.
 Examples of this approach include Agda's~\cite{Agda} Agsy~\cite{Agsy}, HOL4's~\cite{HOL4} Metis~\cite{MetisHOL4} (also available in HOL Light~\cite{HOLLight,MetisHOLLight} and Isabelle~\cite{MetisIsabelle}), Rocq's sauto~\cite{sauto} and Lean's Canonical~\cite{Canonical}, Duper~\cite{Duper} and grind\footnote{\url{https://lean-lang.org/doc/reference/latest/find/?domain=Verso.Genre.Manual.section&name=grind-tactic}}.
-However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established ATPs such as CVC5~\cite{CVC5}, Vampire~\cite{Vampire}, Zipperposition~\cite{Zipperposition} or Z3~\cite{Z3}.
+However, these ATPs tend to be somewhat weak since they must be re-implemented for each ITP and are therefore less mature than established external ATPs such as CVC5~\cite{CVC5}, Vampire~\cite{Vampire}, Zipperposition~\cite{Zipperposition} or Z3~\cite{Z3}.
 Moreover, native ATPs must support their ITPs' logical foundations, rather than a standard logic such as first-order logic (FOL) or higher-order logic (HOL).
 This is a particular concern for type-theoretic ITPs, where the foundation is considerably more complex than FOL or HOL.
 As a result, native ATPs must adapt established calculi to the type-theoretic setting (Duper, Lean's grind) or rely on simple calculi based on type inhabitation (Agsy, Canonical) that are typically able to find only very short proofs.
@@ -272,14 +268,14 @@ Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's s
 More recently, some ATPs have gained the ability to report detailed proofs~\cite{Alethe,CVC5ProofVerification,CVC5RewriteVerification} that can be directly translated back into the ITP's logic.
 
 Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with SMT solvers and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
-The tight integration of ITP and ATP leads to a better user experience and a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
-This yields a large and complex trusted code base compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases small.
+The tight integration of ITP and ATP leads to a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
+This yields a large and complex trusted code base compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases -- the kernels -- small.
 
 However an ATP is integrated, users pay for the convenience of push-button automation with some amount of brittleness: proofs that compile on one version of the ITP-ATP combination may break or become non-reproducible on the next version, due to updates to the ATP's calculus and heuristics or the hammer's translation algorithms.
 Since ATPs employ complex calculi with many heuristics and options, it is often hard to tell what should be done to fix such breakage.
 By contrast, proof search procedures like Aesop are much simpler, so it is easier -- though still nontrivial -- to understand why a particular statement could or could not be proved.
 Their relative simplicity also makes it easier to obtain consistently good performance, whereas updates to the heuristics of ATPs may influence their performance in complex ways.
-This is particularly important in the area of verified software, where proofs are sometimes so large that precise control over the proof search strategy becomes essential.
+This is particularly important in the area of software verification, where proofs are sometimes so large that precise control over the proof search strategy becomes essential.
 
 The flip side of Aesop's simplicity is that, even when properly configured, it is considerably less powerful than ATPs.
 For example, Aesop can only make use of equations by passing them to Lean's simplifier, which is helpful only when the equation has a natural left-to-right or right-to-left direction.
@@ -308,7 +304,7 @@ Notably, several systems have achieved gold and silver medals at the 2024 and 20
 However, a downside of LLM-based approaches is that they are much more costly, in both time and money, than ATPs.
 Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 2 to over 1000.
 Even a single such one-shot attempt is typically more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware.
-Meanwhile, Systems based on tactic-level search or decomposition tend to involve large numbers of LLM queries.
+Systems based on tactic-level search or decomposition also tend to involve large numbers of LLM queries.
 For instance, the Aristotle system~\cite{Aristotle}, in its IMO gold medal performance, ran Lean on up to 500,000 CPUs for multiple days to verify proofs generated by LLMs running on an undisclosed number of GPUs.
 It therefore seems likely that future automated proving systems will incorporate both high-level LLM guidance and efficient ATPs.
 The ATPs become, in effect, an optimisation that allows an NTP to shift some of the proving effort from expensive GPUs to cheap CPUs.
@@ -316,19 +312,18 @@ The ATPs become, in effect, an optimisation that allows an NTP to shift some of 
 \section{Adoption}
 
 For a pragmatic, heuristic tool like Aesop, the ultimate success metric is adoption, so it is my pleasure to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
-Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that call Aesop with a specialised rule set.
-The \tac{measurability} tactic, which attempts to prove that a function is measurable, is a typical example.
-For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}, but these are often less general.
+Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that use a specialised rule set.
+The \tac{measurability}\footnote{\url{https://github.com/leanprover-community/mathlib4/blob/6b3e5a3312983f468f6187068fca3e69ddc7f80b/Mathlib/Tactic/Measurability.lean}} tactic, which attempts to prove that a function is measurable, is a typical example.
+For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}\footnote{\url{https://github.com/leanprover-community/mathlib4/blob/6b3e5a3312983f468f6187068fca3e69ddc7f80b/Mathlib/Tactic/FunProp.lean}}.
 Anecdotally, the script generation functionality is used regularly for goals where it would be inopportune to leave Aesop in the final proof script (usually for performance reasons), but since script generation leaves no trace in the final proof, we cannot quantify this.
 
 Even so, many Mathlib theories have not yet been thoroughly annotated to build effective Aesop rule sets, limiting the effectiveness of Aesop even on goals where it could perform well.
 Forward rules, in particular, are rarely used in Mathlib.
 A tool that suggests good Aesop annotations, perhaps using an LLM to determine whether a lemma should be used forward or backward and what its priority should be, could thus provide substantial value to the Lean community.
 
-Outside of Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{https://github.com/teorth/pfr}.
+Outside of Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{\url{https://github.com/teorth/pfr}}.
 Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
 Geoffrey Irving's \tac{interval} tactic\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
-Aeneas~\cite{Aeneas} uses a custom implementation of forward rules, inspired by Aesop's, in its proof automation.
 
 As mentioned, Aesop is also used in larger, push-button provers.
 LeanHammer~\cite{LeanHammer} uses Aesop as one of its proof reconstruction backends.
@@ -336,7 +331,7 @@ Some tactic-by-tactic NTPs use Aesop as a backend providing an AND-OR tree with 
 And of course, many LLM-based systems use Aesop as a comparatively cheap tactic to dispatch easy goals.
 
 An interesting, unusual use of Aesop is explored in unpublished work by Harry Goldstein et al.%
-\footnote{https://github.com/hgoldstein95/palamedes-lean}
+\footnote{\url{https://github.com/hgoldstein95/palamedes-lean}}
 Aesop is used as the backend of a synthesis engine for correct-by-construction generators in the context of property-based testing.
 Using a custom set of purely constructive rules, Aesop searches for proofs of the existence of generators with particular correctness properties.
 If such a proof is found, an executable generator can be immediately extracted.
