@@ -722,8 +722,8 @@ It shows the most involved parts of metavariable handling, including the copying
     \KwLet $\mathcal{G}_P$ be the set of goals on the path from $R_⊤$ to $G$ \\
     \KwLet $\mathcal{R}_P$ be the set of rapps on the path from $R_⊤$ to $G$ \\
     \KwLet $\mathcal{O}_P ≔ \{ \Fn{origin}(G) \mid G ∈ \mathcal{G}_P \}$ \\
-    \KwLet $\mathcal{G}_C ≔ ∅$ \\
-    \KwLet $\mathcal{O}_C ≔ ∅$ \\
+    $\mathcal{G}_C \gets ∅$ \\
+    $\mathcal{O}_C \gets ∅$ \\
     \ForEach{$R ∈ \mathcal{R}_P$}{
       \ForEach{child goal $C$ of $R$}{
         \KwLet $O ≔ \Fn{origin}(C)$ \\
