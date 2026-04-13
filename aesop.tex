@@ -273,7 +273,7 @@ If we use left $∧$-elimination as a destruct rule, it reduces the goal $h : A 
 Since the matched hypotheses are removed, destruct rules do not generally apply to their own subgoals, so there is no need to prevent cycles.
 
 The initial version of Aesop only supported a naive algorithm to apply forward rules.
-For each goal, this algorithm iterates through the forward rules and the goal's hypotheses, looking for sets of hypotheses to match the rules' immediate arguments (subject to an indexing optimisation; see Section~\ref{sec:aesop:indexing}).
+For each goal, this algorithm iterates through the forward rules and the goal's hypotheses, looking for sets of hypotheses to match the rules' immediate arguments (subject to an indexing optimisation; see Sec.~\ref{sec:aesop:indexing}).
 Since searches tend to involve many goals with similar local contexts, much of this work is repeated across goals.
 Chapter~\ref{chap:forward} discusses a more sophisticated approach that caches partial applications to reduce the repetition.
 
