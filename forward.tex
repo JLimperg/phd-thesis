@@ -12,23 +12,23 @@
 \chapter{Incremental Forward Reasoning}%
 \label{chap:forward}
 
-In the previous chapter, we briefly discussed \emph{forward rules}, which attempt to derive additional facts from the hypotheses of a given goal.
+In the previous chapter, we introduced \emph{forward rules}, which derive additional facts from the hypotheses of a given goal.
 Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
 The added hypothesis $h₃ : a < c$ may then be used by subsequent rules.
 
-Initially, Aesop used the \emph{naive algorithm} from the previous chapter to apply forward rules.
-When a forward rule was run on a goal, the rule would search the goal's context for all combinations of hypotheses satisfying its premises.
+Initially, Aesop only implemented what we call the \emph{naive algorithm} for applying forward rules.
+When a forward rule is run on a goal, the algorithm searches the goal's context for all combinations of hypotheses satisfying the rule's premises.
 This method is simple but involves much repeated work because, in practice, contexts encountered during the search tend to be similar.
 For example, the $∧$-introduction rule, when run on $Γ ⊢ A ∧ B$, produces subgoals $Γ ⊢ A$ and $Γ ⊢ B$, so the naive algorithm runs the same forward rules on the same context $Γ$ three times.
-More generally, any backward rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
+More generally, any apply rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
 
-In this chapter, we present an alternative way to apply forward rules that addresses this issue.
+In this chapter, we present an alternative way to apply forward rulesA
 The central idea is to remember, for each goal $Γ ⊢ A$, which forward rules can be partially applied to which sets of hypotheses.
 When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ ⊢ Aₙ$, the new contexts $Δᵢ$ are likely similar to $Γ$.
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
 The update first deletes partial matches that include hypotheses no longer present in $Δᵢ$.
-Afterwards it adds new partial matches for the hypotheses that are new in $Δᵢ$, extending the existing partial matches for a rule if the new hypothesis is compatible with them.
-Whenever this process produces a full match -- i.e., all premises of a forward rule are satisfied by a set of hypothesis in $Δᵢ$ -- the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
+Afterwards, it adds new partial matches for the hypotheses that are new in $Δᵢ$, extending the existing partial matches for each forward rule if the new hypothesis is compatible with them.
+Whenever this process produces a complete match -- i.e., all premises of a rule are satisfied by a set of hypothesis in $Δᵢ$ -- the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
 
 The main contribution of this chapter is a data structure, the \emph{forward state}, that organises the partial matches so that updates can be made efficiently.
 In addition to this \emph{incrementality}, the forward state satisfies two other desiderata:
@@ -51,7 +51,7 @@ We first introduce some terminology for matches and for forward rules (which are
 As before, we use dependent type theory as a foundation, but the technique generalises to other logics.
 
 Given a lemma $\All{(x₁ : A₁) \dots (xₙ : Aₙ)}{B}$, the $xᵢ$ are \emph{premises} and $B$ is the lemma's \emph{conclusion}.
-The type $Aᵢ$ of the $i$th premise may depend on (i.e., refer to) any premise $xⱼ$ with $j < i$.
+The type $Aᵢ$ of the $i^{\mathrm{th}}$ premise may depend on (i.e., refer to) any premise $xⱼ$ with $j < i$.
 Implication $A → B$ is an abbreviation for $\All{x : A}{B}$ where $B$ does not depend on $x$.
 Propositions are (certain) types, and we do not distinguish between the two concepts.
 
@@ -64,7 +64,7 @@ Note that premises on which only the conclusion depends are not considered varia
 
 If a lemma has $n$ slots, each slot is assigned a unique number between $1$ and $n$, and slots are identified with their numbers.
 For now, assume that the slots are numbered consecutively, so in the example above slot~1 has type $x < y$ and slot~2 has type $y < z$.
-The \emph{shared variables of slot $i$}, $\vars(i)$, are those variables that appear in the type of $i$ and also in at least one type of a slot $j < i$.
+The \emph{shared variables of slot $i$}, $\vars(i)$, are those variables that appear in the type of $i$ and also in at least one type of a previous slot $j < i$.
 
 If $h : C$ is a hypothesis and $C$ matches the type $A$ of slot $i$, we say that $h$ \emph{matches} $i$.
 Matching induces a substitution $σ$ such that $A[σ]$ is definitionally equal to $C$; we define $\sub_{i}(h) ≔ σ$.
@@ -89,13 +89,13 @@ The application is type-correct by requirements~\ref{cond:match:matches} and~\re
 If $m$ is complete, then $\sub(m)$ contains a term for every slot and every variable -- hence for every premise -- of $r$, and we have a full application.
 
 Note that matches represent only those partial applications where arguments are added without gaps.
-Hence, for a rule $r : A → B → C$, the applications $r~a~\_ : B \to C$ and $r~a~b : C$ for some $a : A$ and $b : B$ correspond to matches, but not $r~\_~b : A \to C$.
+Hence, for a rule $r : A → B → C$, the applications $r~a~· : B \to C$ and $r~a~b : C$ for some $a : A$ and $b : B$ correspond to matches, but not $r~·~b : A \to C$.
 This prevents us from constructing $r~a~b$ in two different but ultimately redundant ways.
 
 \section{Naive Forward Reasoning}%
 \label{sec:forward:naive}
 
-Before this work, Aesop used the algorithm briefly presented in Chapter~\ref{chap:aesop}, which we call \emph{naive forward reasoning}.
+Before this work, Aesop used the algorithm briefly presented in Sec.~\ref{sec:aesop:rule-builders}, which we call \emph{naive forward reasoning}.
 This approach treats forward rules like any other Aesop rule.
 Hence, when Aesop selects a forward rule $r$ with $n$ slots of types $A₁, \dots, Aₙ$ as the highest-priority rule currently applicable to a goal $Γ ⊢ T$, we look for all complete matches for $r$ in $Γ$, using an approach reminiscent of backtracking subsumption algorithms.
 
@@ -121,7 +121,7 @@ The main concept introduced in this chapter is a data structure, the \emph{forwa
 
 \para{Forward States.}
 We associate with each goal in Aesop's search tree a forward state that reflects the goal's context.
-Let $\States$ be the set of forward states, $\Hyps$ the set of hypotheses, $\Rules$ the set of rules, $\CMatches$ the set of complete matches and $\powerset(X)$ the powerset of $X$.
+Let $\States$ be the set of forward states, $\Hyps$ the set of hypotheses, $\Rules$ the set of rules, $\CMatches$ the set of complete matches and $\powerset(X)$ the powerset of a set $X$.
 The forward state's interface then consists of two functions
 \[
   \addHyp : \States → \Hyps → \States × \powerset(\Rules × \CMatches) \qquad \delHyp : \States → \Hyps → \States
@@ -162,15 +162,15 @@ In general, to extend a match $m$ with a hypothesis $h : T$ at slot $i$, we need
 
 The rule state therefore uses two \emph{variable indices} $H$ and $M$ to index hypotheses and matches by their instantiations for shared variables, allowing us to quickly determine compatible pairs of matches and hypotheses.
 We could use a substitution tree~\cite{SubstitutionTrees}, but our custom data structure is simpler.
-The \emph{hypothesis index} $H$ maps each triple $(x, i, t)$ (where $i > 1$ is a slot, $x ∈ \vars(i)$ a variable and $t$ a term) to a set containing hypotheses $h$ added to the rule state such that $h$ matches $i$ and $\sub_{i}(h)(x) = t$.
+The \emph{hypothesis index} $H$ maps triples $(x, i, t)$ -- where $i > 1$ is a slot, $x ∈ \vars(i)$ a variable and $t$ a term -- to a set containing hypotheses $h$ added to the rule state such that $h$ matches $i$ and $\sub_{i}(h)(x) = t$.
 In other words, $H$ indexes the known hypotheses by the slots they match and the instantiations of shared variables.
 Note that hypotheses matching slot $1$ are not stored since they can never extend a match.
 
-Similarly, the \emph{match index} $M$ maps each triple $(x, i, t)$ to a set containing partial matches $m$ (that can be derived from the hypotheses added to the rule state) such that $i = \lvl(m) $, $x ∈ \vars(i + 1)$ and $\sub(m)(x) = t$.
+Similarly, the \emph{match index} $M$ maps triples $(x, i, t)$ to a set containing partial matches $m$ (that can be derived from the hypotheses added to the rule state) such that $i = \lvl(m) $, $x ∈ \vars(i + 1)$ and $\sub(m)(x) = t$.
 Matches for the maximal slot are not stored because, being complete, they never need to be extended.
 We write $M_{x}(i, t)$ instead of $M(x, i, t)$ and $H_{x}(i, t)$ instead of $H(x, i, t)$.
 
-Given a hypothesis $h : T$ that matches slot $i > 1$ with substitution $σ = \sub_{i}(h)$, the partial matches that can be extended by $h$ are those at level $i - 1$ whose substitutions are compatible with $σ$ on the variables $\vars(i)$ (i.e., the variables shared between $i$ and any earlier slot).
+Given a hypothesis $h : T$ that matches slot $i > 1$ with substitution $σ = \sub_{i}(h)$, the partial matches that can be extended by $h$ are those at level $i - 1$ whose substitutions are compatible with $σ$ on the variables $\vars(i)$, i.e., the variables shared between $i$ and any earlier slot.
 Assuming for the moment that $\vars(i)$ is non-empty for all slots $i > 1$, these matches are
 \[
   \bigcap_{x \in \vars(i)} M_{x}(i-1, σ(x))
@@ -181,7 +181,7 @@ Similarly, given a partial match $m$ at level $i$ with substitution $σ = \sub(m
 \]
 The number of shared variables tends to be small in practice, so these intersections can be computed efficiently.
 
-From these observations we can directly derive two procedures for adding hypotheses and matches to the rule state.
+From these observations, we can directly derive two procedures for adding hypotheses and matches to the rule state.
 The procedures maintain the invariants of the variable indices while reporting any complete matches discovered during this process.
 Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- i.e., it contains the hypotheses of $Γ$ and all partial matches of $r$ that can be derived from them -- then the rule state obtained from $\addHyp(h : T)$ corresponds to $Γ,\, h : T$.
 
@@ -213,8 +213,7 @@ Specifically, if a rule state for a rule $r$ corresponds to the context $Γ$ -- 
   \label{alg:forward:addhyp}
 \end{algorithm}
 
-The rule state's $\addHyp$ method (Algorithm~\ref{alg:forward:addhyp}) adds a hypothesis $h : T$ matching slot $i$ to the rule state.
-(If a hypothesis matches multiple slots, $\addHyp$ is called multiple times.)
+The rule state's $\addHyp$ method (Algorithm~\ref{alg:forward:addhyp}) adds a hypothesis $h : T$ matching at least one slot $i$ to the rule state.
 For $i = 1$, we add the singleton match $[h]$ to the rule state.
 For $i > 1$, we first insert $h$ into the hypothesis index $H$.
 Then we query the match index $M$ for matches that can be extended by $h$ and add the extended matches to the rule state.
@@ -254,12 +253,12 @@ Any extended matches thus produced are added to the rule state recursively.
 \para{Variable Clusters.}
 We have so far only considered rules where for each slot $i > 1$, the set of shared variables $\vars(i)$ is non-empty, i.e.\ each slot shares at least one variable with at least one of the previous slots.
 However, there are also rules such as $\All{x~y}{P~x → Q~y → R~x~y}$, where slot~2 ($Q~y$) shares no variables with slot~1 ($P~x$).
-In this case, any match at level 1 can be extended with any hypothesis at level 2, since the two slots are independent.
+In this case, any match at level 1 can be extended with any hypothesis at level 2 since the two slots are independent.
 
-To account for this fact, we partition the set of premises of each rule into maximal subsets of premises connected by shared variables, called \emph{variable clusters}, using the same construction as Aesop's \emph{metavariable clusters} from Chapter~\ref{chap:aesop}.
+To account for this fact, we partition the set of premises of each rule into maximal subsets of premises connected by shared variables, called \emph{variable clusters}, using the same construction as the \emph{metavariable clusters} from Sec.~\ref{sec:aesop:mvars-search-tree}.
 The variable clusters share no variables with each other, so each can be treated as a separate rule with its own rule state.
-Finding a complete match for a rule then amounts to finding one complete match for each of its clusters.
-The slots within each cluster can be ordered to ensure that each slot shares at least one variable with the previous slots.
+Finding a complete match for a rule then amounts to finding a complete match for each of its clusters.
+The slots within each cluster can be ordered to ensure that each slot shares at least one variable with the previous slots, so $\vars(i)$ is indeed always non-empty.
 
 \para{Deletion.}
 When a hypothesis $h$ is removed from a goal's context, we must update the forward state accordingly.
@@ -270,7 +269,7 @@ When $h$ is deleted, we can then efficiently determine the relevant rule states 
 \para{Example 1.}
 As a first example, consider a rule state for the transitivity rule $r₁ : \All{x~y~z}{\allowbreak x ≤ y → y ≤ z → x ≤ z}$ to which we add, in order, the hypotheses
 $h₁ : b ≤ c$ and $h₂ : a ≤ b$.
-The rule has two slots of types $x ≤ y$ and $y ≤ z$ which share the variable $y$.
+The rule has two slots of types $x ≤ y$ and $y ≤ z$, sharing the variable $y$.
 
 The hypothesis $h₁ : b ≤ c$ unifies with both slots, so we execute the outer loop of Algorithm~\ref{alg:forward:addhyp} twice.
 For slot 1, unification yields the substitution $\{x ↦ b, y ↦ c\}$.
@@ -440,7 +439,7 @@ Naively, two matches would be considered equal if they contain the same hypothes
 However, consider the rule $r : \All{x~y}{P~x~y → Q~x~z → R~x}$ and the hypotheses $h₁ : P~a~b$, $h₂ : P~a~c$, $h₃ : Q~a~d$ and $h₄ : Q~a~e$.
 The complete matches $m₁ ≔ [h₁, h₃]$ and $m₁' ≔ [h₁, h₄]$ contain different hypotheses, but the difference does not matter because the applications $r~h₁~h₃$ and $r~h₁~h₄$ both have type $R~a$.
 Generating both $m₁$ and $m₁'$ would therefore be redundant.
-Similarly, the partial matches $m₂ ≔ [h₁]$ and $m₂' ≔ [h₂]$ are redundant because the choice between $h₁$ and $h₂$ affects neither the type of any eventual application derived from $m₂$ and $m₂'$ nor the hypotheses that can be used to complete them.
+Similarly, the partial matches $m₂ ≔ [h₁]$ and $m₂' ≔ [h₂]$ are redundant because the choice between $h₁$ and $h₂$ affects neither the type of any eventual application derived from $m₂$ and $m₂'$ nor the hypotheses that can complete them.
 Hence, we should store only one of $m₂$ and $m₂'$ in the rule state of $r$.
 Based on these observations, we consider two matches $m$ and $m'$ of a rule $r$ equal if $\lvl(m) = \lvl(m')$ and for each premise $x$ that appears either in the conclusion of $r$ or in the type of a slot $i$ of $r$ with $i > \lvl(m)$ we have $\sub(m)(x) = \sub(m')(x)$.
 
@@ -463,8 +462,8 @@ Hence, we delay the insertion of hypotheses at $i$ until there is at least one m
 
 \para{Phased Insertion.}
 We delay insertions yet further by taking advantage of Aesop's partitioning of rules into several phases.
-When Aesop tries to solve a goal, it first normalises it, using only rules tagged with the normalisation phase.
-Then it tries to apply rules from the safe phase, and only when all of them fail does it consider rules from the unsafe phase.
+When Aesop tries to solve a goal, it first normalises it, using only normalisation rules.
+Then it tries to apply safe rules, and only when all of them fail does it consider unsafe rules.
 
 This means that we can delay updates to the rule states of normalisation rules until we start working on the goal; updates to safe rules until normalisation is finished; and updates to unsafe rules until we have applied all the safe rules.
 Sometimes, this allows us to avoid expensive operations, e.g.\ when a goal is solved only by safe rules and no unsafe rules need to be considered at all.
@@ -473,10 +472,10 @@ Phased insertion skips any updates to safe and unsafe rules resulting from the t
 
 To implement this optimisation, we split insertion into two operations.
 When a hypothesis is added, it is initially just added to per-slot queues of rule states for which it may be relevant.
-(The same queues are also used to implement lazy insertion.)
 Then, once we need to determine which rules of a given phase apply to the goal, we move the hypotheses from the slot queues into the variable indices and construct matches, including, perhaps, complete matches that allow us to apply the rules.
+The per-slot queues are also used to implement lazy insertion.
 
-\section{Failed Experiment: Reducible Proof-Irrelevant Normal Form}%
+\section{Reducible Proof-Irrelevant Normal Form}%
 \label{sec:forward:rpinf}
 
 We also considered another implementation of our variable indices.
@@ -484,12 +483,12 @@ This implementation turned out to be slower in the Mathlib benchmark, so we did 
 However, it may have advantages in specific situations, for instance the Depth benchmark from Sec.~\ref{sec:forward:evaluation}, which benefited considerably.
 
 Recall that the variable indices map expressions to data (here: matches and hypotheses) while identifying expressions up to definitional equality at reducible transparency.
-We can implement this by bringing all instantiations into \emph{reducible proof-irrelevant normal form} (RPINF).
-This is the usual normal form of expressions with respect to Lean's notion of computation, with two modifications.
+We can implement this by bringing expressions into \emph{reducible proof-irrelevant normal form} (RPINF).
+This is the usual normal form of expressions with respect to Lean's reduction relation, with two modifications.
 First, only reducible definitions are unfolded.
 Second, parts of the original expression that are proofs (in the sense that their types are in the universe of propositions) are not normalised.
 This is justified because Lean's type theory definitionally equates any two proofs of the same proposition, so there is no need to check whether they are equal.
-Skipping proofs considerably improves the performance of normalisation, since proof expressions tend to be very large.
+Skipping proofs considerably improves the performance of normalisation since proof expressions tend to be very large.
 When computing the RPINF of an expression, we also mark all proofs with some special metadata.
 
 With this setup, two expressions $t$ and $u$ are definitionally equal at reducible transparency if their RPINFs are syntactically equal except for the marked proof subexpressions (with an important caveat, discussed below).
@@ -681,8 +680,7 @@ The incremental algorithm would do constant work per hypothesis if not for the l
 This setup is challenging for the incremental algorithm because no rule is ever applied, so incrementality does not help.
 And indeed, Fig.~\ref{fig:forward:erase-noprecomp} shows that while both approaches slow down for greater $k$ (only slightly as the context contains only $n = 6$ hypotheses), the incremental approach remains slower.
 
-Fig.~\ref{fig:forward:erase-precomp} shows the results of the depth benchmark with \emph{precompilation} enabled.
-This is a feature of Lean that compiles tactics ahead of time instead of interpreting them.
+Fig.~\ref{fig:forward:erase-precomp} shows the results of the depth benchmark with precompilation enabled.
 Both implementations benefit from this, but incremental forward reasoning does so disproportionately, perhaps because it uses more custom code that, unlike Lean's built-in routines, is normally interpreted.
 However, precompilation also substantially increases Aesop's build time, so it is disabled by default.
 
@@ -699,18 +697,18 @@ In the \emph{saturate configuration}, the \tac{saturate} tactic with naive or in
 An invocation is successful if \tac{saturate} generates a hypothesis that matches the theorem statement.
 The maximum depth of \tac{saturate} is set to 10 to prevent infinite loops.
 
-In either configuration, constants are not added as forward rules if they are private or typeclass instances, or if their types contain only logical symbols.
-In the Aesop configuration, we also exclude equations used by the simplifier, which Aesop already uses during its search.
+In either configuration, constants from the original proof are not added as forward rules if they are private or typeclass instances, or if their types contain only logical symbols.
+In the Aesop configuration, we also exclude equations that appear in the global simplifier set, which Aesop already uses during its search.
 We use a timeout of \SI{10}{s} for each tactic invocation, and \SI{1.5}{h} for each Mathlib module.
 The module timeout affects 176 modules (out of 7452) where, due to unknown issues, the tactic timeout is not effective.
 
 Each tactic is run three times, and we exclude samples where the minimal and maximal runtime differ by more than 20\%.
 Furthermore, when comparing performance, we only consider theorems where both the naive and the incremental tactic variant succeed.
-This reduces the likelihood that differences are caused by minor, unintentional changes in behaviour.
+This reduces the likelihood that observed performance differences are caused by minor, unintentional changes in behaviour.
 If the latter restriction is removed, incremental forward reasoning produces an even larger average speedup over naive forward reasoning than that reported below.
 After these exclusions, the evaluation comprises 53524 Aesop samples and 16452 \tac{saturate} samples.
 
-Aesop is not expected to perform well on this benchmark since it is designed for carefully curated rulesets in which constants are appropriately registered as backward, forward or other types of rules.
+Aesop is not expected to perform well on this benchmark since it is designed for carefully curated rulesets in which constants are registered with an appropriate rule builder.
 Nevertheless, the results may be indicative of Aesop's performance on real use cases involving forward rules.
 
 \begin{table}
@@ -776,7 +774,7 @@ Like the synthetic benchmarks, this indicates that we would see larger gains fro
 \section{Related Work}
 
 \para{White-Box Tactics.}
-Among white-box proof automation tactics, to my knowledge only ACL2's \enquote{waterfall}~\cite{ACL2Book} and PVS's various proof search strategies~\cite{PVS-tutorial} have special support for forward reasoning.
+Among white-box proof automation tactics, to our knowledge only ACL2's \enquote{waterfall}~\cite{ACL2Book} and PVS's various proof search strategies~\cite{PVS-tutorial} have special support for forward reasoning.
 Both use approaches similar to Aesop's naive algorithm; in particular, the context of each goal is saturated independently.
 ACL2 additionally allows forward rules to be annotated with \emph{trigger terms}, which cause the rules to be run if the trigger terms are matched anywhere in a goal.
 Aesop implements a similar mechanism, \emph{rule patterns}, not described here.
@@ -786,12 +784,12 @@ As such, it does not require incrementality, but it could perhaps benefit from o
 \para{SATCHMO.}
 The SATCHMO first-order theorem prover~\cite{SATCHMO} uses a search procedure that treats a given set of implications as forward rules and uses a case-splitting rule to perform case analysis on disjunctive hypotheses.
 SATCHMO-style provers may benefit from our incremental approach if the set of implications is large.
-However, since unification is comparatively cheap in first-order logic, it is not clear what effect it will have.
+However, since unification is comparatively cheap in first-order logic, the overhead introduced by our somewhat complicated technique may dominate in practice.
 SATCHMO also employs an optimisation that \enquote*{focuses} forward reasoning on the hypothesis established by the last case split, providing a different form of incrementality.
 
 \para{Knowledge-Based Systems.}
 Some knowledge-based reasoning systems, such as Algernon~\cite{Algernon} and EYE~\cite{EYE}, also support combined forward and backward reasoning.
-However, to my knowledge, no such system allows non-forward rules to change the assumptions available to forward rules, so they do not require incrementality.
+However, to our knowledge, no such system allows non-forward rules to change the assumptions available to forward rules, so they do not require incrementality.
 Nevertheless, our technique bears some resemblance to the RETE algorithm~\cite{RETE} for forward reasoning in large knowledge bases.
 
 \section{Conclusion}
