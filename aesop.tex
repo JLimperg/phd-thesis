@@ -240,7 +240,7 @@ A distinguished default rule set is activated by default.
 Rule sets can also be configured to become active automatically whenever a particular namespace is opened.
 
 \para{Apply.}
-Given a term $f$ of type $\All{\vec{x} : \vec{T}}{P~\vec{x}}$, the apply builder creates a rule that applies $f$ to goals $Γ ⊢ P~\vec{y}$.
+Given a term $f$ of type $\All{\vec{x} : \vec{T}}{P~\vec{x}}$, the apply builder creates a \emph{backward} rule that applies $f$ to goals $Γ ⊢ P~\vec{y}$.
 The arguments $\vec{x}$ are either inferred (by unification or type-class search) or become subgoals.
 
 In the notation $P~\vec{x}$, $P$ is an arbitrary type-valued function (e.g.\ $\Lam{x~y}{x = y + 1}$), so $P~\vec{x}$ is essentially an arbitrary type-valued term possibly involving the variables $\vec{x}$.
