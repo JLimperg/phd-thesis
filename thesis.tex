@@ -19,8 +19,13 @@
   url=true,
   isbn=false,
   eprint=false,
+  maxnames=10,
 ]{biblatex}
 \addbibresource{lit.bib}
+\DeclareFieldFormat[article,inproceedings,incollection,thesis]{title}{#1}
+\setcounter{biburllcpenalty}{7000}
+\setcounter{biburlucpenalty}{8000}
+\setcounter{biburlnumpenalty}{7000}
 \usepackage{pgfplots}
 \usepackage[noend,algochapter]{algorithm2e}
 \usepackage{siunitx}
