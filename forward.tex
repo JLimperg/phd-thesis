@@ -22,7 +22,7 @@ This method is simple but involves much repeated work because, in practice, cont
 For example, the $∧$-introduction rule, when run on $Γ ⊢ A ∧ B$, produces subgoals $Γ ⊢ A$ and $Γ ⊢ B$, so the naive algorithm runs the same forward rules on the same context $Γ$ three times.
 More generally, any apply rule leaves the context unchanged, and many rules that change the context do so only in limited ways.
 
-In this chapter, we present an alternative way to apply forward rulesA
+In this chapter, we present an alternative way to apply forward rules.
 The central idea is to remember, for each goal $Γ ⊢ A$, which forward rules can be partially applied to which sets of hypotheses.
 When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ ⊢ Aₙ$, the new contexts $Δᵢ$ are likely similar to $Γ$.
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
@@ -675,7 +675,7 @@ We use 100 copies of a rule $r : \All{x}{P_{1}~x → \dots → P_{n}~x → A}$, 
 Given a \emph{depth} $k ≤ n$, the initial goal contains hypotheses of types $P_{i}~a$ for each $i ≠ n - k$ with $1 ≤ i ≤ n$, as well as one hypothesis $P_{n-k}~(a + 1)$ (with $a = 0$ or $a = 100$).
 In other words, the hypotheses match all premises with compatible substitutions, except the $k$th premise from the back.
 Since the naive algorithm processes the premises from back to front, $k$ determines how many premises the algorithm matches before it notices that the rule cannot be applied.
-The incremental algorithm would do constant work per hypothesis if not for the lazy insertion optimization, which—combined with a heuristic that reorders slots so later premises come first—has a similar effect.
+The incremental algorithm would do constant work per hypothesis if not for the lazy insertion optimisation, which -- combined with a heuristic that reorders slots so later premises come first -- has a similar effect.
 
 This setup is challenging for the incremental algorithm because no rule is ever applied, so incrementality does not help.
 And indeed, Fig.~\ref{fig:forward:erase-noprecomp} shows that while both approaches slow down for greater $k$ (only slightly as the context contains only $n = 6$ hypotheses), the incremental approach remains slower.

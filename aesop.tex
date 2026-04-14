@@ -70,15 +70,16 @@ For example, the goal $⊢ P ∧ Q$ could have a child rapp for $∧$-introducti
 At any point during the search, a node (goal or rapp) is in one of three states:
 \begin{itemize}
   \item
-    \emph{proved}: the node is proved.
+    \emph{Proved}: the node is proved.
     For a goal node, this means that \emph{at least one} of its child rapps is proved.
     For a rapp node, it means that \emph{all} of its child goals are proved.
     So sibling goal nodes are implicitly conjoined and sibling rapp nodes are implicitly disjoint, making the tree an AND/OR tree.
   \item
-    \emph{stuck}: the node cannot be proved with the given rules.
+    \emph{Stuck}: the node cannot be proved with the given rules.
     For a goal node, this means that (a) all rules which can be applied to the goal have been applied and (b) \emph{all} resulting child rapps are stuck.
     For a rapp node, it means that \emph{at least one} of its child goals is stuck.
-  \item \emph{unknown}: the node is neither proved nor stuck.
+  \item
+    \emph{Unknown}: the node is neither proved nor stuck.
 \end{itemize}
 
 The state of a node matters only insofar as it is necessary to determine the state of its parent node, then the parent's parent, etc., until we ultimately learn whether the root goal is proved or stuck.
@@ -145,7 +146,7 @@ This order is semantically irrelevant (assuming that safe rules are actually saf
 For instance, suppose we have, in addition to safe $∧$-introduction, a safe rule $R$ that transforms a hypothesis $h : A$ into $h : B$.
 For the goal $h : A ⊢ P ∧ Q$, it is better to apply $R$ before $∧$-introduction; otherwise we would have to apply $R$ twice.
 
-In practice, safety is a somewhat subtle propertly since safe rules must preserve provability relative to the whole rule set.
+In practice, safety is a somewhat subtle property since safe rules must preserve provability relative to the whole rule set.
 When we mark $∧$-introduction as safe, we require the rest of the rule set to maintain the invariant that whenever we can prove $Γ ⊢ P ∧ Q$, we can also prove $Γ ⊢ P$ and $Γ ⊢ Q$.
 This invariant can be violated, for example, by registering an unsafe rule $R$ that proves $P ∧ Q$: the rule will never be
 applied since any goal $Γ ⊢ P ∧ Q$ gets split by \enquote*{safe} $∧$-introduction before $R$ can be tried.
@@ -578,14 +579,14 @@ The children of a rapp are then metavariable clusters; the children of a metavar
 This view leads to a natural generalisation of the node states:
 \begin{itemize}
   \item
-    \emph{proved}: as before, a goal node is proved if \emph{at least one} of its child rapps is proved; a rapp node is proved if \emph{all} its children are proved.
+    \emph{Proved}: as before, a goal node is proved if \emph{at least one} of its child rapps is proved; a rapp node is proved if \emph{all} its children are proved.
     But the children of a rapp are now metavariable clusters, and a metavariable cluster is proved if \emph{at least one} of its goals is proved.
     This is motivated by the observation we made above: if, for a metavariable cluster with goals $\{ G_{1}, \dots, G_{n}\}$, we prove some $G_{i}$, then all the $G_{j}$ with $j ≠ i$ must have been proved as part of the proof of $G_{i}$.
-  \item \emph{stuck}: as before, a goal node is stuck if \emph{all} its child rapps are stuck and there are no more rules that could be applied to it; a rapp node is stuck if \emph{at least one} of its children is stuck.
+  \item \emph{Stuck}: as before, a goal node is stuck if \emph{all} its child rapps are stuck and there are no more rules that could be applied to it; a rapp node is stuck if \emph{at least one} of its children is stuck.
     A metavariable cluster is stuck if \emph{all} its goals are stuck.
     This is because even if a goal $G[\mv{x}]$ is stuck, as long as some other goal $H$ in the same metavariable cluster is non-stuck, it is still possible that the proof of $H$ will discover a new assignment $\mv{x} ≔ a$ and we can prove $G[\mv{x} ≔ a]$.
   \item
-    \emph{unknown}: as before, a node is unknown if it is neither proved nor stuck.
+    \emph{Unknown}: as before, a node is unknown if it is neither proved nor stuck.
 \end{itemize}
 The definition of irrelevance also remains unchanged: a node (which can now also be a metavariable cluster) is irrelevant if any of its ancestors, including the node itself, is proved or stuck.
 
@@ -707,7 +708,7 @@ It shows the most involved parts of metavariable handling, including the copying
     \KwLet $\mathcal{M}_C ≔ \bigcup_{C ∈ \mathcal{G}_C} \Fn{mvars}(C)$ \\
     \KwLet $\mathcal{G}_D ≔ \{ \Proc{mk-goal}(m) \mid m ∈ \mathcal{M}_D \setminus \mathcal{M}_{C} \}$ \\
     \KwLet $\mathcal{G}$ be the proper goals of $\mathcal{H} ∪ \mathcal{G}_C ∪ \mathcal{G}_D$ \\
-    \KwLet $\mathcal{C}$ be the mvar clusters of $\mathcal{G}$ \\
+    \KwLet $\mathcal{C}$ be the metavariable clusters of $\mathcal{G}$ \\
     Add a new rapp with children $\mathcal{C}$ to $G$
   }
   \BlankLine
@@ -846,9 +847,9 @@ In our case study, this happens two times; in both cases, Aesop succeeds once we
 To get a broad idea of how fast Aesop is, we also ran a small benchmark involving this case study.
 For the benchmark, we prepared a version of the case study in which all lemmas are proved by hand.
 The proofs are written in the runtime-efficient style of Mathlib (most proofs are translated from Lean~3), meaning they involve no expensive tactics except the simplifier, which moreover is always given the exact set of lemmas it should simplify with.
-Thus, the hand-written version of the case study has close to optimal performance.
-We then compared the total time Lean takes to typecheck the hand-written version and the Aesop version of the case study, averaging over 10 runs each.
-On my machine, the hand-written version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045), so delegating all proofs to Aesop resulted in a slowdown of 2.53x.
+Thus, the handwritten version of the case study has close to optimal performance.
+We then compared the total time Lean takes to typecheck the handwritten version and the Aesop version of the case study, averaging over 10 runs each.
+On my machine, the handwritten version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045), so delegating all proofs to Aesop resulted in a slowdown of 2.53x.
 When run on other machines, the benchmark yielded slowdowns of 2.59x and 2.60x.
 
 It is perhaps not surprising that Aesop is fairly successful in this case study -- most of the lemmas are very simple.

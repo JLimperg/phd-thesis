@@ -297,7 +297,7 @@ These techniques make it highly effective at equational and arithmetic reasoning
 
 Recent advances in generative artificial intelligence have led to much interest in \emph{neural theorem provers} (NTPs): tools that search for formal proofs, in Lean or other ITPs, by employing large language models (LLMs).
 Various architectures for such NTPs have been proposed, including one-shot NTPs, where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process (e.g.\ OpenGauss\footnote{\url{https://www.math.inc/opengauss}} and Leanstral\footnote{\url{https://mistral.ai/news/leanstral}}).
-The NTP field is evolving rapidly and many systems are hybrids that combine features of different architectures.
+The NTP field is evolving rapidly, and many systems are hybrids that combine features of different architectures.
 
 Despite their relative youth, NTPs have already demonstrated capabilities far surpassing those of ATPs.
 Notably, several systems have achieved gold and silver medals at the 2024 and 2025 International Mathematical Olympiads.
@@ -321,7 +321,7 @@ Even so, many Mathlib theories have not yet been thoroughly annotated to build e
 Forward rules, in particular, are rarely used in Mathlib.
 A tool that suggests good Aesop annotations, perhaps using an LLM to determine whether a lemma should be used forward or backward and what its priority should be, could thus provide substantial value to the Lean community.
 
-Outside of Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{\url{https://github.com/teorth/pfr}}.
+Outside Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{\url{https://github.com/teorth/pfr}}.
 Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
 Geoffrey Irving's \tac{interval} tactic\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 

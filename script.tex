@@ -111,7 +111,7 @@ We call a proof \emph{structured} if it is depth-first and uses Lean's structuri
 
 Unfortunately, when we extract the tactics from an Aesop proof tree, they are generally not in depth-first order, for two reasons.
 First, Aesop runs the rules in best-first order rather than depth-first, and the proof tree reflects this.
-Second, a rule can generate multiple tactics and it would be onerous to require that these are always in depth-first order.
+Second, a rule can generate multiple tactics, and it would be onerous to require that these are always in depth-first order.
 For example, as shown in Fig.~\ref{fig:big-example-unoptimised}, Aesop's \tac{split} rule first runs the \tac{split} tactic, which usually produces multiple subgoals, and then runs the \tac{rename\_i} tactic on each subgoal.
 When the rule generates these tactic invocations, it does not know which other tactics will be used to eventually close the first subgoal, but it already needs to operate on the other subgoals.
 It therefore cannot easily generate a depth-first proof.
@@ -167,7 +167,7 @@ Most Lean tactics are of this form.
 
 Each rule is responsible for generating suitable steps.
 These must satisfy two conditions.
-First, each step must be \emph{well-formed}, meaning that $g^{\pre}$ must be declared but unassigned in $Φ^{\pre}$; $g^{\pre}$ must be declared and assigned in $Φ^{\post}$; each goal in $G^{\post}$ must be declared and unassigned in $Φ^{\post}$; and the tactic $t$, when run in the steps's pre-state, produces the step's post-state.
+First, each step must be \emph{well-formed}, meaning that $g^{\pre}$ must be declared but unassigned in $Φ^{\pre}$; $g^{\pre}$ must be declared and assigned in $Φ^{\post}$; each goal in $G^{\post}$ must be declared and unassigned in $Φ^{\post}$; and the tactic $t$, when run in the step's pre-state, produces the step's post-state.
 Second, the steps must be \emph{faithful} to the rule.
 This means they must replicate the effect of the rule, so the pre-state of the first step must be the tactic state in which the rule was run and the post-state of the last step must be the tactic state that the rule produced.
 The optimiser assumes (as will we in the remainder of this chapter) that all generated steps satisfy these conditions, but it can also check them as a debugging aid.
@@ -260,7 +260,7 @@ To check $\mv{m₁} ≡ \mv{m₂}$, where $\mv{m₁}$ is an unassigned metavaria
   \item If $\mv{m₁} = \mv{m₂}$ (i.e.\ the metavariables have the same internal name), $\mv{m₁} ≡ \mv{m₂}$.
   \item If $σ(\mv{m₁}) = \mv{m₂}$, then $\mv{m₁} ≡ \mv{m₂}$.
   \item If $\mv{m₁} ∈ \dom(σ)$, but $σ(\mv{m₁}) ≠ \mv{m₂}$, then $\mv{m₁} ≢ \mv{m₂}$.
-  \item Otherwise we check that the local contexts and types of $\mv{m₁}$ and $\mv{m₂}$ are equal up to renaming.
+  \item Otherwise, we check that the local contexts and types of $\mv{m₁}$ and $\mv{m₂}$ are equal up to renaming.
         On success, the mapping $\mv{m₁} ↦ \mv{m₂}$ is added to $σ$.
 \end{itemize}
 
@@ -348,10 +348,9 @@ Such tactics can almost always be reordered.
 Both reordering algorithms take as input a sequence of steps $S_{1}, \dots, S_{n}$ where each step $S_{i}$ is of the usual form $\step{Φ^{\pre}_{i}}{g^{\pre}_{i}}{t_{i}}{Φ^{\post}_{i}}{G^{\post}_{i}}$.
 The algorithms produce a permutation of this sequence.
 
-We assume that each step in the input sequence is well-formed and that all pre-goals in the sequence are distinct.
-We further assume that the input sequence is \emph{complete} in the sense that each post-goal has an associated step, i.e.\ for each $i$ and $g ∈ G^{\post}_{i}$ there must be a step $j$ such that $g^{\pre}_{j} = g$.
+We assume that each step in the input sequence is well-formed, that all pre-goals in the sequence are distinct and that the input sequence is \emph{complete} in the sense that each post-goal has an associated step, i.e.\ for each $i$ and $g ∈ G^{\post}_{i}$ there must be a step $j$ such that $g^{\pre}_{j} = g$.
 We call $j$ the \emph{step for $g$}.
-This assumption is not essential, but it simplifies the presentation of the algorithms.
+The completeness assumption is not essential, but it simplifies the presentation of the algorithms.
 
 In practice, we are also interested in generating scripts for incomplete proofs, where some goals have not yet been proved.
 Such incomplete proofs can be completed synthetically: for each post-goal $g$ in post-context $Φ$ such that there is no step for $g$, add a step $\step{Φ}{g}{\tac{sorry}}{Ψ}{∅}$.
@@ -369,7 +368,7 @@ It contains the goals of the current tactic state, initially the first step's pr
 The remainder of the algorithm iteratively selects steps and applies them to the tactic state, simulating the effect of each step's tactic, until no goals remain.
 
 The function \Proc{next-step}, which picks the next step to apply to a given tactic state, implements the actual reordering.
-If the first goal in the tactic state does not contain metavariables, we can pick the step that applies to this goal, since it cannot have any ordering constraints with regards to other steps.
+If the first goal in the tactic state does not contain metavariables, we can pick the step that applies to this goal, since it cannot have any ordering constraints with respect to other steps.
 This gives us precisely the depth-first order we seek.
 If the first goal in the tactic state does, however, contain metavariables, we perform no reordering, so we select the first step (according to the order in which the steps were generated) that applies to any goal in the tactic state.
 
@@ -523,7 +522,7 @@ Due to this update of the step, \Proc{reorder-dynamic} does not, in fact, merely
 
 Being a straightforward backtracking algorithm, \Proc{reorder-dynamic} has exponential complexity in the number of steps $n$.
 In the worst case, \Proc{go-structured} always succeeds except for the last step in each chain of \Proc{go-structured} calls.
-Thus the first step takes $n-1$ \Proc{go-structured} calls until we hit a failure and switch to \Proc{go-unstructured}.
+Thus, the first step takes $n-1$ \Proc{go-structured} calls until we hit a failure and switch to \Proc{go-unstructured}.
 There we apply one step, then make another $n-2$ \Proc{go-structured} calls until we hit a failure, and so on.
 
 However, this worst-case behaviour rarely occurs in practice, for two reasons.
@@ -835,7 +834,7 @@ Here, the main challenge is to bridge the considerable gap between resolution pr
 Some integrations also compress proofs by combining multiple proof steps performed by the ATP into one proof step of the proof assistant.
 This involves checking repeatedly whether the compressed proof still works, similar to my dynamic optimisations.
 
-Recently, there has been interest in LLM-based methods for simplifying formal proofs.
+Recently, there has been growing interest in LLM-based methods for simplifying formal proofs.
 ImProver~\cite{ImProver} and ProofOptimizer~\cite{ProofOptimizer} are custom LLM-based agents for shortening Lean proofs, but even off-the-shelf agents backed by recent foundation models appear, anecdotally, to perform well at this task.
 LLM-based methods tend to be much more general than our symbolic approach, performing a wide range of optimisations.
 However, they are much more costly (in time and money), and they may change a proof's structure quite radically.
