@@ -100,7 +100,7 @@ In practice, the exact percentages generally do not affect the proof search much
 
 Using the success probabilities, Aesop implements a simple \emph{best-first} strategy, answering the question of which goal to solve first.
 Each goal is associated with a \emph{priority} (also a percentage), with the root goal having priority 100\%.
-Whenever we apply a rule with success probability $p_r$ to a parent goal with success probability $p_g$, the priority of each subgoal is $p_g p_r$.
+Whenever we apply a rule with success probability $p_r$ to a parent goal with priority $p_g$, the priority of each subgoal is $p_g p_r$.
 Hence, applying a 50\% rule to a 70\% goal results in subgoals with priority 35\%.
 Alternatively, rules can assign explicit priorities to the child goals, but this is rarely done.
 Depth-first and breadth-first search strategies are likewise supported but little used.
@@ -120,7 +120,7 @@ Since we support non-depth-first search in Aesop, we must represent the search t
 This substantially complicates the handling of \emph{metavariables}.
 A metavariable (also called \emph{existential variable}, \emph{schematic variable} and sometimes just \emph{free variable}) is a named hole in the proof state, to be filled by later proof steps.
 It often arises from an existential quantifier.
-For example, the goal $\Ex{n : ℕ}{0 < n ∧ n < 3}$ is decomposed by built-in Aesop rules into two goals $0 < \mv{n}$ and $\mv{n} < 2$, where $\mv{n}$ is a newly created metavariables.
+For example, the goal $\Ex{n : ℕ}{0 < n ∧ n < 2}$ is decomposed by built-in Aesop rules into two goals $0 < \mv{n}$ and $\mv{n} < 2$, where $\mv{n}$ is a newly created metavariable.
 When a goal is solved, metavariables may be assigned as a side effect.
 In our example, applying the lemma $0 < 1$ to the first goal, $0 < \mv{n}$, solves the goal and assigns $\mv{n} ≔ 1$.
 The second goal, $\mv{n} < 2$, then becomes $1 < 2$.

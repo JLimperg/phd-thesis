@@ -574,7 +574,7 @@ All results are averaged over 10 runs per benchmark.
 
 \subpara{Transitivity Benchmark.}
 The first synthetic benchmark is a larger version of the transitivity example from Sec.~\ref{sec:forward:incremental}.
-Given some relation $≺$ on natural numbers, we register the lemma $\All{x~y}{x ≺ y → y ≺ z → x ≺ z}$ as the sole forward rule and set up a goal with hypotheses $h₁ : a ≺ a + 1, \dots, hₙ : a + n - 1 ≺ a + n$, where either $a = 0$ (yielding easy unification problems) or $a = 100$.
+Given some relation $≺$ on natural numbers, we register the lemma $\All{x~y~z}{x ≺ y → y ≺ z → x ≺ z}$ as the sole forward rule and set up a goal with hypotheses $h₁ : a ≺ a + 1, \dots, hₙ : a + n - 1 ≺ a + n$, where either $a = 0$ (yielding easy unification problems) or $a = 100$.
 Saturating this goal adds $n(n-1)/2$ hypotheses to the context.
 
 \begin{figure}
