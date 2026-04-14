@@ -1,0 +1,20 @@
+{\KOMAoptions{open=any}%
+\chapter*{Abstract}}
+
+This thesis describes Aesop, a widely used proof automation tactic for the Lean~4 interactive theorem prover.
+Its foundation is a tableau-style tree search similar to that of Rocq's and Isabelle's auto tactics, which users can customise by providing sets of proof rules that Aesop should apply.
+On this foundation, we build three major novel features.
+
+First, while similar tools use depth-first search, Aesop supports arbitrary search strategies and defaults to best-first search.
+As a result, the common backtracking-based method for handling metavariables (also known as existential or schematic variables) during the search is no longer applicable.
+We develop a novel method that preserves the independence of goals in the search tree even in the presence of metavariables while remaining, we conjecture, complete.
+
+Second, we optimise the application of forward rules, which derive additional facts from local hypotheses.
+Similar tools that support forward rules use a somewhat naive, stateless method to apply them, involving considerable redundant work.
+We show how to efficiently cache some of the work that would otherwise be duplicated between similar goals.
+This delivers speedups of over 30x in specific examples involving heavy use of forward rules, and a mean speedup of 1.24x on a large-scale benchmark where forward rules are more lightly used.
+Like our metavariable handling, the new forward reasoning algorithm is not specific to dependent type theory and could be ported to systems based on different logics.
+
+Third, we enable Aesop to generate largely idiomatic tactic proofs corresponding to the rules it applied.
+This allows users to replace expensive Aesop searches with the generally much more efficient proofs Aesop found, or to use Aesop as a preprocessor that takes some obvious proof steps before handing control back to the user.
+To make the generated proofs more idiomatic, we implement an optimiser that turns raw sequences of tactics into structured proofs and improves certain unidiomatic constructions.

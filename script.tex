@@ -138,7 +138,6 @@ For example, if two tactics assign the same metavariable in the same way, it doe
 We can therefore try to reorder the script's tactics dynamically, re-executing them to check that the reordering did not change their behaviour.
 
 \para{Global static optimisation (Sec.~\ref{sec:script:global-optimisation}).}
-
 Finally, we run two optimisation passes on the produced script.
 These perform purely syntactic optimisations.
 For example, tactic expressions of the form $\tacbullet \tac{rename\_i}~x₁ \dots xₙ$ (where $\tacbullet$ is a combinator that focuses the current goal) are converted to the more idiomatic $\tac{next}~x₁ \dots xₙ$.
