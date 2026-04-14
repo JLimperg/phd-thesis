@@ -6,7 +6,7 @@ They allow their users to express mathematical statements and proofs in a precis
 The logic is usually kept simple, admitting a small implementation of a proof checker, called a \emph{kernel}.
 Hence, if an ITP accepts a proof, we can be very confident that the proof is, in fact, correct.
 Indeed, while bugs have been found in many kernels (usually small and quickly fixed), to my knowledge no ITP-proved statement of wider interest has ever turned out to be false.
-The same cannot be said for regular, non-computerised mathematics~\cite{Voevodsky14,Hales08} or for many of the automated systems that aim to verify various properties of computer programs~\cite{CSmith}. % TODO better refs
+The same cannot be said for regular, non-computerised mathematics~\cite{Voevodsky14,Hales08} or for many of the automated systems that aim to verify properties of computer programs~\cite{CSmith,YinYang,OpFuzz,DeltaDebugSMT,HistFuzz,STORM}.
 
 Such extreme reliability has made ITPs a mainstay of certain scientific areas, particularly programming languages research, and they have also found some success in industrial applications where correctness is paramount~\cite{seL4,CompCert,AWSFormal}.
 A promising line of research has recently started to combine ITPs with machine learning, aiming to mitigate the unreliability of large language models by checking their outputs with ITPs~\cite{Lample22,LeanDojo,GoedelProver,DeepSeekProver,Aristotle}.
