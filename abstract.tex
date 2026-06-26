@@ -1,12 +1,9 @@
-{\KOMAoptions{open=any}%
-\chapter*{Abstract}}
-
-This thesis describes Aesop, a proof automation tactic for the Lean~4 interactive theorem prover.
+This thesis describes the design and implementation of Aesop, a proof automation tactic for the Lean~4 interactive theorem prover.
 Its foundation is a tableau-style tree search similar to that of Rocq's and Isabelle's auto tactics, which users can customise by providing proof rules for Aesop to apply.
 On this foundation, we build three major novel features.
 
-First, while similar tools use depth-first search, Aesop supports arbitrary search strategies and defaults to best-first search.
-As a result, the common backtracking-based method for handling metavariables during the search is no longer applicable.
+First, while similar tools are based on depth-first search, Aesop supports arbitrary search strategies and defaults to best-first search.
+As a result, the common backtracking-based method for supporting metavariables -- holes representing subterms to be filled in by subsequent proof steps -- is no longer applicable.
 We develop a novel method that preserves the independence of goals in the search tree even in the presence of metavariables while remaining, we conjecture, complete.
 
 Second, we optimise the application of forward rules, which derive additional facts from local hypotheses.
@@ -17,4 +14,4 @@ Like our metavariable handling, the new forward reasoning algorithm is not speci
 
 Third, we enable Aesop to generate largely idiomatic tactic proofs corresponding to the rules it applied.
 This allows users to replace expensive Aesop searches with the found proofs, or to use Aesop as a preprocessor that automates obvious proof steps before handing control back to the user.
-To make the generated proofs more idiomatic, we implement an optimiser that turns raw sequences of tactics into structured proofs and improves certain unidiomatic constructions.
+To make the generated proofs more idiomatic, we implement an optimiser that turns raw sequences of tactics into structured proofs and eliminates certain unidiomatic constructions.

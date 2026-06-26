@@ -21,4 +21,12 @@ fi
   registry.gitlab.com/islandoftex/images/texlive:TL2025-2026-01-18-full \
   latexmk -xelatex -recorder \
   -latexoption="-interaction nonstopmode -shell-escape" \
+  -outdir=build/abstract abstract-standalone.tex
+
+"$runtime" run --rm \
+  --mount=type=bind,source="$ROOT",destination=/work \
+  --workdir /work \
+  registry.gitlab.com/islandoftex/images/texlive:TL2025-2026-01-18-full \
+  latexmk -xelatex -recorder \
+  -latexoption="-interaction nonstopmode -shell-escape" \
   -outdir=build thesis.tex $@
