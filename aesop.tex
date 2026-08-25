@@ -728,7 +728,7 @@ It shows the most involved parts of metavariable handling, including the copying
     \ForEach{$R ∈ \mathcal{R}_P$}{
       \ForEach{child goal $C$ of $R$}{
         \KwLet $O ≔ \Fn{origin}(C)$ \\
-        \If{$\Fn{mvars}(C) ∩ M_{AD} ≠ ∅ ∧ O ∉ \mathcal{O}_P ∧ O ∉ \mathcal{O}_C$}{
+        \If{$\Fn{mvars}(C) ∩ \mathcal{M}_{AD} ≠ ∅ ∧ O ∉ \mathcal{O}_P ∧ O ∉ \mathcal{O}_C$}{
           $\mathcal{G}_C \gets \mathcal{G}_C ∪ \{C\}$ \\
           $\mathcal{O}_C \gets \mathcal{O}_C ∪ \{O\}$
         }
