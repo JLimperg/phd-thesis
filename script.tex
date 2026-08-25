@@ -828,7 +828,7 @@ A variety of tools used to improve Mizar proofs is described by Grabowski and Sc
 
 In the context of hammers, an important problem is the reconstruction of proofs found by the ATPs in the language of the proof assistants.
 The most popular proof reconstruction method simply passes the lemmas used in the ATP proof to a second, less sophisticated ATP implemented within the proof assistant.
-However, there have also been attempts to directly transform the ATP proof into the proof assistant's language in HOL Light~\cite{PRocH}, Isabelle~\cite{Paulson2007,Blanchette2013a,Blanchette2013b,Blanchette2016} and Mizar~\cite{ATPMizar,MizarATP}.
+However, there have also been attempts to directly transform the ATP proof into the proof assistant's language in HOL Light~\cite{PRocH}, Isabelle~\cite{MetisIsabelle,Blanchette2013a,Blanchette2013b,Blanchette2016} and Mizar~\cite{ATPMizar,MizarATP}.
 Here, the main challenge is to bridge the considerable gap between resolution proofs and the language of the respective proof assistant.
 Some integrations also compress proofs by combining multiple proof steps performed by the ATP into one proof step of the proof assistant.
 This involves checking repeatedly whether the compressed proof still works, similar to my dynamic optimisations.
