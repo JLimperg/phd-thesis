@@ -1,7 +1,7 @@
 \chapter{Conclusion}
 
-I have presented Aesop, a white-box proof automation tactic for Lean~4.
-Built on a foundation of conventional, straightforward tree-based search with user-provided rules, Aesop incorporates several innovations that have improved its usefulness as a pragmatic proof tool.
+We have discussed the design and implementation of Aesop, a white-box proof automation tactic for Lean~4.
+Built on a foundation of straightforward tree-based search with user-provided rules, Aesop incorporates several innovations that have improved its usefulness as a pragmatic proof tool.
 Support for safe rules (following Isabelle's auto) allows users to optimise their rule sets, often considerably.
 A normalisation phase generalises Isabelle's simplifier integration and allows us to establish invariants that other rules can rely on.
 Best-first search enables searches with larger, less precisely targeted rule sets, while Aesop's particular design gives users enough control to effectively steer the search if necessary.

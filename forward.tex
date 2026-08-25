@@ -12,7 +12,7 @@
 \chapter{Incremental Forward Reasoning}%
 \label{chap:forward}
 
-In the previous chapter, we introduced \emph{forward rules}, which derive additional facts from the hypotheses of a given goal.
+In the previous chapter, we introduced \emph{forward rules}, which derive additional facts from the hypotheses of a goal.
 Given, for example, the transitivity lemma $\All{x~y~z}{x < y → y < z → x < z}$, a forward rule run on the goal $h₁ : a < b,\, h₂ : b < c ⊢ A$ produces the subgoal $h₁ : a < b,\, h₂ : b < c,\, h₃ : a < c ⊢ A$.
 The added hypothesis $h₃ : a < c$ may then be used by subsequent rules.
 
@@ -800,4 +800,4 @@ The technique is independent of the search strategy and logic used.
 An evaluation shows that the technique outperforms Aesop's previous implementation on both a synthetic and a natural benchmark.
 
 One obvious extension of this method would be to exploit redundancy not just between contexts of parent and child goals, but also between those of siblings or even unrelated goals.
-This would require no changes to the forward state data structure; we would only need to find pairs of goals that produce small diffs.
+This would require no changes to the forward state data structure; we would only need to find pairs of goals that produce small local context diffs.

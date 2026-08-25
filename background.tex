@@ -115,7 +115,7 @@ Elaborators are monadic programs, and the various elaborator monads contain a \e
 
 Metavariables can also be seen as \emph{goals}, and we use the two terms interchangeably.
 This view is most natural for metavariables whose types are propositions.
-The fvars are then \emph{hypotheses} and the type of the metavariable, also called its \emph{target}, is a statement to be proved.
+The fvars are then \emph{hypotheses} and the type of a metavariable, also called its \emph{target}, is a statement to be proved.
 Aesop's search tree stores metavariables at goal nodes, and metavariable contexts at rapp nodes.
 
 \section{Definitional Equality, Reducibility and Unification}%
@@ -129,7 +129,7 @@ At \emph{default} transparency, most definitions can be unfolded, but we often u
 This speeds up definitional equality checking since far fewer possible computation steps must be considered.
 However, it also means that users have to unfold more definitions manually.
 
-When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level as well.
+When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level.
 In fact, the same Lean function is used for unification and for definitional equality checking.
 Lean's unification is complete for a decidable first-order fragment~\cite{Miller91} and supports some higher-order features, but it is necessarily incomplete for general higher-order unification problems~\cite{SecondOrderUnificationUndecidable}.
 Aesop uses this unification procedure throughout, so whenever we discuss unification, we mean Lean's implementation rather than the undecidable mathematical notion which it approximates.
