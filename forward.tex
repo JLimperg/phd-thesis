@@ -70,7 +70,7 @@ If $h : C$ is a hypothesis and $C$ matches the type $A$ of slot $i$, we say that
 Matching induces a substitution $σ$ such that $A[σ]$ is definitionally equal to $C$; we define $\sub_{i}(h) ≔ σ$.
 A precise account of type matching is given in Sec.~\ref{sec:forward:implementation}.
 
-A \textit{match} $m$ for a given rule $r$ with $n$ slots is a list containing between one and $n$ hypotheses.
+A \emph{match} $m$ for a given rule $r$ with $n$ slots is a list containing between one and $n$ hypotheses.
 We interpret $m$ as a partial map from slots of $r$ to hypotheses, so $\dom(m) = \{i \mid 1 ≤ i ≤ |m| \}$ and for each slot $i ∈ \dom(m)$, $m(i)$ is the hypothesis assigned to $i$.
 A match $m$ must additionally satisfy the following requirements:
 \begin{enumerate}
@@ -81,8 +81,8 @@ A match $m$ must additionally satisfy the following requirements:
 \end{enumerate}
 The \emph{substitution of a match $m$}, $\sub(m)$, is the union of the substitutions induced by the hypotheses in $m$, i.e. $\sub(m) ≔ ⋃_{i ∈ \dom(m)}\sub_{i}(m(i))$.
 This is well-defined by requirement~\ref{cond:match:compat}.
-The \textit{level of a match $m$}, $\lvl(m)$, is the length of $m$.
-A match for rule $r$ is \textit{complete} if $i ∈ \dom(m)$ for every slot $i$ of $r$, and \emph{partial} otherwise.
+The \emph{level of a match $m$}, $\lvl(m)$, is the length of $m$.
+A match for rule $r$ is \emph{complete} if $i ∈ \dom(m)$ for every slot $i$ of $r$, and \emph{partial} otherwise.
 
 A partial match $m$ for rule $r$ corresponds to a partial application of the rule to the terms given in $\sub(m)$.
 The application is type-correct by requirements~\ref{cond:match:matches} and~\ref{cond:match:compat}.
