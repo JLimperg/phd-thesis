@@ -79,7 +79,7 @@ The optimised script permutes the tactics to obtain such a depth-first proof.
 
 Second, the naive script is just a list of tactics with no structure.
 This makes it hard to tell what each tactic does without replaying the proof, either in the reader's head or in Lean's interactive mode.
-In particular, the first invocation of \tac{split} produces two subgoals, the first of which is then closed by the next invocation of \tac{simp\_all} (a variant of Lean's simplifier), but neither of these facts are readily apparent.
+In particular, the first invocation of \tac{split} produces two subgoals, the first of which is then closed by the next invocation of \tac{simp\_all} (a variant of Lean's simplifier), but neither of these facts is readily apparent.
 By contrast, the optimised script uses Lean's \tac{next} combinator, which focuses the current goal and hides any other goals, to clarify the proof structure.
 
 Third, the first invocation of \tac{simp\_all} in the naive script does not close the goal it is run on.
@@ -145,7 +145,7 @@ For example, tactic expressions of the form $\tacbullet \tac{rename\_i}~x₁ \do
 \medskip
 
 Concluding the chapter, we evaluate the performance of script generation and the efficacy of dynamic structuring (Sec.~\ref{sec:script:evaluation}) and survey related work (Sec.~\ref{sec:script:related}).
-The evaluation shows that script generation, both with static reordering and dynamic reordering, is fast enough in almost all cases.
+The evaluation shows that script generation, with both static reordering and dynamic reordering, is fast enough in almost all cases.
 It also shows that dynamic reordering is more effective than static reordering, though the effect is small.
 The supplement for the paper on which this chapter is based~\cite{ScriptSupplement} contains the exact version of Aesop described here, as well as all materials needed to reproduce the evaluation.
 
@@ -160,7 +160,7 @@ $Φ^{\post}$ is another metavariable context and $G^{\post}$ is a list of goals.
 We call $(Φ^{\pre}, [g^{\pre}])$ the step's \emph{pre-state} and $(Φ^{\post}, G^{\post})$ its \emph{post-state}.
 
 Note that Aesop rules always receive a single goal $g^{\pre}$ as input.
-When the tactic corresponding to a rule is run in a tactic state $(Φ,\allowbreak [g₁, \dots, gₙ])$, it receives the first goal $g₁$ as input, creates subgoals $g₁', \dots, gₘ'$ (where $m$ can be zero) and returns a tactic state with goals $g₁', \dots, gₘ', g₂, \dots gₙ$.
+When the tactic corresponding to a rule is run in a tactic state $(Φ,\allowbreak [g₁, \dots, gₙ])$, it receives the first goal $g₁$ as input, creates subgoals $g₁', \dots, gₘ'$ (where $m$ can be zero) and returns a tactic state with goals $g₁', \dots, gₘ', g₂, \dots, gₙ$.
 In other words, the tactic replaces the first input goal with some subgoals and leaves the other input goals unchanged.
 Most Lean tactics are of this form.
 
@@ -207,7 +207,7 @@ Using \tac{rename\_i} is not ideal since this tactic is usually avoided, so in S
 
 \para{Transparency.}
 Aesop rules can generally be configured to use any transparency, and as we have seen, many rules by default use the restrictive \emph{reducible} transparency.
-Naively, we could produce steps that precisely reflect the used transparencies.
+Naively, we could produce steps that precisely reflect the transparencies used.
 For example, if Aesop is configured to use reducible transparency for \tac{apply} rules, we could generate the tactic $\tac{with\_reducible}~\tac{apply}~e$ for a rule that applies theorem $e$.
 However, this would be highly unidiomatic.
 For \tac{apply} rules (and many others) we therefore generate the more idiomatic $\tac{apply}~e$, assuming that if Lean was able to apply $e$ at the more restrictive reducible transparency, it will also be able to do so at the less restrictive default one (and that the step is therefore well-formed).
@@ -270,7 +270,7 @@ A mapping $h₁ ↦ h₂$ in $τ$ means that the fvar $h₁$ in $Γ₁$ correspo
 
 Finally, to check $e₁ ≡ e₂$, where $e₁$ and $e₂$ are expressions (including types), we check that $e₁$ and $e₂$ are structurally equal, with the following exceptions:
 \begin{itemize}
-  \item Any metavariable from $e₁$ that is assigned in $Φ₁$ is replaced with its assignment before checking for structural equality, and similar for $e₂$ and $Φ₂$.
+  \item Any metavariable from $e₁$ that is assigned in $Φ₁$ is replaced with its assignment before checking for structural equality, and similarly for $e₂$ and $Φ₂$.
   \item An fvar $h₁$ in $e₁$ and an fvar $h₂$ at the same position in $e₂$ are considered equal if either $h₁ = h₂$ (i.e.\ $h₁$ and $h₂$ have the same internal name) or $τ(h₁) = h₂$.
   \item An unassigned metavariable $\mv{m₁}$ in $e₁$ and an unassigned metavariable $\mv{m₂}$ at the same position in $e₂$ are considered equal if $\mv{m₁} ≡ \mv{m₂}$.
 \end{itemize}
@@ -300,7 +300,7 @@ The second tactic is considered more idiomatic, so we choose it.
 
 However, it is sometimes tricky to determine whether a more idiomatic tactic does, in fact, have the same effect as the applied rule.
 For example, Aesop has a rule that unfolds a given list of defined constants $c₁, \dots, cₙ$.
-This has a similar effect as running the Lean tactic $\tac{unfold}~c₁ \dots cₙ$, but Aesop uses a slightly different algorithm that sometimes produces a different result.%
+This has a similar effect to running the Lean tactic $\tac{unfold}~c₁ \dots cₙ$, but Aesop uses a slightly different algorithm that sometimes produces a different result.%
 \footnote{The reason for this discrepancy is that the simpler \tac{unfold} algorithm is inefficient when there are many constants to be unfolded.}
 So to ensure that the generated tactic is faithful to the rule, we use the non-standard \tac{aesop\_unfold} tactic, which implements Aesop's unfolding algorithm.
 
@@ -340,7 +340,7 @@ Moreover, even when a shared metavariable appears in a proof, it usually only ap
 
 The second approach, \emph{dynamic reordering}, optimistically reorders tactics even in the presence of shared metavariables, then checks whether the script still behaves as expected.
 This sometimes allows us to structure a script better than with the static approach.
-For example, both applying the \tac{rfl} tactic to a goal $⊢ \mv{n} = 0$ and applying the \tac{assumption} tactic to a goal $h : \mv{n} < 42 ⊢ 0 < 42$ assigns $\mv{n} ≔ 0$, so the order of these tactics does not matter and we can reorder them.
+For example, both applying the \tac{rfl} tactic to a goal $⊢ \mv{n} = 0$ and applying the \tac{assumption} tactic to a goal $h : \mv{n} < 42 ⊢ 0 < 42$ assign $\mv{n} ≔ 0$, so the order of these tactics does not matter and we can reorder them.
 Another case in which dynamic reordering may be beneficial concerns tactics that interact only with parts of the goal not containing shared metavariables.
 Such tactics can almost always be reordered.
 
@@ -577,7 +577,7 @@ Applying this procedure recursively yields a tree of nodes.
 The empty node is only used if the sequence of steps is empty.
 
 The index of each inner node is the position of the node's step in the original sequence, i.e.\ 1 for $s₁$, etc.
-From this immediately follows that the children of a node with index $i$ must each have an index greater than $i$ since a step that applies to the post-goal of the $i^{\text{th}}$ step cannot have been run before the $i^{\text{th}}$ step.
+From this it immediately follows that the children of a node with index $i$ must each have an index greater than $i$ since a step that applies to the post-goal of the $i^{\text{th}}$ step cannot have been run before the $i^{\text{th}}$ step.
 
 From a step tree, we can determine two properties of each step.
 First, the \emph{number of siblings} of a step is the number of siblings of the step's node in the step tree.
@@ -642,7 +642,7 @@ In fact, this treatment of the tactic state is slightly simplified.
 When generating the $h$ script, we restrict the tactic state to the single goal $g$.
 However, this does not mean that $h$ only acts on $g$ and its descendants: steps can also solve goals that are not present in the tactic state.
 This happens when a goal appears as a metavariable in one of the goals that are present in the tactic state and a step assigns this metavariable.
-The tactic state must therefore track such \enquote{invisible} goals as well and after generating $h$, we must remove any solved goals from the tactic state $ts$.%
+The tactic state must therefore track such \enquote{invisible} goals as well, and after generating $h$, we must remove any solved goals from the tactic state $ts$.%
 \footnote{\texttt{Aesop/Script/TacticState.lean}}
 
 Perhaps surprisingly, not all steps for focusable goals should be rendered as $\Fn{fas}$ nodes.

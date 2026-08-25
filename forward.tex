@@ -28,7 +28,7 @@ When a non-forward rule then generates subgoals $Δ₁ ⊢ A₁$, \dots, $Δₙ 
 Hence, it is generally cheaper (and often much cheaper) to start with the partial matches for $Γ$ and update them for each of the $Δᵢ$.
 The update first deletes partial matches that include hypotheses no longer present in $Δᵢ$.
 Afterwards, it adds new partial matches for the hypotheses that are new in $Δᵢ$, extending the existing partial matches for each forward rule if the new hypothesis is compatible with them.
-Whenever this process produces a complete match -- i.e., all premises of a rule are satisfied by a set of hypothesis in $Δᵢ$ -- the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
+Whenever this process produces a complete match -- i.e., all premises of a rule are satisfied by a set of hypotheses in $Δᵢ$ -- the rule is applied and adds a corresponding new hypothesis to $Δᵢ$.
 
 The main contribution of this chapter is a data structure, the \emph{forward state}, that organises the partial matches so that updates can be made efficiently.
 In addition to this \emph{incrementality}, the forward state satisfies two other desiderata:
@@ -64,7 +64,7 @@ Note that premises on which only the conclusion depends are not considered varia
 
 If a lemma has $n$ slots, each slot is assigned a unique number between $1$ and $n$, and slots are identified with their numbers.
 For now, assume that the slots are numbered consecutively, so in the example above slot~1 has type $x < y$ and slot~2 has type $y < z$.
-The \emph{shared variables of slot $i$}, $\vars(i)$, are those variables that appear in the type of $i$ and also in at least one type of a previous slot $j < i$.
+The \emph{shared variables of slot $i$}, $\vars(i)$, are those variables that appear in the type of $i$ and also in the type of at least one previous slot $j < i$.
 
 If $h : C$ is a hypothesis and $C$ matches the type $A$ of slot $i$, we say that $h$ \emph{matches} $i$.
 Matching induces a substitution $σ$ such that $A[σ]$ is definitionally equal to $C$; we define $\sub_{i}(h) ≔ σ$.
@@ -102,7 +102,7 @@ Hence, when Aesop selects a forward rule $r$ with $n$ slots of types $A₁, \dot
 More specifically, we first match the type of the last slot, $Aₙ$, with each hypothesis $h : B$ (using an imperfect discrimination tree~\cite{DiscriminationTrees} index to quickly determine potentially matching hypotheses).
 If successful, this results in a substitution $σ₁$ containing all variables that occur in $Aₙ$.
 We then match $A_{n-1}[σ₁]$ against the type of each hypothesis in the context, yielding a substitution $σ₂$, and proceed with $A_{n-2}[σ₂]$, etc., until we obtain a complete match for $r$.
-If a premise $A_{n-i}[σᵢ]$ does not match any hypothesis type, we backtrack and consider other potential matching hypotheses for $A_{n-i+1}$.
+If a premise $A_{n-i}[σᵢ]$ does not match any hypothesis type, we backtrack and consider other potentially matching hypotheses for $A_{n-i+1}$.
 These may lead to a different substitution $τ$ and therefore to different matching hypotheses for $A_{n-i}[τ]$.
 For each complete match $m$ with substitution $σ$ found during this process, we add a new hypothesis of type $C[σ]$, where $C$ is the conclusion of $r$.
 
@@ -253,7 +253,7 @@ Any extended matches thus produced are added to the rule state recursively.
 \para{Variable Clusters.}
 We have so far only considered rules where for each slot $i > 1$, the set of shared variables $\vars(i)$ is non-empty, i.e.\ each slot shares at least one variable with at least one of the previous slots.
 However, there are also rules such as $\All{x~y}{P~x → Q~y → R~x~y}$, where slot~2 ($Q~y$) shares no variables with slot~1 ($P~x$).
-In this case, any match at level 1 can be extended with any hypothesis at level 2 since the two slots are independent.
+In this case, any match at level~1 can be extended with any hypothesis at level~2 since the two slots are independent.
 
 To account for this fact, we partition the set of premises of each rule into maximal subsets of premises connected by shared variables, called \emph{variable clusters}, using the same construction as the \emph{metavariable clusters} from Sec.~\ref{sec:aesop:mvars-search-tree}.
 The variable clusters share no variables with each other, so each can be treated as a separate rule with its own rule state.
@@ -272,9 +272,9 @@ $h₁ : b ≤ c$ and $h₂ : a ≤ b$.
 The rule has two slots of types $x ≤ y$ and $y ≤ z$, sharing the variable $y$.
 
 The hypothesis $h₁ : b ≤ c$ unifies with both slots, so we execute the outer loop of Algorithm~\ref{alg:forward:addhyp} twice.
-For slot 1, unification yields the substitution $\{x ↦ b, y ↦ c\}$.
+For slot~1, unification yields the substitution $\{x ↦ b, y ↦ c\}$.
 Since this is the first slot, Algorithm~\ref{alg:forward:addmatch} inserts the new partial match $[h₁]$ into the set $M_{y}(1, c)$.
-This match cannot be extended since the hypothesis index $H$ does not contain a hypothesis for slot 2.
+This match cannot be extended since the hypothesis index $H$ does not contain a hypothesis for slot~2.
 
 For slot~2, unification yields the substitution $σ ≔ \{y ↦ b, z ↦ c\}$, so we insert $h₁$ into $H_{y}(2, b)$.
 No matches at level~1 can be extended by $h₁$ since
@@ -329,13 +329,13 @@ At this point, $H$ and $M$ are in state~\eqref{eq:forward:example1:state1}, show
 Now we add $h₂ : a ≤ b$, which again unifies with both slots.
 For slot~1, $\sub₁(h₂)(y) = b$, so we add the match $[h₂]$ to $M_{y}(1, b)$.
 We then check for hypotheses in slot~2 that also instantiate $y$ with $b$, and indeed we find $H_{y}(2, b) = \{h₁\}$.
-Hence, we return the complete match $[h₂, h₁]$, which induces $h₃ : a ≤ c$ to be added later.
+Hence, we return the complete match $[h₂, h₁]$, which causes $h₃ : a ≤ c$ to be added later.
 For slot~2, we add $h₂$ to $H_{y}(2, a)$.
 There are no compatible matches at level~1, so we are done with $h₂$, yielding the final rule state~\eqref{eq:forward:example1:state2}.
 
 \para{Example 2.}
 We now consider a rule $r₂ : \All{x~y}{A~x~y → B~x~y → C~x~y}$ with multiple shared variables.
-We add hypotheses $h₁ : B~a~a$, $h₂ : A~a~b$ and $h₃ : B~a~b$ to the rule state of $r₂$, starting with $h₁$, which is added to $H$ with slot~2.
+We add hypotheses $h₁ : B~a~a$, $h₂ : A~a~b$ and $h₃ : B~a~b$ to the rule state of $r₂$, starting with $h₁$, which is added to $H$ at slot~2.
 There are no matches yet, so there is nothing to extend.
 We then add $h_2 : A~a~b$, which initially generates a match $m = [h₂]$ that is added to $M$, yielding the following rule state:
 \begin{align*}
@@ -480,7 +480,7 @@ The per-slot queues are also used to implement lazy insertion.
 
 We also considered another implementation of our variable indices.
 This implementation turned out to be slower in the Mathlib benchmark, so we did not include it in Aesop.
-However, it may have advantages in specific situations, for instance the Depth benchmark from Sec.~\ref{sec:forward:evaluation}, which benefited considerably.
+However, it may have advantages in specific situations, for instance the depth benchmark from Sec.~\ref{sec:forward:evaluation}, which benefited considerably.
 
 Recall that the variable indices map expressions to data (here: matches and hypotheses) while identifying expressions up to definitional equality at reducible transparency.
 We can implement this by bringing expressions into \emph{reducible proof-irrelevant normal form} (RPINF).
@@ -502,7 +502,7 @@ We attempted to address this in two ways.
 First, we introduced a cache to avoid repeated normalisation of the same expression (or subexpression).
 Second, we precompiled the RPINF function.
 Lean tactics are generally interpreted, but can also be compiled ahead of time, and since the RPINF computation is a tight loop over often large expressions, it disproportionately benefits from precompilation.
-Even with these optimisations, the RPINF method remained slower than the simpler method presented in this paper.
+Even with these optimisations, the RPINF method remained slower than the simpler method presented in this chapter.
 
 The RPINF method additionally introduced a semantic issue.
 When comparing expressions up to definitional equality at reducible transparency, Lean sometimes unfolds non-reducible declarations, specifically typeclass instances.
@@ -654,7 +654,7 @@ Saturating this goal adds $n(n-1)/2$ hypotheses to the context.
   \caption{Results of the depth benchmark for $n = 6$ with precompilation disabled (\subref{fig:forward:erase-noprecomp}) or enabled (\subref{fig:forward:erase-precomp}) and with $a = 0$ (\protect\showpgfsquare) or $a = 100$ (\protect\showpgfcircle).}%
 \end{figure}
 
-In Fig.~\ref{fig:forward:trans} the incremental algorithm has a sizeable advantage over the naive algorithm.
+In Fig.~\ref{fig:forward:trans}, the incremental algorithm has a sizeable advantage over the naive algorithm.
 We use a logarithmic scale, with each dotted horizontal line representing a 16-fold increase.
 Hence, for $2^{3} = 8$ hypotheses and $a = 0$, the incremental implementation is over 30 times faster than the naive one.
 The speedup for $a = 100$ is around 35x, with naive forward reasoning taking over 19 seconds.
@@ -678,7 +678,7 @@ Since the naive algorithm processes the premises from back to front, $k$ determi
 The incremental algorithm would do constant work per hypothesis if not for the lazy insertion optimisation, which -- combined with a heuristic that reorders slots so later premises come first -- has a similar effect.
 
 This setup is challenging for the incremental algorithm because no rule is ever applied, so incrementality does not help.
-And indeed, Fig.~\ref{fig:forward:erase-noprecomp} shows that while both approaches slow down for greater $k$ (only slightly as the context contains only $n = 6$ hypotheses), the incremental approach remains slower.
+And indeed, Fig.~\ref{fig:forward:erase-noprecomp} shows that while both approaches slow down for greater $k$ (only slightly, as the context contains only $n = 6$ hypotheses), the incremental approach remains slower.
 
 Fig.~\ref{fig:forward:erase-precomp} shows the results of the depth benchmark with precompilation enabled.
 Both implementations benefit from this, but incremental forward reasoning does so disproportionately, perhaps because it uses more custom code that, unlike Lean's built-in routines, is normally interpreted.
@@ -725,7 +725,7 @@ Nevertheless, the results may be indicative of Aesop's performance on real use c
   S.\ incr.   & 16995  & 34.35  & 0.64   & 2.22   & 3.24   & 6.15   & 14.38  & 43.36  & 523.06 \\
   S.\ speedup &        & 2.08x  & 1.42x  & 1.19x  & 1.24x  & 1.25x  & 1.52x  & 1.76x  & 3.01x \\
   \end{tabular}
-  \caption{Number of problems solved, average elapsed time (in ms) and elapsed time percentiles for the Aesop (A.) and \tac{saturate} (S.) configuration with naive and incremental forward reasoning.
+  \caption{Number of problems solved, average elapsed time (in ms) and elapsed time percentiles for the Aesop (A.) and \tac{saturate} (S.) configurations with naive and incremental forward reasoning.
   Each speedup is the ratio of naive and incremental time at the respective location of the distribution.}%
   \label{tab:forward:mathlib}
 \end{table}
@@ -769,7 +769,7 @@ Naive and incremental forward reasoning are almost exactly semantically equivale
 A possible explanation for the modest gains in the Aesop configuration is that the vast majority of solved problems require very few rule applications, so the maximum depth of goals in Aesop's search tree is low.
 As a result, incrementality, which reuses partial matches from parent goals for child goals, does not help much.
 Fig.~\ref{fig:forward:math-aesop-depth} shows that with larger maximum depths, we obtain larger speedups (except at Aesop's depth limit of 30; these invocations likely involve looping rules).
-Like the synthetic benchmarks, this indicates that we would see larger gains from incremental forward reasoning with larger-scale Aesop searches.
+As with the synthetic benchmarks, this indicates that we would see larger gains from incremental forward reasoning with larger-scale Aesop searches.
 
 \section{Related Work}
 

@@ -43,7 +43,7 @@ We write a goal with local context $Γ$ and target $T$ as $Γ ⊢ T$.
 In their most general form, rules are arbitrary tactics, but Aesop also provides \emph{rule builders} that create rules for specific lemmas.
 Rules are added by users, who often curate \emph{rule sets} for certain tasks.
 
-For example, the lemma that continuity of $f$ and $g$ implies continuity of $x ↦ f(x) + g(x)$ (\textsc{Add}) can be turned into a rule that reduces any goal of the form \enquote{$x ↦ f(x) + g(x)$ is continuous} into two subgoals, \enquote{$f$ is continuous} and \enquote{$g$ is continuous}.
+For example, the lemma that continuity of $f$ and $g$ implies continuity of $x ↦ f(x) + g(x)$ (\textsc{Add}) can be turned into a rule that reduces any goal of the form \enquote{$x ↦ f(x) + g(x)$ is continuous} to two subgoals, \enquote{$f$ is continuous} and \enquote{$g$ is continuous}.
 Similarly, we can register the following lemmas about continuity:
 \begin{itemize}
   \item \textsc{Mul}: If $f$ and $g$ are continuous, then $x ↦ f(x)g(x)$ is continuous.
@@ -83,7 +83,7 @@ The leaf rapp nodes have no children, so nothing remains to be proved, and the t
 Usually, Aesop is provided not with exactly the rules needed for a proof, but rather with a superset designed to prove a large class of goals.
 As a result, multiple rules may apply to any given goal.
 Aesop then considers all possible rule applications as sibling rapp nodes, and the proof tree becomes a search tree.
-More specifically, it becomes an AND-OR-tree: sibling goals are implicitly conjoined (all need to be proved for the parent rapp to be proved) while sibling rapps are implicitly disjoint (only one needs to be proved for the parent goal to be proved).
+More specifically, it becomes an AND/OR tree: sibling goals are implicitly conjoined (all need to be proved for the parent rapp to be proved) while sibling rapps are implicitly disjoined (only one needs to be proved for the parent goal to be proved).
 
 Essentially the same setup is used by various other proof search tactics, particularly Rocq's~\cite{Rocq} and Isabelle's~\cite{Isabelle} auto tactics~\cite{IsabelleAuto}.
 Aesop distinguishes itself by three features, summarised in the next three sections and detailed in Chapters~\ref{chap:aesop}--\ref{chap:script}.
@@ -109,7 +109,7 @@ Other Aesop-style tools generally support only depth-first search, which is part
 No explicit representation of the search tree is needed; it is encoded in the recursive calls of the search procedure.
 ITPs tend to make it easy to take and restore snapshots of the current proof state (and hence to backtrack) since this capability is also used to implement other features, e.g.\ interactive proof development environments.
 
-However, depth-first search scales poorly to larger proofs and rulesets.
+However, depth-first search scales poorly to larger proofs and rule sets.
 If rules are not precisely prioritised, depth-first search may proceed down a long, ultimately fruitless branch, without ever considering a short, successful branch.
 Aesop's implementation of best-first search, which is often close to breadth-first in practice, avoids this issue.
 Best-first search also allows us to use certain classes of rules that, with a depth-first approach, are either unusable or require very specific configuration.
@@ -142,7 +142,7 @@ Hence, consider an attempt to solve our running example with $0 < 3$ applied to 
 This assigns $\mv{n} ≔ 3$, so the coupled sibling goal $\mv{n} < 2$ is copied, with $\mv{n}$ replaced by its assignment.
 This means that the rule, which closes its goal and so would ordinarily have no subgoals, produces the subgoal $3 < 2$.
 Since that subgoal is unprovable, the attempt will not succeed, but the original goal $0 < \mv{n}$ is still present in the search tree, and Aesop can start a new attempt where this goal is solved by $0 < 1$.
-That rule application produces the copied subgoal $1 < 2$ and once this is solved, the overall search succeeds.
+That rule application produces the copied subgoal $1 < 2$, and once this is solved, the overall search succeeds.
 We conjecture that this approach is complete, in the sense that if there is a sequence of rule applications that will solve a given goal, a fair search will find it.
 
 As an optimisation, we partition the subgoals of a rule into \emph{metavariable clusters}, which are minimal sets of goals transitively coupled by metavariables.
@@ -179,7 +179,7 @@ To evaluate our scheme, we test it on synthetic and non-synthetic benchmarks.
 The synthetic benchmarks show that our scheme substantially outperforms the naive approach in scenarios involving heavy use of forward rules.
 For a more practical evaluation, we adapt the benchmark used by lean-auto~\cite{lean-auto} to run different Aesop configurations on Mathlib theorems.
 In this benchmark, the new, incremental forward reasoning implementation provides a 1.24x mean speedup over the naive one for Aesop, and a 2.08x mean speedup for the \tac{saturate} tactic that only performs forward reasoning.
-The modest mean Aesop speedup may be caused by the fact that most theorems Aesop can solve involve only few applications of forward rules, so the caching provided by the incremental implementation does not have a large effect.
+The modest mean Aesop speedup may be caused by the fact that most theorems Aesop can solve involve only a few applications of forward rules, so the caching provided by the incremental implementation does not have a large effect.
 We see larger speedups for invocations with deeper search trees.
 
 \section{Script Generation and Optimisation}
@@ -239,7 +239,7 @@ Other heuristic, customisable provers include ACL2's \enquote{waterfall}~\cite{A
 They serve as the main automation methods of their ITPs and include many extensions that increase their effectiveness.
 In particular, their support for arithmetic and equational reasoning is often much better than that of Aesop, which in these domains relies almost entirely on the simplifier.
 However, the extensions also add substantial complexity that makes the provers semi-black-box systems in practice.
-A notable heuristic prover based not on tree search but saturation is Isabelle's auto2~\cite{auto2}.
+A notable heuristic prover based not on tree search but on saturation is Isabelle's auto2~\cite{auto2}.
 
 \subsection{Automated Theorem Provers and Hammers}
 
@@ -255,7 +255,7 @@ Moreover, native ATPs must support their ITPs' logical foundations, rather than 
 This is a particular concern for type-theoretic ITPs, where the foundation is considerably more complex than FOL or HOL.
 As a result, native ATPs must adapt established calculi to the type-theoretic setting (Duper, Lean's grind) or rely on simple calculi based on type inhabitation (Agsy, Canonical) that are typically able to find only very short proofs.
 
-The main alternative to native ATPs are external ATPs integrated via \emph{hammers} such as Rocq's CoqHammer~\cite{CoqHammer}, HOL Light's and HOL 4's HOL(y)Hammer~\cite{HOLyHammer,HOLyHammerHOL4}, Lean's LeanHammer~\cite{LeanHammer} and Isabelle's Sledgehammer~\cite{Sledgehammer}.
+The main alternative to native ATPs is external ATPs integrated via \emph{hammers} such as Rocq's CoqHammer~\cite{CoqHammer}, HOL Light's and HOL4's HOL(y)Hammer~\cite{HOLyHammer,HOLyHammerHOL4}, Lean's LeanHammer~\cite{LeanHammer} and Isabelle's Sledgehammer~\cite{Sledgehammer}.
 They prove theorems in four steps.
 First, the hammer translates a problem from the logic of the ITP to the (usually weaker) logic of the ATP.
 This translation is non-trivial and usually incomplete, but sophisticated heuristics allow for successful translation in many cases.
@@ -269,7 +269,7 @@ More recently, some ATPs have gained the ability to report detailed proofs~\cite
 
 Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with SMT solvers and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
 The tight integration of ITP and ATP leads to a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
-This yields a large and complex trusted code base compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases -- the kernels -- small.
+This yields a large and complex trusted codebase compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases -- the kernels -- small.
 
 However an ATP is integrated, users pay for the convenience of push-button automation with some amount of brittleness: proofs that compile on one version of the ITP-ATP combination may break or become non-reproducible on the next version, due to updates to the ATP's calculus and heuristics or the hammer's translation algorithms.
 Since ATPs employ complex calculi with many heuristics and options, it is often hard to tell what should be done to fix such breakage.
@@ -321,13 +321,13 @@ Even so, many Mathlib theories have not yet been thoroughly annotated to build e
 Forward rules, in particular, are rarely used in Mathlib.
 A tool that suggests good Aesop annotations, perhaps using an LLM to determine whether a lemma should be used forward or backward and what its priority should be, could thus provide substantial value to the Lean community.
 
-Outside Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman-Ruzsa conjecture\footnote{\url{https://github.com/teorth/pfr}}.
+Outside Mathlib, Aesop is used in various mathematical formalisation projects, e.g.\ the Equational Theories project \cite{EquationalTheories} and the formalisation of a proof of the polynomial Freiman--Ruzsa conjecture\footnote{\url{https://github.com/teorth/pfr}}.
 Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
 Geoffrey Irving's \tac{interval} tactic\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 
 As mentioned, Aesop is also used in larger, push-button provers.
 LeanHammer~\cite{LeanHammer} uses Aesop as one of its proof reconstruction backends.
-Some tactic-by-tactic NTPs use Aesop as a backend providing an AND-OR tree with prioritisation support~\cite{LeanDojo,ABEL}.
+Some tactic-by-tactic NTPs use Aesop as a backend providing an AND/OR tree with prioritisation support~\cite{LeanDojo,ABEL}.
 And of course, many LLM-based systems use Aesop as a comparatively cheap tactic to dispatch easy goals.
 
 An interesting, unusual use of Aesop is explored in unpublished work by Harry Goldstein et al.%
@@ -350,4 +350,4 @@ For consistency, I use the first person plural throughout, but any mistakes in t
 \section{Data Availability}
 
 All functionality described in this thesis is implemented in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}}.
-The exact Aesop version corresponding to each chapter, as well as benchmark code and data, are available in the supplement for the paper that the respective chapter is based on~\cite{AesopSupplement,ForwardSupplement,ScriptSupplement}.
+The exact Aesop version corresponding to each chapter, as well as benchmark code and data, is available in the supplement for the paper that the respective chapter is based on~\cite{AesopSupplement,ForwardSupplement,ScriptSupplement}.

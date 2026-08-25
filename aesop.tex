@@ -73,7 +73,7 @@ At any point during the search, a node (goal or rapp) is in one of three states:
     \emph{Proved}: the node is proved.
     For a goal node, this means that \emph{at least one} of its child rapps is proved.
     For a rapp node, it means that \emph{all} of its child goals are proved.
-    So sibling goal nodes are implicitly conjoined and sibling rapp nodes are implicitly disjoint, making the tree an AND/OR tree.
+    So sibling goal nodes are implicitly conjoined and sibling rapp nodes are implicitly disjoined, making the tree an AND/OR tree.
   \item
     \emph{Stuck}: the node cannot be proved with the given rules.
     For a goal node, this means that (a) all rules which can be applied to the goal have been applied and (b) \emph{all} resulting child rapps are stuck.
@@ -115,7 +115,7 @@ The probabilities could also be determined empirically by computing the actual s
 But while such automated tuning may improve Aesop's overall performance in a larger library, it may also make some previously successful proofs fail, leading to maintenance challenges.
 
 From the rules' success probabilities we inductively derive, for each goal in the search tree, a \emph{priority} between 0\% and 100\%.
-The root goal has priority 100\%, and whenever we apply a rule $R$ to a goal $G$, the priority of the subgoals is the priority of $G$ multiplied with the success probability of $R$.
+The root goal has priority 100\%, and whenever we apply a rule $R$ to a goal $G$, the priority of the subgoals is the priority of $G$ multiplied by the success probability of $R$.
 In each iteration of the search loop, Aesop picks the highest-priority goal and expands it along the rule with the highest success probability.
 
 We also allow rules to give different priorities to their subgoals, e.g.\ to prioritise goals that are known to quickly become unprovable if the initial goal is unprovable.
@@ -242,7 +242,7 @@ Rule sets can also be configured to become active automatically whenever a parti
 
 \para{Apply.}
 Given a term $f$ of type $\All{\vec{x} : \vec{T}}{P~\vec{x}}$, the apply builder creates a \emph{backward} rule that applies $f$ to goals $Γ ⊢ P~\vec{y}$.
-The arguments $\vec{x}$ are either inferred (by unification or type-class search) or become subgoals.
+The arguments $\vec{x}$ are either inferred (by unification or typeclass search) or become subgoals.
 
 In the notation $P~\vec{x}$, $P$ is an arbitrary type-valued function (e.g.\ $\Lam{x~y}{x = y + 1}$), so $P~\vec{x}$ is essentially an arbitrary type-valued term possibly involving the variables $\vec{x}$.
 However, due to the inherent limitations of higher-order unification~\cite{SecondOrderUnificationUndecidable}, the apply builder cannot support all functions $P$; it uses the same heuristics as Lean's \tac{apply} tactic to support a useful subset.
@@ -312,7 +312,7 @@ Multiple patterns can also be given; the rule is then applied if at least one of
 
 We also considered a third solution to the infinite regress issue: we could stipulate that once a cases rule has been applied to a hypothesis, it cannot be applied again to the descendants of that hypothesis; or, more generally, that it can only be applied to the first $n$ descendants.
 The vast majority of proofs should still work for, say, $n = 3$.
-Unfortunately the restriction is difficult to implement since Lean does not provide a reliable way to associate metadata with hypotheses.
+Unfortunately, the restriction is difficult to implement since Lean does not provide a reliable way to associate metadata with hypotheses.
 
 
 \para{Tactic.}
@@ -398,7 +398,7 @@ To compensate, we can, for example, register a simplification rule that normalis
 \label{sec:aesop:builtin}
 
 Aesop's default rules perform uncontroversial reasoning steps mostly pertaining to logical connectives.
-Hypotheses $h : P ∧ Q$ are eliminated during normalisation, yielding separate hypotheses $\Var{h₁} : P$ and $\Var{h₂} : Q$, and similar for products $P × Q$.
+Hypotheses $h : P ∧ Q$ are eliminated during normalisation, yielding separate hypotheses $\Var{h₁} : P$ and $\Var{h₂} : Q$, and similarly for products $P × Q$.
 Goals of the form $Γ ⊢ P ∧ Q$ are reduced to $Γ ⊢ P$ and $Γ ⊢ Q$ by registering $∧$-introduction as a low-priority safe rule.
 For sum-like types such as disjunction, the respective elimination rule, which splits the goal into two subgoals, is safe with low priority.
 The corresponding introduction rules, which select one branch of the sum, are unsafe with 50\% success probability.
@@ -445,7 +445,7 @@ This way of handling existential quantification is complete in theory since we c
 In practice, it is highly incomplete since only witness terms induced by a subsequent unification are considered.
 But it is also cheap, reasonably effective and familiar to users from their interactive proofs.
 
-Another important class of metavariable-creating rules are transitivity rules, which reduce a goal $x ≤ z$ to subgoals $x ≤ \mv{y}$ and $\mv{y} ≤ z$.
+Another important class of metavariable-creating rules is transitivity rules, which reduce a goal $x ≤ z$ to subgoals $x ≤ \mv{y}$ and $\mv{y} ≤ z$.
 These rules illustrate the main challenge of dealing with metavariables: they \emph{couple} goals.
 A metavariable represents the same term everywhere it appears, so when we apply, say, reflexivity to the first subgoal $x ≤ \mv{y}$, we assign $\mv{y} ≔ x$ as a side effect and the second subgoal becomes $x ≤ z$.
 Hence, \emph{how} the first subgoal is proved now determines how, and indeed whether, we can prove the second.
@@ -465,7 +465,7 @@ In the remainder of this section, we present an extension of the search algorith
 \subsection{Overview}%
 \label{sec:aesop:mvars-overview}
 
-To see the core issue with metavariables, suppose we have a rapp $R$ with subgoals $G[\mv{x}]$ and $H[\mv{x}]$ that depend on $?x$.
+To see the core issue with metavariables, suppose we have a rapp $R$ with subgoals $G[\mv{x}]$ and $H[\mv{x}]$ that depend on $\mv{x}$.
 $G$ and $H$ are \emph{m-coupled} (\emph{metavariable-coupled}), meaning they share a metavariable $\mv{x}$ such that if $G$ is proved for some assignment $\mv{x} ≔ a$, then we must also prove $H[\mv{x} ≔ a]$ ($H$ with $a$ substituted for $\mv{x}$) to get a proof of the parent rapp $R$.
 We can view $H[\mv{x} ≔ a]$ as a \enquote*{virtual subgoal} of the rule that proves $G$.
 
@@ -478,7 +478,7 @@ Suppose we first apply a rule to $G$ that does not interact with $\mv{x}$ and pr
 We then apply $R'$ to $G'$, assigning $\mv{x} ≔ a$.
 Then $H[\mv{x} ≔ a]$ still needs to be copied even though it is not a sibling of $G'$.
 Accordingly, we expand the notion of m-coupled goals.
-Let $G_{1}, \dots, G_{n}$ be the path from $G'$ (so $G₁ = G'$) towards the root of the tree such that $G_{n}$ is the first goal in which $\mv{x}$ appears.
+Let $G_{1}, \dots, G_{n}$ be the path from $G'$ (so $G_{1} = G'$) towards the root of the tree such that $G_{n}$ is the first goal in which $\mv{x}$ appears.
 Each goal $I$ that depends on $\mv{x}$ and that is a sibling of a goal $G_{i}$ on the path is m-coupled to $G'$ and is therefore copied.
 Fig.~\ref{fig:mvars-path} visualises this example, showing the incomplete search tree with root $R$.
 
@@ -600,7 +600,7 @@ The metavariable-free version of the algorithm from Sec.~\ref{sec:aesop:abstract
 The search procedure with metavariables is largely the same as without metavariables.
 The only change is that when we add a rapp that assigns a metavariable, we must copy the m-coupled goals.
 
-To see how, suppose we are adding a rapp $R$ with parent goal $G[\mv{x}_{1},\dots,\mv{x}_{n},?\vec{y}]$ such that $R$ assigns $\mv{x}_{i} ≔ a_{i}$ for $1 ≤ i ≤ n$.
+To see how, suppose we are adding a rapp $R$ with parent goal $G[\mv{x}_{1},\dots,\mv{x}_{n},\mv{\vec{y}}]$ such that $R$ assigns $\mv{x}_{i} ≔ a_{i}$ for $1 ≤ i ≤ n$.
 Aesop then walks the path from $G$ up the tree towards the root goal, stopping at the topmost rapp node $R_{m}$ that creates any of the metavariables $\mv{x}_{i}$.
 (Thus the $\mv{x}_{i}$ can only appear in the subtree below $R_{m}$.)
 Let this path be $G_{1}, R_{1}, G_{2}, R_{2}, \dots, G_{m}, R_{m}$, where $G_{1} = G$ and for each $i$, $R_{i}$ is the parent rapp of $G_{i}$ and $G_{i+1}$ is the parent goal of $R_{i}$.
@@ -609,7 +609,7 @@ Aesop then copies every sibling $H$ of the $G_{i}$ that depends on any of the $\
 However, there are two special cases in which it is not useful to copy a sibling goal $H$.
 First, $H$ may be a copy of one of the $G_{i}$ on the path.
 This means we are already in the subtree that will serve as a proof of $G_{i}$, so adding $H$ as a subgoal would be pointless.
-Second, we may discover multiple goals $H_{1}, \dots, H_{k}$ that are copies of the same original goal; only one of these needs to copied.
+Second, we may discover multiple goals $H_{1}, \dots, H_{k}$ that are copies of the same original goal; only one of these needs to be copied.
 
 Note that we copy only the sibling goals themselves and not their subtrees.
 This means that any rules applied to the sibling goals must later be re-applied to their copies.
@@ -752,7 +752,7 @@ When we create a goal for a metavariable $m$ with the function $\Proc{mk-goal}(m
 Given a set $\mathcal{G}$ of goals, the subset of \emph{proper goals} of $\mathcal{G}$ contains those goals $G ∈ \mathcal{G}$ such that there is no $G' ∈ \mathcal{G}$ with $G ∈ \Fn{mvars}(G')$.
 While goals and metavariables are the same to Lean, Aesop distinguishes between metavariables that no other metavariable depends on -- these are treated as \enquote*{proper goals} and become part of the search tree -- and metavariables that a goal depends on -- these are treated as \enquote*{proper metavariables} that are solved as a side effect of solving a goal (unless they are dropped and become proper goals).
 
-The $\Proc{add-rapp}$ procedure first determines the metavariables occurring in the parent goal ($\mathcal{M}_G$) and in the subgoals ($\mathcal{M}_H$), as well as the metavariables assigned by the rule ($\mathcal{M}_A$) and those that were dropped, i.e., neither assigned nor reported as a subgoal ($\mathcal{M}_D$).
+The $\Proc{add-rapp}$ procedure first determines the metavariables occurring in the parent goal ($\mathcal{M}_G$) and in the subgoals ($\mathcal{M}_H$), as well as the metavariables assigned by the rule ($\mathcal{M}_A$) and those that were dropped, i.e.\ neither assigned nor reported as a subgoal ($\mathcal{M}_D$).
 We then get the goals that need to be copied, which are those m-coupled to a metavariable that was either assigned or dropped.
 For the dropped metavariables, we create additional subgoals ($\mathcal{G}_D$).
 However, we need to exclude metavariables that occur in the copied goals ($\mathcal{M}_C$); otherwise we would treat a metavariable as both a proper metavariable and a proper goal.
@@ -835,7 +835,7 @@ The other 6 unsolved lemmas fail either because a lemma is missing from the libr
 Of the 163 lemmas Aesop (plus induction) can prove, 48 (29\%) require local rules; the rest are solved using only global rules.
 By far the most common local rule, with 25 occurrences, is a low-priority unsafe rule that performs a case split on hypotheses of type \Ty{List}.
 Since each such case split produces another hypothesis of type \Ty{List}, this rule can loop, so it is not suitable as a global rule.
-But for lemmas requiring such a case split, we can add the rule and due to its low priority, Aesop applies it only as a last resort.
+But for lemmas requiring such a case split, we can add the rule and, due to its low priority, Aesop applies it only as a last resort.
 This ensures that if a proof is found, it is found quickly.
 
 Another notable local adjustment involves Aesop's simplifier integration.
@@ -911,7 +911,7 @@ Variations of the \Theorema{} algorithm are also used for free variable tableaux
 However, these algorithms are specific to first-order logic and do not obviously generalise to a type-theoretic setting.
 In particular, they require that rules behave uniformly for different metavariable assignments.
 
-HyperTree Proof Search (HTPS)~\cite{Lample22}, a neural theorem proving architecture based on search over an Aesop-like AND-OR tree of Lean tactics, handles metavariables by, effectively, giving up on goal independence in their presence.
+HyperTree Proof Search (HTPS)~\cite{Lample22}, a neural theorem proving architecture based on search over an Aesop-like AND/OR tree of Lean tactics, handles metavariables by, effectively, giving up on goal independence in their presence.
 Once a set of sibling goals contains a metavariable, the goals are treated as one unit.
 Applying a rule to one of the goals yields a derived set of goals in which all other goals are copied, possibly with updated metavariable assignments.
 
