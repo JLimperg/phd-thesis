@@ -849,7 +849,7 @@ For the benchmark, we prepared a version of the case study in which all lemmas a
 The proofs are written in the runtime-efficient style of Mathlib (most proofs are translated from Lean~3), meaning they involve no expensive tactics except the simplifier, which moreover is always given the exact set of lemmas it should simplify with.
 Thus, the handwritten version of the case study has close to optimal performance.
 We then compared the total time Lean takes to typecheck the handwritten version and the Aesop version of the case study, averaging over 10 runs each.
-On my machine, the handwritten version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045), so delegating all proofs to Aesop resulted in a slowdown of 2.53x.
+On one particular machine, the handwritten version took on average 2.48 seconds to typecheck (min = 2.46, max = 2.50, σ = 0.015) whereas the Aesop version took 6.25 seconds (min = 6.17, max = 6.32, σ = 0.045), so delegating all proofs to Aesop resulted in a slowdown of 2.53x.
 When run on other machines, the benchmark yielded slowdowns of 2.59x and 2.60x.
 
 It is perhaps not surprising that Aesop is fairly successful in this case study -- most of the lemmas are very simple.
@@ -920,7 +920,7 @@ However, Aesop's approach may have an efficiency advantage since copies are only
 Aesop's partitioning of goals into metavariable clusters could be applied to HTPS as well.
 
 Aesop has been used as a backend for later HTPS-style systems such as ABEL~\cite{ABEL} and LeanDojo~\cite{LeanDojo}.
-The Pantograph library~\cite{Pantograph}, which aims to provide a foundation for tactic-by-tactic NTPs, handles metavariables in a manner inspired by Aesop.
+The Pantograph library~\cite{Pantograph}, which aims to provide a foundation for tactic-by-tactic neural theorem provers, handles metavariables in a manner inspired by Aesop.
 
 
 \section{Conclusion}%

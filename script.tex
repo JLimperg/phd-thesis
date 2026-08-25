@@ -309,7 +309,7 @@ To take advantage of this observation, we let each step contain not just one but
 Of these, only the last must produce the right result; the others may be variants that are more idiomatic but may produce the wrong result.
 The \emph{local dynamic optimisation} step\footnote{\texttt{Aesop/Script/Step.lean}} then selects the first tactic that does, in fact, produce the right result.
 
-More formally, rules now produce \emph{multi-steps} (called \emph{lazy steps} in the implementation) $\step{Φ^{\pre}}{g^{\pre}}{[t₁, ..., tₙ]}{Φ^{\post}}{G^{\post}}$, where $\step{Φ^{\pre}}{g^{\pre}}{tₙ}{Φ^{\post}}{G^{\post}}$ must be a well-formed step.
+More formally, rules now produce \emph{multi-steps} (called \emph{lazy steps} in the implementation) $\step{Φ^{\pre}}{g^{\pre}}{[t₁, \dots, tₙ]}{Φ^{\post}}{G^{\post}}$, where $\step{Φ^{\pre}}{g^{\pre}}{tₙ}{Φ^{\post}}{G^{\post}}$ must be a well-formed step.
 Local dynamic optimisation then turns each multi-step into a step by executing, for each $i ∈ \{1, \dots, n-1\}$, the tactic $tᵢ$ in tactic state $(Φ^{\pre}, [g^{\pre}])$, resulting in tactic state $(Φ_{i}, G_{i})$.
 If $(Φ_{i}, G_{i}) ≡ (Φ^{\post}, G^{\post})$, we use the step $(Φ^{\pre}, g^{\pre}, tᵢ, Φ^{\post}, G^{\post})$, which is well-formed by definition.
 If this process is unsuccessful for all $i$ up to $n-1$, we instead use the step $(Φ^{\pre}, g^{\pre}, tₙ, Φ^{\post}, G^{\post})$, which is well-formed by assumption.
@@ -647,7 +647,7 @@ The tactic state must therefore track such \enquote{invisible} goals as well, an
 
 Perhaps surprisingly, not all steps for focusable goals should be rendered as $\Fn{fas}$ nodes.
 If there is only a single goal, it is idiomatic to apply the next tactic directly, without using a bullet to focus on the goal.
-For example, when proving a biimplication $P ↔ Q$, the proof typically has the form
+For example, when proving a bi-implication $P ↔ Q$, the proof typically has the form
 \[
   \begin{array}{l}
     \tac{constructor} \\
@@ -821,9 +821,9 @@ Huang~\cite{Huang1989,Huang1994,Huang1996} translates resolution proofs into nat
 In particular, he compresses multiple natural deduction steps into one \enquote{assertion-level} step that applies a theorem or definition.
 
 Pąk~\cite{Pak2015,Pak2014a,Pak2014b,Pak2013,Pak2010} optimises Mizar proofs by extracting lemmas for common deduction steps and by removing unnecessary references, assumptions, etc.
-Most closely related to my work is an optimisation that reorders proof steps.
+Most closely related to this thesis is an optimisation that reorders proof steps.
 However, the objective of this reordering is not to enable structuring but to produce a linear sequence in which related proof steps are as close together as possible.
-Vyskocil, Stanovský and Urban~\cite{Vyskovil2010} also compress proofs via lemma extraction.
+Vyskočil, Stanovský and Urban~\cite{Vyskovil2010} also compress proofs via lemma extraction.
 A variety of tools used to improve Mizar proofs is described by Grabowski and Schwarzweller~\cite{Grabowski2009}.
 
 In the context of hammers, an important problem is the reconstruction of proofs found by the ATPs in the language of the proof assistants.
