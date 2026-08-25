@@ -655,7 +655,7 @@ We have not found a reliable way to detect this situation, so cases normalisatio
 \subsection{Synthesis of Dropped Metavariables}%
 \label{sec:aesop:mvars-dropped}
 
-Recall that when a rule $R$ is applied to a goal $G[\mv{x}]$, there must be at least one subgoal of $R$ which depends on $\mv{x}$.
+Recall that when a rule $R$ is applied to a goal $G[\mv{x}]$ and does not assign $\mv{x}$, there must be at least one subgoal of $R$ which depends on $\mv{x}$.
 If this is not the case, $\mv{x}$ has been dropped, and so far we have disallowed dropped metavariables.
 
 However, this restriction turns out to be too harsh.
@@ -681,7 +681,7 @@ But at the same time, we must take care not to violate the conditions that led u
 To address the first requirement, when a rule $R$ is applied to a goal $G[\mv{x}]$ and drops $\mv{x}$, we add an additional subgoal for $\mv{x}$ to the rapp for $R$.
 In the ring example, applying $\Fn{id}$ proves the goal $\Ty{RingHom}~\mv{R}~\mv{R}$, but since $\mv{R} : \Ty{Ring}$ is dropped, we add a subgoal of type $\Ty{Ring}$, which is then proved by assumption.
 
-To address the second requirement, we modify the procedure for copying metavariable-related goals such that it treats dropped metavariables as assigned for the purposes of copying.
+To address the second requirement, we modify the procedure for copying m-coupled goals such that it treats dropped metavariables as assigned for the purposes of copying.
 So if, in the example, we had an m-coupled goal, say $\Ty{RingHom}~\mv{R}~ℤ$, then the $\Fn{id}$ application would copy this goal as an additional subgoal.
 Thus, the proof of the original goal, $\Ty{RingHom}~\mv{R}~\mv{R}$, again contains proofs of all m-coupled goals.
 
@@ -866,7 +866,7 @@ To that end, we first define the type \Ty{Form} of propositional formulas.
 Given an interpretation \Var{i} of propositional variables~\Var{Φ}, the predicate $\Ty{Val} : \Ty{Form}~Φ → \Prop$ gives the truth value of a formula.
 Aesop proves, after manual induction over \Ty{Form}, that if \Var{i} is decidable, then so is \Ty{Val}.
 
-Satisfiability of formulas extends to satisfiability of sequents: a sequent with premises $Γ$ and conclusions $Δ$ is valid if, whenever all premises are true, at least one conclusion is true.
+Validity of formulas extends to validity of sequents: a sequent with premises $Γ$ and conclusions $Δ$ is valid if, whenever all premises are true, at least one conclusion is true.
 Formally, $\Ty{All}~(\Ty{Val}~i)~Γ$ implies $\Ty{Any}~(\Ty{Val}~i)~Δ$.
 We saw \Ty{All} earlier; \Ty{Any} is similar but encodes the fact that \emph{some} element of the list satisfies the predicate.
 The cases rule for \Ty{Any} makes good use of patterns: case analysis on a hypothesis that matches the pattern $\Ty{Any}~\_~[]$ is safe since the hypothesis is contradictory; case analysis on a hypothesis that matches $\Ty{Any}~\_~(\_ ∷ \_)$ is unsafe but often useful.
