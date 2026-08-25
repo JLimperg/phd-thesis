@@ -59,7 +59,7 @@ Using somewhat non-standard terminology, we call premises on which a later premi
 These are usually terms of non-propositional types, e.g.\ natural numbers or lists.
 The non-variable premises, whose types are typically propositions, are called \emph{slots}.
 For example, the lemma $\All{(x~y~z : ℕ)}{x < y → y < z → x < z}$ has variables $x, y, z$ and slots of types $x < y$ and $y < z$.
-If more than two premises depend on a variable (e.g.\ $y$), the variable is \emph{shared}.
+If at least two premises depend on a variable (e.g.\ $y$), the variable is \emph{shared}.
 Note that premises on which only the conclusion depends are not considered variables.
 
 If a lemma has $n$ slots, each slot is assigned a unique number between $1$ and $n$, and slots are identified with their numbers.
@@ -410,7 +410,7 @@ This yields the following rule state:
 \end{align*}
 Since $h₃$ matches slot $i = 2$, the matches that can be extended by $h₃$ are
 \[
-  \bigcap_{x \in \vars(i)} M_{x}(i - 1, \sub_{i}(x)) = M_{x}(1, a) \cap M_{y}(1, b) = \{[h₂]\}
+  \bigcap_{x \in \vars(i)} M_{x}(i - 1, \sub_{i}(h₃)(x)) = M_{x}(1, a) \cap M_{y}(1, b) = \{[h₂]\}
 \]
 This produces the complete match $[h₂, h₃]$, so we can add a new hypothesis of type $C~a~b$.
 
@@ -436,7 +436,7 @@ To reduce the number of such checks, we add an imperfect discrimination tree ind
 
 \para{Match Equivalence.}
 Naively, two matches would be considered equal if they contain the same hypotheses.
-However, consider the rule $r : \All{x~y}{P~x~y → Q~x~z → R~x}$ and the hypotheses $h₁ : P~a~b$, $h₂ : P~a~c$, $h₃ : Q~a~d$ and $h₄ : Q~a~e$.
+However, consider the rule $r : \All{x~y~z}{P~x~y → Q~x~z → R~x}$ and the hypotheses $h₁ : P~a~b$, $h₂ : P~a~c$, $h₃ : Q~a~d$ and $h₄ : Q~a~e$.
 The complete matches $m₁ ≔ [h₁, h₃]$ and $m₁' ≔ [h₁, h₄]$ contain different hypotheses, but the difference does not matter because the applications $r~h₁~h₃$ and $r~h₁~h₄$ both have type $R~a$.
 Generating both $m₁$ and $m₁'$ would therefore be redundant.
 Similarly, the partial matches $m₂ ≔ [h₁]$ and $m₂' ≔ [h₂]$ are redundant because the choice between $h₁$ and $h₂$ affects neither the type of any eventual application derived from $m₂$ and $m₂'$ nor the hypotheses that can complete them.
