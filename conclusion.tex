@@ -5,7 +5,7 @@ Built on a foundation of conventional, straightforward tree-based search with us
 Support for safe rules (following Isabelle's auto) allows users to optimise their rule sets, often considerably.
 A normalisation phase generalises Isabelle's simplifier integration and allows us to establish invariants that other rules can rely on.
 Best-first search enables searches with larger, less precisely targeted rule sets, while Aesop's particular design gives users enough control to effectively steer the search if necessary.
-Our incremental implementation of forward reasoning is much more efficient for certain rule sets, and script generation allows the use of slow, explosive rule sets that turn into straightforward proofs.
+Our incremental implementation of forward reasoning is much more efficient for certain rule sets, and script generation allows the use of slow, explosive rule sets that produce straightforward proofs.
 
 Largely unplanned, some of these features have also broadened Aesop's remit to new use cases.
 Best-first search enables Aesop-based neural theorem provers that involve much larger search spaces than typical Aesop invocations, where some form of prioritisation is necessary and pure depth-first search would be impractical.

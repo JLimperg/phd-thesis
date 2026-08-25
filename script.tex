@@ -714,8 +714,8 @@ The first pass applies the following rewrite rule from left to right wherever th
 \]
 Both tactic scripts focus on the first goal, then rename the last $n$ inaccessible hypotheses in the local context and continue with the tactic sequence $s$.
 The right-hand expression uses the $\tac{next}$ combinator, which is designed specifically for this situation and is thus considered more idiomatic.
-But it cannot be generated directly: when a tactic generates its script steps, it does not know whether its subgoals are focusable, and hence whether $\tac{next}$ is applicable.
-The tactic therefore generates a $\tac{rename\_i}$ script step, and if the goal later turns out to be focusable, a bullet is added during structuring.
+But it cannot be generated directly: when a rule generates its script steps, it does not know whether its subgoals are focusable, and hence whether $\tac{next}$ is applicable.
+The rule therefore generates a $\tac{rename\_i}$ script step, and if the goal later turns out to be focusable, a bullet is added during structuring.
 The static optimisation pass then cleans up the script, replacing bullet and $\tac{rename\_i}$ with $\tac{next}$.
 This is a considerable improvement since the \tac{split} rule discussed in Sec.~\ref{sec:script:generation} produces many focusable \tac{rename\_i} calls.
 
