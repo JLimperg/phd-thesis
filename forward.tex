@@ -764,7 +764,7 @@ For \tac{saturate}, we obtain a substantial mean speedup of 2.08x, with incremen
 For Aesop, the mean speedup is a more modest 1.24x, and we see slight slowdowns at the lower percentiles, meaning Aesop calls that were already fast become a bit slower.
 However, we also obtain substantial speedups on problems where Aesop was previously slow, compensating for the slowdowns.
 Fig.~\ref{fig:forward:math-time} shows a more detailed comparison of running times.
-Naive and incremental forward reasoning are almost exactly semantically equivalent, so they are expected to solve almost exactly the same number of problems.
+Naive and incremental forward reasoning are almost exactly semantically equivalent, so they solve almost exactly the same number of problems.
 
 A possible explanation for the modest gains in the Aesop configuration is that the vast majority of solved problems require very few rule applications, so the maximum depth of goals in Aesop's search tree is low.
 As a result, incrementality, which reuses partial matches from parent goals for child goals, does not help much.
