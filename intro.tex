@@ -24,9 +24,9 @@ The main cause of this is perhaps the requirement to spell out proofs in full de
 Compounding this issue, the minimalistic logics of proof assistants typically require explicit proof steps even for operations that are entirely obvious to humans.
 For example, if, for two natural numbers $n$ and $m$, the sum $m + n$ has been shown to be positive, most proof assistants require an explicit proof step to show that $n + m$ is also positive.
 Similarly, if two functions $f$ and $g$ are continuous, multiple proof steps are needed to show that $x ↦ f(2g(x) + 1)$ is also continuous.
-Demonstrating such trivialities takes time and effort, clutters the proof and saps the enthusiasm of aspiring ITP users.
+Demonstrating such trivialities takes time and effort, clutters proofs and saps the enthusiasm of aspiring ITP users.
 
-Almost all proof assistants address this issue with some form of proof automation.
+Almost all proof assistants address this issue with some form of \emph{proof automation}.
 This means the proof assistants offer programs, usually called \emph{tactics}, that partially or fully automate the construction of proofs.
 A simple tactic might derive $n + m > 0$ from $m + n > 0$, constructing a proof that uses commutativity of addition and a congruence rule.
 A more complex tactic might prove continuity of $x ↦ f(2g(x) + 1)$ by referring to a lemma about the composition of continuous functions, together with continuity of multiplication and addition.
@@ -301,7 +301,8 @@ The NTP field is evolving rapidly, and many systems are hybrids that combine fea
 Perhaps the most commonly used NTPs in practice are plain LLM harnesses designed for programming, such as Anthropic's Claude Code and OpenAI's Codex.
 
 Despite their relative youth, NTPs have already demonstrated capabilities far surpassing those of ATPs.
-For instance, several systems have achieved gold and silver medals at the 2024 and 2025 International Mathematical Olympiads.
+An early milestone were silver and gold medals achieved by NTPs at the 2024 and 2025 International Mathematical Olympiads~\cite{AlphaProof,Aristotle,SeedProver}.
+More recently, NTPs have autonomously or semi-autonomously produced a steady stream of large formal proofs, including some (dis)proofs of previously open conjectures~\cite{Gauss,AlexeevMixon25,AxiomProverPutnam25,Schmitt25,Erdos728,Ilin26,ConjectureResolution,MunkresIsabelle,Kahle26,AlphaProofNexus,Mazur26,TaoSendov,FelConjecture,ParityDifferentials,PrimeGapsLib}.
 However, a downside of LLM-based approaches is that they are much more costly, in both time and money, than ATPs.
 Typical evaluations of one-shot NTPs use a pass@$k$ metric that gives the system $k$ attempts to solve each problem in a given benchmark, with $k$ ranging from 2 to over 1000.
 Even a single such one-shot attempt is typically more expensive than an ATP invocation since LLMs of sufficient size are slow and require costly hardware.
@@ -312,7 +313,8 @@ The ATPs become, in effect, an optimisation that allows an NTP to shift some of 
 
 \section{Adoption}
 
-For a pragmatic, heuristic tool like Aesop, the ultimate success metric is adoption, so it is my pleasure to report that Aesop has been used for a variety of purposes throughout the Lean ecosystem.
+For a pragmatic, heuristic tool like Aesop, the ultimate success metric is adoption.
+Happily, Aesop has been used for a variety of purposes throughout the Lean ecosystem.
 Recent versions of Mathlib call Aesop around 7000 times, often through wrapper tactics that use a specialised rule set.
 The \tac{measurability}\footnote{\url{https://github.com/leanprover-community/mathlib4/blob/6b3e5a3312983f468f6187068fca3e69ddc7f80b/Mathlib/Tactic/Measurability.lean}} tactic, which attempts to prove that a function is measurable, is a typical example.
 For some such use cases, Aesop has been partially replaced with more efficient specialised tactics such as \tac{fun\_prop}\footnote{\url{https://github.com/leanprover-community/mathlib4/blob/6b3e5a3312983f468f6187068fca3e69ddc7f80b/Mathlib/Tactic/FunProp.lean}}.
@@ -326,7 +328,7 @@ Outside Mathlib, Aesop is used in various mathematical formalisation projects, e
 Aesop is also used in the nascent-in-Lean software verification domain, for example to dispatch verification conditions in the Loom multi-modal verifier~\cite{Loom}.
 Geoffrey Irving's \tac{interval} tactic\footnote{\url{https://github.com/girving/interval}} for interval arithmetic with floating point numbers is largely a wrapper around Aesop with a particular rule set.
 
-As mentioned, Aesop is also used in larger, push-button provers.
+Aesop is also used in larger, push-button provers.
 LeanHammer~\cite{LeanHammer} uses Aesop as one of its proof reconstruction backends.
 Some tactic-by-tactic NTPs use Aesop as a backend providing an AND/OR tree with prioritisation support~\cite{LeanDojo,ABEL}.
 And of course, many LLM-based systems use Aesop as a comparatively cheap tactic to dispatch easy goals.
@@ -339,7 +341,7 @@ If such a proof is found, an executable generator can be immediately extracted.
 
 \section{Attribution}
 
-This thesis is based on three papers that are reproduced without substantive changes, though I have adjusted the introductions, centralised some of the background material and related work and made various small updates.
+This thesis is based on three papers that are reproduced without substantive changes, although I have made various small updates and corrections, adjusted the introductions and centralised some of the background material and related work.
 Chapter~\ref{chap:aesop} is based on \emph{Aesop: White-Box Best-First Proof Search for Lean}~\cite{Aesop}, which is joint work with Asta Halkjær From.
 I have added Sec.~\ref{sec:aesop:mvars-summary} to give a more precise description of our handling of metavariables.
 Chapter~\ref{chap:forward} is based on \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Aesop-forward}, which is joint work with Xavier Généreux.
@@ -351,4 +353,4 @@ For consistency, I use the first person plural throughout, but any mistakes in t
 \section{Data Availability}
 
 All functionality described in this thesis is implemented in mainline Aesop\footnote{\url{https://github.com/leanprover-community/aesop}}.
-The exact Aesop version corresponding to each chapter, as well as benchmark code and data, is available in the supplement for the paper that the respective chapter is based on~\cite{AesopSupplement,ForwardSupplement,ScriptSupplement}.
+The exact Aesop version corresponding to each chapter, as well as benchmark code and data, is available in the supplement for the chapter's underlying paper~\cite{AesopSupplement,ForwardSupplement,ScriptSupplement}.
