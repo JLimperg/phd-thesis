@@ -22,6 +22,8 @@
   maxnames=10,
 ]{biblatex}
 \addbibresource{lit.bib}
+\usepackage{ragged2e}
+\AtBeginBibliography{\RaggedRight}
 \DeclareFieldFormat[article,inproceedings,incollection,thesis]{title}{#1}
 \setcounter{biburllcpenalty}{7000}
 \setcounter{biburlucpenalty}{8000}
