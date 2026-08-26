@@ -269,7 +269,7 @@ Proof reconstruction is then done by passing the theorems to a native ATP, which
 Aesop-style provers have sometimes been used as such native ATPs; e.g.\ Rocq's sauto is expressly designed for this purpose, and Aesop is used by LeanHammer as one reconstruction backend among others.
 More recently, some ATPs have gained the ability to report detailed proofs~\cite{Alethe,CVC5ProofVerification,CVC5RewriteVerification} that can be directly translated back into the ITP's logic.
 
-Yet another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with SMT solvers and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
+Another style of ATP integration is exemplified by the Dafny~\cite{Dafny}, \Fstar~\cite{Fstar}, Verus~\cite{Verus} and Why3~\cite{Why3} tools, which are deeply integrated with SMT solvers and allow users to provide only a coarse proof sketch, with the SMT solver filling in most of the details.
 The tight integration of ITP and ATP leads to a higher degree of proof automation, but in return, the external ATP is typically trusted, meaning its proofs are not checked by the ITP.
 This yields a large and complex trusted codebase compared to HOL, Isabelle, Lean and Rocq, all of which strive (to varying degrees) to keep their trusted codebases -- the kernels -- small.
 
