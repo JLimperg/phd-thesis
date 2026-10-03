@@ -1,0 +1,27 @@
+{
+\selectlanguage{german}
+{\KOMAoptions{open=any}%
+\chapter*{Zusammenfassung}}
+
+Diese Arbeit beschreibt das Design und die Implementation von Aesop, einer Taktik zur Automatisierung von Beweisen im interaktiven Theorembeweiser Lean~4.
+Aesops Fundament ist eine Baumsuche im Stil von Tableaus, ähnlich derjenigen der auto-Taktiken von Rocq und Isabelle.
+Nutzer können die Suche anpassen, indem sie Beweisregeln angeben, die Aesop dann anwendet.
+Auf dieser Basis bauen drei wesentliche neue Funktionen auf.
+
+Erstens unterstützt Aesop beliebige Suchstrategien und verwendet standardmäßig eine Best-First-Suchstrategie, wohingegen die meisten ähnlichen Taktiken auf Tiefensuche basieren.
+Daraus folgt, dass die übliche, auf Backtracking basierende Methode, Metavariablen zu unterstützen, nicht mehr anwendbar ist.
+Metavariablen sind \enquote*{Löcher} im Beweis und repräsentieren Subterme, die in den folgenden Beweisschritten auszufüllen sind.
+Wir entwickeln eine neue Methode, die die Unabhängigkeit von Beweiszielen in unseren Suchbäumen auch dann bewahrt, wenn die Beweisziele Metavariablen enthalten, und dabei -- so unsere Vermutung -- vollständig bleibt.
+
+Zweitens optimieren wir die Anwendung von Vorwärts-Regeln, die zusätzliche Fakten aus den lokalen Hypothesen ableiten.
+Ähnliche Taktiken, die Vorwärts-Regeln unterstützen, verwenden eine recht naive, zustandslose Methode, um sie anzuwenden.
+Dies führt zu erheblichen Redundanzen.
+Wir adressieren diese mit einer Caching-Strategie, die strukturelle Ähnlichkeiten zwischen Beweiszielen ausnutzt.
+Dies beschleunigt Aesop auf Beispielen, in denen viele Vorwärts-Regeln verwendet werden, um mehr als den Faktor 30.
+Angewendet auf einen großen Benchmark, bei dem Vorwärts-Regeln weniger intensiv genutzt werden, erhalten wir im Durchschnitt eine Beschleunigung um den Faktor 1,24x.
+Wie auch unsere Methode zur Unterstützung von Metavariablen ist der Algorithmus für Vorwärts-Regeln weitgehend unabhängig von der verwendeten Logik und könnte auch für nicht-typentheoretische Systeme verwendet werden.
+
+Drittens implementieren wir eine Aesop-Funktion, die aus den angewendeten Regeln weitgehend idiomatische Taktik-Beweise generiert.
+Das ermöglicht Nutzern, teure Aesop-Suchen durch die gefundenen Beweise zu ersetzen, oder auch Aesop als Präprozessor zu verwenden, der offensichtliche Beweisschritte automatisiert und dann die Kontrolle wieder an den Nutzer abgibt.
+Um die generierten Beweise idiomatischer zu machen, implementieren wir einen Optimierer, der Taktiksequenzen in strukturierte Beweise transformiert und gewisse unidiomatische Konstruktionen eliminiert.
+}
