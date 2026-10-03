@@ -7,10 +7,10 @@ A normalisation phase generalises Isabelle's simplifier integration and allows u
 Best-first search enables searches with larger, less precisely targeted rule sets, while Aesop's particular design gives users enough control to effectively steer the search if necessary.
 Our incremental implementation of forward reasoning is much more efficient for certain rule sets, and script generation allows the use of slow, explosive rule sets that produce straightforward proofs.
 
-Largely unplanned, some of these features have also broadened Aesop's remit to new use cases.
+These features have also, sometimes unintentionally, broadened Aesop's remit to new use cases.
 Best-first search enables Aesop-based neural theorem provers that involve much larger search spaces than typical Aesop invocations, where some form of prioritisation is necessary and pure depth-first search would be impractical.
 Script generation allows Aesop to be used as a preprocessor that does not necessarily finish a proof.
 
 Aesop's adoption throughout the Lean ecosystem, in formalisation projects and AI-based systems, demonstrates its effectiveness in practice.
-To me, this is the highest honour a tool can receive, so I would like to conclude this thesis by thanking the users of Aesop, who have collectively (and sometimes individually) spent considerable amounts of time designing rule sets for their particular domains.
+To me, this is the highest honour a tool can receive, so I would like to conclude this thesis by thanking the users of Aesop, who have spent considerable amounts of time designing rule sets for their particular domains.
 I hope they enjoyed, and continue to enjoy, using Aesop.

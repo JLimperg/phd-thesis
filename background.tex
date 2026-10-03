@@ -76,9 +76,9 @@ Its children record either tokens and identifiers that were consumed directly (\
 
 Extensibility of the \Ty{Syntax} tree, in turn, requires extensibility of the elaborator.
 Lean again uses the environment extension mechanism to implement this.
-It expects us to define, for each registered parser function, a corresponding elaboration function (or \emph{elaborator}), and to register it in an environment extension for elaborators.
-An elaborator receives a \Ty{Syntax} tree produced by a given parser function as input and produces (abstract syntax trees of) constructs of Lean's core type theory.
-Command elaborators produce core declarations, e.g.\ inductive types or definitions; term elaborators produce expressions.
+It expects us to define, for each registered parser function, a corresponding elaboration function, and to register it in an environment extension.
+An elaboration function receives a \Ty{Syntax} tree produced by a given parser function as input and produces (abstract syntax trees of) constructs of Lean's core type theory.
+Elaboration functions for command syntax produce core declarations, e.g.\ inductive types or definitions; those for term syntax produce expressions.
 
 The inverse of elaboration, \emph{delaboration}, converts expressions into \Ty{Syntax} trees that can then be pretty-printed to obtain Lean code.
 The delaboration stage is not perfect -- it occasionally produces code that is not idiomatically formatted or even fails to compile.
@@ -94,13 +94,13 @@ Detailed introductions can be found in the Lean source code%
 
 However, one particular type of expression will repeatedly concern us: metavariables, which we can view as holes or placeholders in an expression.
 Each metavariable $\mv{x}$ is identified by a globally unique internal name and has a type $T$ and a \emph{local context} $Γ$.
-We write $Γ ⊢ \mv{x} : T$, or $\mv{x} : T$ if $Γ$ can be inferred from the context.
+We write $Γ ⊢ \mv{x} : T$, or just $\mv{x} : T$ if $Γ$ is immaterial.
 The local context $Γ$ is a list of \emph{fvars} (\enquote{free variables}, another kind of expression), which represent the variables that can be used in the expression that will eventually replace the metavariable.
 Each fvar is identified by a globally unique internal name and has a type and a user-facing name.
-We write $y : U$ for an fvar of type $U$, or $\vec{y} : \vec{U}$ for a list of fvars $y₁ : U₁, y₂ : U₂, \dots$.
+We write $y : U$ for an fvar of type $U$, or $\vec{y} : \vec{U}$ for a list of fvars $y₁ : U₁, \dots, yₙ : Uₙ$.
 
 When we view metavariables as expression placeholders, the fvars represent variables that are currently in scope.
-Hence, in the expression $\Lam{(n : ℕ)~(x : \mathrm{Fin}~n)}{\mv{y}}$ the metavariable $\mv{y}$ has a local context containing at least the fvars $n : ℕ$ and $x : \mathrm{Fin}~n$.
+Hence, in the expression $\Lam{(n : ℕ)~(x : \mathrm{Fin}~n)}{\mv{y}}$, the metavariable $\mv{y}$ has a local context containing at least the fvars $n : ℕ$ and $x : \mathrm{Fin}~n$.
 (It may contain additional fvars if the expression appears under additional binders.)
 The type of $\mv{y}$ could be, for example, $\mathrm{Fin}~n$.
 Types of later fvars may contain earlier fvars -- e.g.\ the type of $x$ contains $n$ --, so local contexts are \emph{telescopes}.
@@ -111,7 +111,7 @@ Conceptually, the assignment operation substitutes $e$ for $\mv{x}$ anywhere $\m
 
 Metavariables are registered in a \emph{metavariable context} that maps each metavariable's internal name to its local context, type and, potentially, assignment.
 Hence, a metavariable is only valid in a metavariable context that contains its internal name.
-Elaborators are monadic programs, and the various elaborator monads contain a \enquote*{global} ambient metavariable context.
+Elaboration functions are monadic, and the various elaboration monads contain a \enquote*{global} ambient metavariable context.
 
 Metavariables can also be seen as \emph{goals}, and we use the two terms interchangeably.
 This view is most natural for metavariables whose types are propositions.
@@ -127,7 +127,7 @@ For instance, the expression $(\Lam{x}{x})~y$ is definitionally equal to $y$.
 Lean stratifies definitional equality along several \emph{transparency} levels that indicate which definitions can be unfolded when checking definitional equality.
 At \emph{default} transparency, most definitions can be unfolded, but we often use the more restrictive \emph{reducible} transparency at which only definitions marked \Attr{@[reducible]} or \Kw{abbrev} are unfolded.
 This speeds up definitional equality checking since far fewer possible computation steps must be considered.
-However, it also means that users have to unfold more definitions manually.
+However, it also means that users need to unfold more definitions manually.
 
 When we attempt to unify two expressions $t$ and $u$ (potentially assigning metavariables in $t$ and $u$ as a side effect if successful), we always do so up to definitional equality at a specific transparency level.
 In fact, the same Lean function is used for unification and for definitional equality checking.
