@@ -297,6 +297,8 @@ These techniques make it highly effective at equational and arithmetic reasoning
 
 \subsection{Neural Theorem Provers}
 
+TODO incorporate recent work
+
 Recent advances in generative artificial intelligence have led to much interest in \emph{neural theorem provers} (NTPs): tools that search for formal proofs, in Lean or other ITPs, by employing large language models (LLMs).
 Various architectures for such NTPs have been proposed, including one-shot NTPs where the LLM directly generates an entire proof~\cite{DeepSeekProver,GoedelProver,GoedelProverV2}; tactic-by-tactic NTPs, where LLMs generate individual tactics to form a large search tree similar to Aesop's~\cite{Lample22,LeanDojo,ABEL,Aristotle,AlphaProof,DeepSeekProverV15}; decomposition-based systems that ask LLMs to recursively decompose the problem statement into smaller lemmas until the lemmas can be directly proved~\cite{DSP,Hilbert,SeedProver}; and free-form agents that let the LLM control the search process (e.g.\ OpenGauss\footnote{\url{https://www.math.inc/opengauss}} and Leanstral\footnote{\url{https://mistral.ai/news/leanstral}}).
 The NTP field is evolving rapidly, and many systems are hybrids that combine features of different architectures.
@@ -344,15 +346,29 @@ If such a proof is found, an executable generator can be immediately extracted.
 
 \section{Attribution}
 
-This thesis is based on three papers that are reproduced without substantive changes, although I have made various small updates and corrections, adjusted the introductions and centralised some of the background material and related work.
-Chapter~\ref{chap:aesop} is based on \emph{Aesop: White-Box Best-First Proof Search for Lean}~\cite{Aesop}, which is joint work with Asta Halkjær From.
+This thesis is based on three papers that are reproduced without major changes, although I have made various small updates and corrections, adjusted the introductions and centralised some of the background material and related work.
+
+Chapter~\ref{chap:aesop} is based on \emph{Aesop: White-Box Best-First Proof Search for Lean}~\cite{Aesop}, which is joint work with Asta Halkjær Boserup (formerly Asta Halkjær From).
 I have added Sec.~\ref{sec:aesop:mvars-summary} to give a more precise description of our handling of metavariables.
+Boserup and I contributed equally to the design of the central data structures and algorithms for tree-based search with metavariables.
+Aesop's remaining design and implementation, as well as the first case study (Sec.~\ref{sec:aesop:lists}), are predominantly my work, with some contributions by Boserup.
+The second case study (Sec.~\ref{sec:aesop:leanprover}) is Boserup's work.
+I wrote most of the paper (with Boserup's input), except the section on Boserup's case study.
+
 Chapter~\ref{chap:forward} is based on \emph{Incremental Forward Reasoning for White-Box Proof Search}~\cite{Aesop-forward}, which is joint work with Xavier Généreux.
 I have added Sec.~\ref{sec:forward:rpinf}, which discusses an attempt at performance optimisation that is not included in the final implementation.
 This section was intended to be part of the paper, but was removed due to space constraints.
-Chapter~\ref{chap:script} is based on \emph{Tactic Script Optimisation for Aesop}~\cite{Aesop-script}.
-For consistency, I use the first person plural throughout, but any mistakes in this thesis are, of course, solely my own.
+Généreux and I contributed equally to the design of the central data structures and algorithms for stateful forward reasoning.
+Généreux wrote an initial implementation of the central data structure.
+I substantially extended and generalised this implementation and integrated it into Aesop.
+I also implemented the optimisations in Secs.~\ref{sec:forward:implementation} and~\ref{sec:forward:rpinf}.
+The synthetic evaluation (Sec.~\ref{sec:forward:evaluation}) is mostly Généreux's work.
+We both contributed to the design and experimental setup of the Mathlib evaluation; the data analysis is largely mine.
+We contributed equally to writing the paper.
 
+Chapter~\ref{chap:script} is based on \emph{Tactic Script Optimisation for Aesop}~\cite{Aesop-script} and is entirely my work.
+
+For consistency, I use the first person plural throughout, but any mistakes in this thesis are, of course, solely my own.
 The research reported in these papers was largely completed while I was a PhD student first at VU Amsterdam, then at LMU Munich.
 I finished the incremental forward reasoning paper, particularly the evaluation and part of the implementation, while employed at Amazon Web Services.
 My current employer is Axiom Math.
