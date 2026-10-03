@@ -129,6 +129,15 @@
 \newcommand{\powerset}{\ensuremath{\mathcal{P}}}
 \newcommand{\bigO}{\ensuremath{\mathcal{O}}}
 
+% Unnumbered front matter chapter that may start on a left-hand page. Not
+% wrapped in a group, since that would cancel the suppression of the first
+% paragraph's indentation.
+\newcommand{\frontchapter}[1]{%
+  \KOMAoptions{open=any}%
+  \chapter*{#1}%
+  \KOMAoptions{open=right}%
+}
+
 % Hyphenation
 
 \hyphenation{meta-va-ri-able meta-va-ri-ables us-abili-ty gen-er-ali-sa-tion
@@ -226,8 +235,7 @@
 
   \pagenumbering{roman}
   {
-    {\KOMAoptions{open=any}%
-    \chapter*{Abstract}}
+    \frontchapter{Abstract}
     \input{abstract}
     \include{summary-de}
     \include{acks}
